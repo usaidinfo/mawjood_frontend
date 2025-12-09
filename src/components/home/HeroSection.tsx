@@ -248,7 +248,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="bg-gradient-to-r from-green-50 to-green-200 min-h-screen flex flex-col py-8 px-4 sm:px-6 lg:px-8">
+    <section className="relative bg-gradient-to-r from-green-50 to-green-200 flex flex-col py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto flex-1 flex flex-col justify-center w-full">
         {/* Hero Title */}
         {siteSettingsLoading ? (
@@ -259,12 +259,12 @@ export default function HeroSection() {
         ) : (
           <>
             {heroTitle && (
-              <h1 className="text-2xl md:text-4xl font-bold text-gray-800 mb-2 text-center leading-tight">
+              <h1 className="text-2xl md:text-4xl font-bold text-gray-800 mb-2 text-left leading-tight">
                 {heroTitle}
               </h1>
             )}
             {heroSubtitle && (
-              <p className="text-center text-gray-600 mb-6 max-w-3xl mx-auto">
+              <p className=" text-gray-600 mb-3 max-w-3xl">
                 {heroSubtitle}
               </p>
             )}
@@ -272,24 +272,26 @@ export default function HeroSection() {
         )}
 
         {/* Search Bar */}
-        <div className="w-full max-w-5xl mx-auto bg-white rounded-3xl shadow-2xl p-3 mb-12 border border-gray-100">
+        <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl p-3 mb-12 border border-gray-100">
           <div className="flex flex-col md:flex-row gap-3 w-full">
             <SearchBar 
               onSearch={handleSearch} 
               selectedCityId={selectedCity?.id}
             />
 
-            <LocationSelector
-              cities={cities}
-              regions={regions}
-              countries={countries}
-              selectedCity={selectedCity}
-              selectedLocation={selectedLocation}
-              loadingCities={loadingCities}
-              onCitySelect={handleCitySelect}
-              onRegionSelect={handleRegionSelect}
-              onCountrySelect={handleCountrySelect}
-            />
+            <div className="md:w-80 w-full">
+              <LocationSelector
+                cities={cities}
+                regions={regions}
+                countries={countries}
+                selectedCity={selectedCity}
+                selectedLocation={selectedLocation}
+                loadingCities={loadingCities}
+                onCitySelect={handleCitySelect}
+                onRegionSelect={handleRegionSelect}
+                onCountrySelect={handleCountrySelect}
+              />
+            </div>
 
             <button
               onClick={() => handleSearch()}
@@ -310,6 +312,9 @@ export default function HeroSection() {
           loading={siteSettingsLoading}
         />
       </div>
+      
+      {/* Fade gradient from primary to white */}
+      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent via-primary/10 to-white pointer-events-none" />
     </section>
   );
 }

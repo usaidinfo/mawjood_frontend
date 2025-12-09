@@ -5,9 +5,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { subscriptionService, SubscriptionPlan, parseDecimal } from '@/services/subscription.service';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Plus, Edit, Archive, Loader2 } from 'lucide-react';
+import { Plus, Edit, Archive, Loader2, UserPlus } from 'lucide-react';
 import { useCurrency } from '@/hooks/useCurrency';
 import PlanFormDialog, { PlanFormValues } from '@/components/admin/subscription-plans/PlanFormDialog';
+import AssignSponsorDialog from '@/components/admin/subscription-plans/AssignSponsorDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,7 @@ export default function SubscriptionPlansPage() {
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
   const [planToArchive, setPlanToArchive] = useState<SubscriptionPlan | null>(null);
   const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
+  const [isAssignSponsorOpen, setIsAssignSponsorOpen] = useState(false);
   const [formData, setFormData] = useState<PlanFormValues>({
     name: '',
     slug: '',
@@ -37,6 +39,7 @@ export default function SubscriptionPlansPage() {
     billingInterval: 'MONTH' as 'DAY' | 'WEEK' | 'MONTH' | 'YEAR' | 'CUSTOM',
     intervalCount: '1',
     customIntervalDays: '',
+    isSponsorPlan: false,
     verifiedBadge: false,
     topPlacement: false,
     allowAdvertisements: false,
@@ -53,15 +56,25 @@ export default function SubscriptionPlansPage() {
 
   const { data: plansData, isLoading } = useQuery({
     queryKey: ['subscription-plans'],
-    queryFn: () => subscriptionService.getSubscriptionPlans({ limit: 100 }),
+    queryFn: () => subscriptionService.getSubscriptionPlans({ limit: 100, includeSponsor: 'true' }),
   });
 
   const plans = plansData?.data?.plans || [];
+
+  // Debug: Log plans to see if sponsor plans are included
+  useEffect(() => {
+    if (plansData) {
+      console.log('All subscription plans:', plans);
+      const sponsorPlans = plans.filter((p: any) => p.isSponsorPlan);
+      console.log('Sponsor plans found:', sponsorPlans);
+    }
+  }, [plansData, plans]);
 
   const createMutation = useMutation({
     mutationFn: (data: any) => subscriptionService.createSubscriptionPlan(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['sponsor-plans'] });
       toast.success('Subscription plan created successfully');
       setIsDialogOpen(false);
       resetForm();
@@ -76,6 +89,7 @@ export default function SubscriptionPlansPage() {
       subscriptionService.updateSubscriptionPlan(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['sponsor-plans'] });
       toast.success('Subscription plan updated successfully');
       setIsDialogOpen(false);
       resetForm();
@@ -89,6 +103,7 @@ export default function SubscriptionPlansPage() {
     mutationFn: (id: string) => subscriptionService.archiveSubscriptionPlan(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['sponsor-plans'] });
       toast.success('Subscription plan archived successfully');
       setIsArchiveDialogOpen(false);
       setPlanToArchive(null);
@@ -123,6 +138,7 @@ export default function SubscriptionPlansPage() {
       billingInterval: 'MONTH',
       intervalCount: '1',
       customIntervalDays: '',
+      isSponsorPlan: false,
       verifiedBadge: false,
       topPlacement: false,
       allowAdvertisements: false,
@@ -159,6 +175,7 @@ export default function SubscriptionPlansPage() {
       billingInterval: plan.billingInterval,
       intervalCount: plan.intervalCount.toString(),
       customIntervalDays: plan.customIntervalDays?.toString() || '',
+      isSponsorPlan: plan.isSponsorPlan,
       verifiedBadge: plan.verifiedBadge,
       topPlacement: plan.topPlacement,
       allowAdvertisements: plan.allowAdvertisements,
@@ -177,17 +194,23 @@ export default function SubscriptionPlansPage() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // For sponsor plans, price defaults to 0 if not provided
+    const priceValue = formData.isSponsorPlan 
+      ? (formData.price ? parseFloat(formData.price) : 0)
+      : parseFloat(formData.price);
+    
     const data: any = {
       name: formData.name,
       slug: formData.slug,
       description: formData.description || undefined,
-      price: parseFloat(formData.price),
+      price: priceValue,
       salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
       currency: formData.currency,
       status: formData.status,
       billingInterval: formData.billingInterval,
       intervalCount: parseInt(formData.intervalCount),
       customIntervalDays: formData.customIntervalDays ? parseInt(formData.customIntervalDays) : undefined,
+      isSponsorPlan: formData.isSponsorPlan,
       couponCode: formData.couponCode || undefined,
       couponType: formData.couponType,
       couponValue: formData.couponValue ? parseFloat(formData.couponValue) : undefined,
@@ -232,16 +255,26 @@ export default function SubscriptionPlansPage() {
             Manage subscription plans for businesses
           </p>
         </div>
-        <Button
-          onClick={() => {
-            resetForm();
-            setIsDialogOpen(true);
-          }}
-          className="bg-[#1c4233] hover:bg-[#245240]"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Create Plan
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setIsAssignSponsorOpen(true)}
+            variant="outline"
+            className="border-amber-500 text-amber-600 hover:bg-amber-50 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-900/20"
+          >
+            <UserPlus className="w-4 h-4 mr-2" />
+            Assign Sponsor
+          </Button>
+          <Button
+            onClick={() => {
+              resetForm();
+              setIsDialogOpen(true);
+            }}
+            className="bg-[#1c4233] hover:bg-[#245240]"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Plan
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -252,9 +285,16 @@ export default function SubscriptionPlansPage() {
           >
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                  {plan.name}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    {plan.name}
+                  </h3>
+                  {plan.isSponsorPlan && (
+                    <span className="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 text-xs font-medium rounded-full">
+                      Sponsor
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   {plan.slug}
                 </p>
@@ -376,6 +416,11 @@ export default function SubscriptionPlansPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AssignSponsorDialog
+        open={isAssignSponsorOpen}
+        onOpenChange={setIsAssignSponsorOpen}
+      />
     </div>
   );
 }

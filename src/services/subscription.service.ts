@@ -14,6 +14,7 @@ export interface SubscriptionPlan {
   billingInterval: 'DAY' | 'WEEK' | 'MONTH' | 'YEAR' | 'CUSTOM';
   intervalCount: number;
   customIntervalDays?: number;
+  isSponsorPlan: boolean; // Admin-only sponsor plan
   verifiedBadge: boolean;
   topPlacement: boolean;
   allowAdvertisements: boolean;
@@ -80,6 +81,14 @@ export interface CreateSubscriptionData {
   metadata?: any;
 }
 
+export interface AssignSponsorSubscriptionData {
+  businessId: string;
+  planId?: string; // Optional - backend will auto-create or find a sponsor plan if not provided
+  startDate?: string;
+  endsAt?: string;
+  notes?: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
@@ -116,7 +125,7 @@ const handleError = (error: unknown): never => {
 
 export const subscriptionService = {
   // Subscription Plans
-  async getSubscriptionPlans(params?: { page?: number; limit?: number; status?: string }): Promise<PaginatedResponse<SubscriptionPlan>> {
+  async getSubscriptionPlans(params?: { page?: number; limit?: number; status?: string; includeSponsor?: string }): Promise<PaginatedResponse<SubscriptionPlan>> {
     try {
       const response = await axiosInstance.get<PaginatedResponse<SubscriptionPlan>>(
         API_ENDPOINTS.SUBSCRIPTION_PLANS.GET_ALL,
@@ -252,6 +261,20 @@ export const subscriptionService = {
       return response.data;
     } catch (error) {
       console.error('Error archiving subscription plan:', error);
+      throw handleError(error);
+    }
+  },
+
+  // Admin - Assign sponsor subscription (no payment required)
+  async assignSponsorSubscription(data: AssignSponsorSubscriptionData): Promise<ApiResponse<BusinessSubscription>> {
+    try {
+      const response = await axiosInstance.post<ApiResponse<BusinessSubscription>>(
+        API_ENDPOINTS.SUBSCRIPTIONS.ASSIGN_SPONSOR,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error assigning sponsor subscription:', error);
       throw handleError(error);
     }
   },

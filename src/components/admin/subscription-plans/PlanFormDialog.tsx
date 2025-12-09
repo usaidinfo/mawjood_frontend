@@ -29,6 +29,7 @@ export interface PlanFormValues {
   billingInterval: 'DAY' | 'WEEK' | 'MONTH' | 'YEAR' | 'CUSTOM';
   intervalCount: string;
   customIntervalDays: string;
+  isSponsorPlan: boolean;
   verifiedBadge: boolean;
   topPlacement: boolean;
   allowAdvertisements: boolean;
@@ -137,17 +138,22 @@ const PlanFormDialog = ({
                     htmlFor="price"
                     className="block text-sm font-medium text-slate-700 dark:text-slate-300"
                   >
-                    Price *
+                    Price {!formData.isSponsorPlan && '*'}
                   </label>
                   <Input
                     id="price"
                     type="number"
                     step="0.01"
-                    value={formData.price}
+                    min="0"
+                    value={formData.isSponsorPlan ? '0' : formData.price}
                     onChange={(e) => setFormData((prev) => ({ ...prev, price: e.target.value }))}
-                    required
-                    className="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 shadow-sm focus:border-[#1c4233] focus:ring-[#1c4233] bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200 sm:text-sm"
+                    required={!formData.isSponsorPlan}
+                    disabled={formData.isSponsorPlan}
+                    className="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 shadow-sm focus:border-[#1c4233] focus:ring-[#1c4233] bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200 sm:text-sm disabled:bg-gray-100 dark:disabled:bg-gray-700"
                   />
+                  {formData.isSponsorPlan && (
+                    <p className="text-xs text-gray-500 mt-1">Price is automatically set to 0 for sponsor plans</p>
+                  )}
                 </div>
                 <div>
                   <label
@@ -267,6 +273,36 @@ const PlanFormDialog = ({
                   />
                 </div>
               )}
+
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-medium text-slate-900 dark:text-slate-200 mb-4">
+                  Plan Type
+                </h3>
+                <div className="flex items-start space-x-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                  <input
+                    id="isSponsorPlan"
+                    type="checkbox"
+                    checked={formData.isSponsorPlan}
+                    onChange={(e) => {
+                      const isChecked = e.target.checked;
+                      setFormData((prev) => ({
+                        ...prev,
+                        isSponsorPlan: isChecked,
+                        price: isChecked ? '0' : prev.price || '',
+                      }));
+                    }}
+                    className="mt-1 h-4 w-4 rounded border-slate-300 text-[#1c4233] focus:ring-[#1c4233]"
+                  />
+                  <label htmlFor="isSponsorPlan" className="text-sm">
+                    <span className="font-medium text-slate-900 dark:text-slate-200">
+                      Sponsor Plan (Admin Only)
+                    </span>
+                    <p className="text-slate-600 dark:text-slate-400 mt-1">
+                      This plan will not be visible to regular users. Only admins can manually assign this plan to businesses without payment.
+                    </p>
+                  </label>
+                </div>
+              </div>
 
               <div>
                 <label

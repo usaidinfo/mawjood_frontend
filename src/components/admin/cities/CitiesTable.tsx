@@ -44,6 +44,7 @@ interface CitiesTableProps<TData, TValue> {
   regions: Array<{ id: string; name: string }>;
   countries?: Array<{ id: string; name: string }>;
   selectedCountry?: string;
+  selectedRegion?: string;
   onBulkExport?: (selectedRows: TData[]) => void;
   onBulkDelete?: (selectedRows: TData[]) => void;
 }
@@ -58,17 +59,22 @@ export function CitiesTable<TData, TValue>({
   regions,
   countries = [],
   selectedCountry = 'all',
+  selectedRegion = 'all',
   onBulkExport,
   onBulkDelete,
 }: CitiesTableProps<TData, TValue>) {
   const [countrySearch, setCountrySearch] = useState('');
+  const [regionSearch, setRegionSearch] = useState('');
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+  const [regionDropdownOpen, setRegionDropdownOpen] = useState(false);
   const countryDropdownRef = useRef<HTMLDivElement>(null);
   const countrySearchInputRef = useRef<HTMLInputElement>(null);
+  const regionDropdownRef = useRef<HTMLDivElement>(null);
+  const regionSearchInputRef = useRef<HTMLInputElement>(null);
 
   const table = useReactTable({
     data,
@@ -103,6 +109,17 @@ export function CitiesTable<TData, TValue>({
     );
   }, [countries, countrySearch]);
 
+  // Filter regions based on search
+  const filteredRegions = useMemo(() => {
+    if (!regionSearch.trim()) {
+      return regions;
+    }
+    const searchLower = regionSearch.toLowerCase();
+    return regions.filter((region) =>
+      region.name.toLowerCase().includes(searchLower)
+    );
+  }, [regions, regionSearch]);
+
   // Close country dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -113,6 +130,13 @@ export function CitiesTable<TData, TValue>({
         setCountryDropdownOpen(false);
         setCountrySearch('');
       }
+      if (
+        regionDropdownRef.current &&
+        !regionDropdownRef.current.contains(event.target as Node)
+      ) {
+        setRegionDropdownOpen(false);
+        setRegionSearch('');
+      }
     };
 
     if (countryDropdownOpen) {
@@ -122,10 +146,17 @@ export function CitiesTable<TData, TValue>({
       }, 100);
     }
 
+    if (regionDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      setTimeout(() => {
+        regionSearchInputRef.current?.focus();
+      }, 100);
+    }
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [countryDropdownOpen]);
+  }, [countryDropdownOpen, regionDropdownOpen]);
 
   const handleExportCSV = () => {
     if (onBulkExport) {
@@ -255,19 +286,69 @@ export function CitiesTable<TData, TValue>({
           </div>
         )}
 
-        <Select onValueChange={onRegionFilter}>
-          <SelectTrigger className="w-full md:w-[200px]">
-            <SelectValue placeholder="Filter by States" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All States</SelectItem>
-            {regions.map((region) => (
-              <SelectItem key={region.id} value={region.id}>
-                {region.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="relative" ref={regionDropdownRef}>
+          <button
+            type="button"
+            onClick={() => setRegionDropdownOpen((prev) => !prev)}
+            className="w-full md:w-[200px] rounded-lg border border-gray-300 bg-white px-3 py-2 flex items-center justify-between text-sm font-medium hover:bg-gray-50"
+          >
+            <span>
+              {selectedRegion === 'all'
+                ? 'All States'
+                : regions.find((r) => r.id === selectedRegion)?.name || 'All States'}
+            </span>
+            <ChevronDown className="h-4 w-4 text-gray-500" />
+          </button>
+          {regionDropdownOpen && (
+            <div className="absolute z-50 mt-2 w-full md:w-[200px] rounded-lg border border-gray-200 bg-white shadow-lg">
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100">
+                <Search className="h-4 w-4 text-gray-400" />
+                <input
+                  ref={regionSearchInputRef}
+                  type="text"
+                  placeholder="Search states..."
+                  value={regionSearch}
+                  onChange={(e) => setRegionSearch(e.target.value)}
+                  className="w-full bg-transparent text-sm focus:outline-none"
+                />
+              </div>
+              <div className="max-h-48 overflow-y-auto">
+                <button
+                  type="button"
+                  className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 ${
+                    selectedRegion === 'all' ? 'bg-gray-100 font-medium' : ''
+                  }`}
+                  onClick={() => {
+                    onRegionFilter('all');
+                    setRegionDropdownOpen(false);
+                    setRegionSearch('');
+                  }}
+                >
+                  All States
+                </button>
+                {filteredRegions.map((region) => (
+                  <button
+                    key={region.id}
+                    type="button"
+                    className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 ${
+                      selectedRegion === region.id ? 'bg-gray-100 font-medium' : ''
+                    }`}
+                    onClick={() => {
+                      onRegionFilter(region.id);
+                      setRegionDropdownOpen(false);
+                      setRegionSearch('');
+                    }}
+                  >
+                    {region.name}
+                  </button>
+                ))}
+                {!filteredRegions.length && (
+                  <p className="px-3 py-2 text-sm text-gray-500">No results found</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Table */}

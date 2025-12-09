@@ -130,7 +130,7 @@ function PaymentStatusContent() {
             >
               Back to Dashboard
             </Button>
-          </div>
+          </div>x``
 
           <p className="mt-6 text-xs text-gray-500">
             If this status looks incorrect, please check your transactions in the dashboard or contact support with

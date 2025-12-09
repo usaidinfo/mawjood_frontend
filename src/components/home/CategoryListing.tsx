@@ -128,7 +128,7 @@ export default function CategoryListing() {
   }
 
   return (
-    <section ref={sectionRef} className="py-16 px-4 sm:px-6 lg:px-8 bg-white  ">
+    <section ref={sectionRef} className="py-8 px-4 sm:px-6 lg:px-8 bg-white  ">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">

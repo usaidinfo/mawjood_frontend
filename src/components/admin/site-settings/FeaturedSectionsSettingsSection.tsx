@@ -18,7 +18,7 @@ import {
 import { Plus, Trash2, Upload, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 interface FeaturedSectionsSettingsSectionProps {
   value: FeaturedSectionSettings[];
@@ -134,6 +134,29 @@ export function FeaturedSectionsSettingsSection({
     await onSave(sections);
   };
 
+  // Flatten categories to include both parent categories and subcategories
+  const flattenedCategories = useMemo(() => {
+    const result: Array<{ category: Category; isSubcategory: boolean; parentName?: string }> = [];
+    
+    categories.forEach((category) => {
+      // Add parent category
+      result.push({ category, isSubcategory: false });
+      
+      // Add subcategories if they exist
+      if (category.subcategories && category.subcategories.length > 0) {
+        category.subcategories.forEach((subcategory) => {
+          result.push({
+            category: subcategory,
+            isSubcategory: true,
+            parentName: category.name,
+          });
+        });
+      }
+    });
+    
+    return result;
+  }, [categories]);
+
   const handleCategorySelect = (
     sectionIndex: number,
     itemIndex: number,
@@ -144,7 +167,25 @@ export function FeaturedSectionsSettingsSection({
       return;
     }
 
-    const selectedCategory = categories.find((category) => category.id === categoryId);
+    // Search in both parent categories and subcategories
+    let selectedCategory: Category | undefined;
+
+    // First, try to find in parent categories
+    selectedCategory = categories.find((category) => category.id === categoryId);
+    
+    // If not found, search in subcategories
+    if (!selectedCategory) {
+      for (const category of categories) {
+        if (category.subcategories) {
+          const subcategory = category.subcategories.find((sub) => sub.id === categoryId);
+          if (subcategory) {
+            selectedCategory = subcategory;
+            break;
+          }
+        }
+      }
+    }
+
     if (!selectedCategory) {
       updateSectionItem(sectionIndex, itemIndex, { categoryId: undefined });
       return;
@@ -315,9 +356,13 @@ export function FeaturedSectionsSettingsSection({
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">No linked category</SelectItem>
-                            {categories.map((category) => (
-                              <SelectItem key={category.id} value={category.id}>
-                                {category.name}
+                            {flattenedCategories.map(({ category, isSubcategory, parentName }) => (
+                              <SelectItem 
+                                key={category.id} 
+                                value={category.id}
+                                className={isSubcategory ? 'pl-6' : ''}
+                              >
+                                {isSubcategory ? `└─ ${category.name}${parentName ? ` (${parentName})` : ''}` : category.name}
                               </SelectItem>
                             ))}
                           </SelectContent>

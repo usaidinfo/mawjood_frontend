@@ -24,7 +24,6 @@ export default function GTranslate({ className = '', id = 'gtranslate-navbar' }:
       if (!existingScript && !scriptLoaded) {
         scriptLoaded = true;
         
-        // Set GTranslate settings before loading script
         (window as any).gtranslateSettings = {
           default_language: 'en',
           languages: ['en', 'ar', 'fr', 'es', 'de', 'ja', 'ko', 'ru', 'hi', 'tr', 'ur', 'zh-TW'],

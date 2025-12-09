@@ -159,7 +159,7 @@ export default function LocationSelector({
   }, [countries, searchQuery]);
 
   return (
-    <div className="flex-1 relative" ref={cityRef}>
+    <div className="w-full relative" ref={cityRef}>
       <div className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none z-10">
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
           <path

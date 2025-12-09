@@ -97,6 +97,7 @@ export const API_ENDPOINTS = {
     CREATE: '/api/subscriptions',
     CANCEL: (id: string) => `/api/subscriptions/${id}/cancel`,
     GET_ALL_ADMIN: '/api/subscriptions/admin/all',
+    ASSIGN_SPONSOR: '/api/subscriptions/admin/assign-sponsor',
   },
 
   // Subscription Plan endpoints

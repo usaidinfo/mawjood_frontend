@@ -468,6 +468,7 @@ export default function CitiesPage() {
                 regions={regions}
                 countries={countries}
                 selectedCountry={selectedCountry}
+                selectedRegion={selectedRegion}
               />
             </CardContent>
           </Card>
