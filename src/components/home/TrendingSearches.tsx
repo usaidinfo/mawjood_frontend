@@ -1,12 +1,11 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
 import { useCityStore } from '@/store/cityStore';
-import { categoryService } from '@/services/category.service';
+import { useCategoryStore } from '@/store/categoryStore';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronRight, ChevronLeft } from 'lucide-react'; // Added ChevronLeft
-import { useRef, useState, useEffect } from 'react';
+import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 
 interface TrendingCategory {
   id: string;
@@ -19,20 +18,27 @@ interface TrendingCategory {
 
 export default function TrendingSearches() {
   const { selectedCity } = useCityStore();
+  const { categories, loading, fetchCategories } = useCategoryStore();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['trending-categories', selectedCity?.id],
-    queryFn: async () => {
-      const response = await categoryService.fetchCategories(1, 50);
-      const categories = response.data.categories
-        .filter((cat) => (cat._count?.businesses || 0) > 0)
-        .sort((a, b) => (b._count?.businesses || 0) - (a._count?.businesses || 0))
-        .slice(0, 6); 
-      
-      return categories.map((cat) => ({
+  // Fetch categories if not already loaded
+  useEffect(() => {
+    if (categories.length === 0 && !loading) {
+      fetchCategories();
+    }
+  }, [categories.length, loading, fetchCategories]);
+
+  // Process categories to get trending ones
+  const trendingCategories: TrendingCategory[] = useMemo(() => {
+    if (!categories || categories.length === 0) return [];
+    
+    return categories
+      .filter((cat: any) => (cat._count?.businesses || 0) > 0)
+      .sort((a: any, b: any) => (b._count?.businesses || 0) - (a._count?.businesses || 0))
+      .slice(0, 6)
+      .map((cat: any) => ({
         id: cat.id,
         name: cat.name,
         slug: cat.slug,
@@ -40,11 +46,7 @@ export default function TrendingSearches() {
         image: cat.image || undefined,
         businessCount: cat._count?.businesses || 0,
       }));
-    },
-    enabled: true,
-  });
-
-  const trendingCategories: TrendingCategory[] = data || [];
+  }, [categories]);
 
   const checkScroll = () => {
     if (scrollContainerRef.current) {
@@ -73,7 +75,7 @@ export default function TrendingSearches() {
     }
   };
 
-  if (isLoading) return <div className="h-64 animate-pulse bg-gray-50 rounded-lg" />;
+  if (loading) return <div className="h-64 animate-pulse bg-gray-50 rounded-lg" />;
   if (trendingCategories.length === 0) return null;
 
   const locationSlug = selectedCity?.slug || 'riyadh';

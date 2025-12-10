@@ -22,6 +22,9 @@ export default function CategoryIcons({ citySlug }: CategoryIconsProps) {
         .slice(0, 10);
     },
     enabled: !!citySlug,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   if (isLoading) {

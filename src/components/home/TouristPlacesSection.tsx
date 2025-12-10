@@ -22,6 +22,9 @@ export default function TouristPlacesSection() {
       return places.slice(0, 6); // Show top 6
     },
     enabled: true,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const checkScroll = () => {

@@ -27,6 +27,9 @@ export default function TopBusinesses({ sections, placeSlug, citySlug, cityName 
       const response = await categoryService.fetchCategories(1, 100);
       return response.data.categories;
     },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   // Fetch businesses for the first section only (we'll reuse the data)
@@ -36,6 +39,9 @@ export default function TopBusinesses({ sections, placeSlug, citySlug, cityName 
     queryKey: ['tourist-place-businesses-section', placeSlug, firstSection?.id],
     queryFn: () => touristPlaceService.getBusinesses(placeSlug, firstSection.id, { limit: 100 }),
     enabled: !!placeSlug && !!firstSection?.id,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const businessesBySection = useMemo(() => {
