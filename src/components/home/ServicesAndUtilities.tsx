@@ -12,7 +12,7 @@ import {
   Train,
   Hotel,
   Car,
-  Clock // Added for the message icon
+  Clock 
 } from 'lucide-react';
 
 export default function ServicesAndUtilities() {
@@ -24,17 +24,18 @@ export default function ServicesAndUtilities() {
         {/* Main Card Container */}
         <div className="relative bg-white rounded-xl border border-gray-200 p-8 shadow-sm overflow-hidden">
           
-          {/* Coming Soon Floating Badge (Centered, No Blur) */}
+          {/* Coming Soon Floating Badge */}
           <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-            <div className="bg-gray-900/95 text-white px-8 py-3 rounded-full shadow-2xl border border-gray-700 transform hover:scale-105 transition-transform">
+            {/* Changed background to #FF4D4F (Brand Red) */}
+            <div className="bg-primary text-white px-8 py-3 rounded-full shadow-2xl transform hover:scale-105 transition-transform">
               <div className="flex items-center gap-3">
-                <Clock className="w-5 h-5 text-[#FF4D4F]" />
-                <span className="text-lg font-bold tracking-wide">Services Coming Soon</span>
+                <Clock className="w-5 h-5 text-white" />
+                <span className="text-lg font-bold tracking-wide">Coming Soon</span>
               </div>
             </div>
           </div>
 
-          {/* Content (Fully Visible) */}
+          {/* Content */}
           <div className="relative z-0">
             
             {/* Section 1: Bills & Recharge */}
@@ -52,8 +53,8 @@ export default function ServicesAndUtilities() {
                 </span>
               </div>
 
-              {/* Right Icons Grid */}
-              <div className="flex-1 flex flex-wrap gap-4 md:gap-8 justify-start md:justify-end">
+              {/* Right Icons Grid - Kept original alignment for top section as requested changes were for Travel */}
+              <div className="flex-1 flex flex-wrap gap-4 md:gap-8 justify-start">
                 <ServiceIcon icon={<Smartphone className="text-cyan-500" />} label="Mobile" />
                 <ServiceIcon icon={<Zap className="text-yellow-500 fill-yellow-500" />} label="Electricity" />
                 <ServiceIcon icon={<Tv className="text-gray-600" />} label="DTH" />
@@ -79,19 +80,15 @@ export default function ServicesAndUtilities() {
                 </span>
               </div>
 
-              {/* Right Icons Grid */}
-              <div className="flex-1 flex flex-wrap gap-4 md:gap-8 justify-start md:justify-end">
+              {/* Right Icons Grid - Aligned to Start (Left) and Removed Subtitles */}
+              <div className="flex-1 flex flex-wrap gap-4 md:gap-8 justify-start">
                 <ServiceIcon 
                   icon={<Plane className="text-blue-500 fill-blue-100" />} 
                   label="Flight" 
-                  subLabel="Powered By Easemytrip.com"
-                  subLabelColor="text-green-600"
                 />
                 <ServiceIcon 
                   icon={<Bus className="text-red-500 fill-red-100" />} 
                   label="Bus" 
-                  subLabel="Affordable Rides"
-                  subLabelColor="text-green-600"
                 />
                 <ServiceIcon 
                   icon={<Train className="text-orange-600 fill-orange-100" />} 
@@ -100,14 +97,10 @@ export default function ServicesAndUtilities() {
                 <ServiceIcon 
                   icon={<Hotel className="text-pink-600 fill-pink-100" />} 
                   label="Hotel" 
-                  subLabel="Budget-friendly Stay"
-                  subLabelColor="text-green-600"
                 />
                 <ServiceIcon 
                   icon={<Car className="text-blue-600 fill-blue-100" />} 
                   label="Car Rentals" 
-                  subLabel="Drive Easy Anywhere"
-                  subLabelColor="text-green-600"
                 />
               </div>
             </div>
@@ -122,14 +115,10 @@ export default function ServicesAndUtilities() {
 // Reusable Icon Component
 function ServiceIcon({ 
   icon, 
-  label, 
-  subLabel,
-  subLabelColor = "text-green-600"
+  label
 }: { 
   icon: React.ReactNode; 
   label: string; 
-  subLabel?: string;
-  subLabelColor?: string;
 }) {
   return (
     <div className="flex flex-col items-center w-[85px]">
@@ -141,11 +130,6 @@ function ServiceIcon({
       <span className="text-[15px] text-gray-800 font-medium text-center leading-tight">
         {label}
       </span>
-      {subLabel && (
-        <span className={`text-[11px] ${subLabelColor} text-center mt-1 leading-tight`}>
-          {subLabel}
-        </span>
-      )}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useCityStore } from '@/store/cityStore';
 import { categoryService } from '@/services/category.service';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ChevronLeft } from 'lucide-react'; // Added ChevronLeft
 import { useRef, useState, useEffect } from 'react';
 
 interface TrendingCategory {
@@ -30,7 +30,7 @@ export default function TrendingSearches() {
       const categories = response.data.categories
         .filter((cat) => (cat._count?.businesses || 0) > 0)
         .sort((a, b) => (b._count?.businesses || 0) - (a._count?.businesses || 0))
-        .slice(0, 8); 
+        .slice(0, 6); 
       
       return categories.map((cat) => ({
         id: cat.id,
@@ -50,7 +50,7 @@ export default function TrendingSearches() {
     if (scrollContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
-      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollLeft(scrollLeft > 10); // Slight buffer to ensure it shows reliably
     }
   };
 
@@ -63,6 +63,13 @@ export default function TrendingSearches() {
   const scrollRight = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+    }
+  };
+
+  // New Function: Scroll Left
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' });
     }
   };
 
@@ -94,6 +101,19 @@ export default function TrendingSearches() {
           {/* Carousel Section */}
           <div className="relative group">
             
+            {/* Left Navigation Arrow */}
+            {canScrollLeft && (
+              <div className="absolute -left-3 top-1/2 -translate-y-1/2 z-10">
+                <button
+                  onClick={scrollLeft}
+                  className="bg-white border border-gray-200 rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:bg-gray-50 transition-all focus:outline-none"
+                  aria-label="Scroll left"
+                >
+                  <ChevronLeft className="w-6 h-6 text-gray-800" />
+                </button>
+              </div>
+            )}
+
             <div
               ref={scrollContainerRef}
               onScroll={checkScroll}
@@ -150,7 +170,7 @@ export default function TrendingSearches() {
               ))}
             </div>
 
-            {/* Right Navigation Arrow (Only visible if scrollable) */}
+            {/* Right Navigation Arrow */}
             {canScrollRight && (
               <div className="absolute -right-3 top-1/2 -translate-y-1/2 z-10">
                 <button

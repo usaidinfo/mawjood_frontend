@@ -18,6 +18,7 @@ import {
   Megaphone,
   BadgePercent,
   X,
+  Map,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -61,6 +62,11 @@ const sidebarItems = [
     name: 'Blogs',
     href: '/admin/blogs',
     icon: FileText,
+  },
+  {
+    name: 'Tourist Places',
+    href: '/admin/tourist-places',
+    icon: Map,
   },
   {
     name: 'Transactions',

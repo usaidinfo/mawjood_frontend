@@ -172,7 +172,6 @@ export default function FeaturedServices() {
           </div>
         </div>
 
-        {/* 6 columns grid if <= 6 items, otherwise scrollable */}
         <div
           className={`flex overflow-x-auto gap-4 pb-2 scrollbar-hide scroll-smooth sm:flex-nowrap ${
             section.items.length <= 6

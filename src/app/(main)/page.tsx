@@ -11,6 +11,7 @@ import Blogs from '@/components/home/Blogs';
 import QuickLinks from '@/components/home/QuickLinks';
 import ServicesAndUtilities from '@/components/home/ServicesAndUtilities';
 import TrendingSearches from '@/components/home/TrendingSearches';
+import TouristPlacesSection from '@/components/home/TouristPlacesSection';
 
 export default function Home() {
     const { t, i18n } = useTranslation('common');
@@ -25,6 +26,8 @@ export default function Home() {
       <FeaturedListings />
       <TrendingSearches />
       <ServicesAndUtilities />
+      <TouristPlacesSection />
+
       {/* <AdvertisementBanner /> */}
       <Reviews />
       <Blogs />

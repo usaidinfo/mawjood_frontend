@@ -169,6 +169,15 @@ export const API_ENDPOINTS = {
     GET_STATUS: '/api/cr/status',
     CHECK_OWNERSHIP: '/api/cr/ownership',
   },
+
+  TOURIST_PLACES: {
+    GET_ALL: '/api/tourist-places',
+    GET_BY_SLUG: (slug: string) => `/api/tourist-places/slug/${slug}`,
+    GET_BUSINESSES: (slug: string, sectionId: string) => `/api/tourist-places/slug/${slug}/businesses/${sectionId}`,
+    CREATE: '/api/tourist-places',
+    UPDATE: (id: string) => `/api/tourist-places/${id}`,
+    DELETE: (id: string) => `/api/tourist-places/${id}`,
+  },
 } as const;
 
 // Request configuration defaults

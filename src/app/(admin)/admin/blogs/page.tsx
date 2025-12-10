@@ -187,68 +187,6 @@ export default function BlogsPage() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="h-1 w-8 bg-[#1c4233] rounded-full"></div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Filters</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-              Status
-            </label>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full h-11 text-base border-2 border-gray-300 dark:border-gray-700 hover:border-[#1c4233] dark:hover:border-[#1c4233] transition-colors">
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="PUBLISHED">Published</SelectItem>
-                <SelectItem value="DRAFT">Draft</SelectItem>
-                <SelectItem value="SCHEDULED">Scheduled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-              Date Range
-            </label>
-            <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="w-full h-11 text-base border-2 border-gray-300 dark:border-gray-700 hover:border-[#1c4233] dark:hover:border-[#1c4233] transition-colors">
-                <SelectValue placeholder="All Time" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Time</SelectItem>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="week">Last 7 Days</SelectItem>
-                <SelectItem value="month">Last 30 Days</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-              Category
-            </label>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full h-11 text-base border-2 border-gray-300 dark:border-gray-700 hover:border-[#1c4233] dark:hover:border-[#1c4233] transition-colors">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
       {/* Blogs Table */}
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6">
         <BlogsTable
@@ -257,6 +195,13 @@ export default function BlogsPage() {
           onSearchChange={setSearchInput}
           searchValue={searchInput}
           loading={loading}
+          statusFilter={statusFilter}
+          dateFilter={dateFilter}
+          categoryFilter={categoryFilter}
+          categories={categories}
+          onStatusFilterChange={setStatusFilter}
+          onDateFilterChange={setDateFilter}
+          onCategoryFilterChange={setCategoryFilter}
         />
       </div>
 

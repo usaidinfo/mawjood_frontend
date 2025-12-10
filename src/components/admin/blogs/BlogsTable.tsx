@@ -23,8 +23,10 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Eye } from 'lucide-react';
 import { BulkActionsToolbar } from '@/components/admin/common/BulkActionsToolbar';
+import { BlogCategory } from '@/services/blog.service';
 
 interface BlogsTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -34,6 +36,13 @@ interface BlogsTableProps<TData, TValue> {
   onBulkExport?: (selectedRows: TData[]) => void;
   onBulkDelete?: (selectedRows: TData[]) => void;
   loading?: boolean;
+  statusFilter?: string;
+  dateFilter?: string;
+  categoryFilter?: string;
+  categories?: BlogCategory[];
+  onStatusFilterChange?: (value: string) => void;
+  onDateFilterChange?: (value: string) => void;
+  onCategoryFilterChange?: (value: string) => void;
 }
 
 export function BlogsTable<TData, TValue>({
@@ -44,6 +53,13 @@ export function BlogsTable<TData, TValue>({
   onBulkExport,
   onBulkDelete,
   loading = false,
+  statusFilter = 'all',
+  dateFilter = 'all',
+  categoryFilter = 'all',
+  categories = [],
+  onStatusFilterChange,
+  onDateFilterChange,
+  onCategoryFilterChange,
 }: BlogsTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -150,7 +166,7 @@ export function BlogsTable<TData, TValue>({
         exportFileName="blogs"
       />
 
-      {/* Search */}
+      {/* Search and Filters */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
@@ -170,6 +186,51 @@ export function BlogsTable<TData, TValue>({
             className="pl-12 h-11 text-base border-2 border-gray-300 dark:border-gray-700 focus:border-[#1c4233] dark:focus:border-[#1c4233] transition-colors"
           />
         </div>
+        
+        {/* Filters inline with search */}
+        {onStatusFilterChange && (
+          <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+            <SelectTrigger className="w-full md:w-[160px] text-base border-2 border-gray-300 dark:border-gray-700 hover:border-[#1c4233] dark:hover:border-[#1c4233] transition-colors">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="PUBLISHED">Published</SelectItem>
+              <SelectItem value="DRAFT">Draft</SelectItem>
+              <SelectItem value="SCHEDULED">Scheduled</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
+
+        {onDateFilterChange && (
+          <Select value={dateFilter} onValueChange={onDateFilterChange}>
+            <SelectTrigger className="w-full md:w-[160px] text-base border-2 border-gray-300 dark:border-gray-700 hover:border-[#1c4233] dark:hover:border-[#1c4233] transition-colors">
+              <SelectValue placeholder="All Time" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="week">Last 7 Days</SelectItem>
+              <SelectItem value="month">Last 30 Days</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
+
+        {onCategoryFilterChange && (
+          <Select value={categoryFilter} onValueChange={onCategoryFilterChange}>
+            <SelectTrigger className="w-full md:w-[180px] text-base border-2 border-gray-300 dark:border-gray-700 hover:border-[#1c4233] dark:hover:border-[#1c4233] transition-colors">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {/* Table */}
