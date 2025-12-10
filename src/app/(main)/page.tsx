@@ -9,6 +9,8 @@ import FeaturedListings from '@/components/home/FeaturedListings';
 import Reviews from '@/components/home/Reviews';
 import Blogs from '@/components/home/Blogs';
 import QuickLinks from '@/components/home/QuickLinks';
+import ServicesAndUtilities from '@/components/home/ServicesAndUtilities';
+import TrendingSearches from '@/components/home/TrendingSearches';
 
 export default function Home() {
     const { t, i18n } = useTranslation('common');
@@ -17,9 +19,12 @@ export default function Home() {
     <div className="font-sans">
       <HeroSection />
       <CategoryListing/>
+
       <AdvertisementBanner />
       <FeaturedServices />
       <FeaturedListings />
+      <TrendingSearches />
+      <ServicesAndUtilities />
       {/* <AdvertisementBanner /> */}
       <Reviews />
       <Blogs />

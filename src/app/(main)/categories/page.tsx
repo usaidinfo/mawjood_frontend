@@ -66,76 +66,57 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            All Categories
+        {/* Header with Search */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">
+            Popular Categories
           </h1>
-          <p className="text-lg text-gray-600">
-            Browse all business categories ({total} total)
-          </p>
-        </div>
-
-        {/* Search */}
-        <div className="mb-8">
-          <div className="relative max-w-2xl mx-auto">
-            <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="relative w-64">
+            <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
               type="text"
-              placeholder="Search categories..."
+              placeholder="Search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-5 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-lg"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
             />
           </div>
         </div>
 
-        {/* Categories Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
+        {/* Compact Categories Grid - 4 columns, icon + text side by side */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
           {filteredCategories.map((category) => (
             <Link
               key={category.id}
               href={`/${locationSlug}/${category.slug}`}
-              className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105 group"
+              className="bg-white rounded-lg p-3 border border-gray-200 hover:border-primary hover:bg-gray-50 transition-all duration-200 group"
             >
-              <div className="flex flex-col items-center text-center">
-                {/* Icon */}
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 bg-gray-50 group-hover:bg-primary/10 transition-colors duration-300">
+              <div className="flex items-center gap-3">
+                {/* Icon - smaller, compact */}
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-50 group-hover:bg-primary/10 transition-colors flex-shrink-0">
                   {category.icon ? (
                     <Image
                       src={category.icon}
                       alt={category.name}
-                      width={40}
-                      height={40}
+                      width={24}
+                      height={24}
                       className="object-contain"
                     />
                   ) : (
-                    <span className="text-3xl">📁</span>
+                    <span className="text-xl">📁</span>
                   )}
                 </div>
 
-                {/* Name */}
-                <h3 className="text-sm font-semibold text-gray-800 group-hover:text-primary transition-colors duration-300">
-                  {category.name}
-                </h3>
-
-                {/* Business count */}
-                {category._count?.businesses !== undefined && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    {category._count.businesses} {category._count.businesses === 1 ? 'Business' : 'Businesses'}
-                  </p>
-                )}
-
-                {/* Subcategories count */}
-                {category.subcategories && category.subcategories.length > 0 && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    {category.subcategories.length} {category.subcategories.length === 1 ? 'Subcategory' : 'Subcategories'}
-                  </p>
-                )}
+                {/* Name - compact text */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-medium text-gray-900 group-hover:text-primary transition-colors truncate">
+                    {category.name}
+                  </h3>
+                </div>
               </div>
             </Link>
           ))}
@@ -143,26 +124,25 @@ export default function CategoriesPage() {
 
         {/* No results */}
         {filteredCategories.length === 0 && !loading && (
-          <div className="text-center py-16">
-            <p className="text-gray-500 text-lg">No categories found</p>
+          <div className="text-center py-12">
+            <p className="text-gray-500">No categories found</p>
           </div>
         )}
 
-        {/* Pagination - only show if more than 20 categories and not searching */}
+        {/* Compact Pagination - only show if more than 20 categories and not searching */}
         {totalPages > 1 && !searchQuery && total > 20 && (
-          <div className="flex justify-center items-center gap-2 mt-8">
+          <div className="flex justify-center items-center gap-2 mt-6">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-4 py-2 border rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              className="px-3 py-1.5 border rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm"
             >
-              <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+              <ChevronLeft className="w-4 h-4 mr-1" /> Prev
             </button>
             
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               {[...Array(totalPages)].map((_, i) => {
                 const pageNum = i + 1;
-                // Show first page, last page, current page, and pages around current
                 if (
                   pageNum === 1 ||
                   pageNum === totalPages ||
@@ -172,7 +152,7 @@ export default function CategoriesPage() {
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`px-4 py-2 rounded-lg ${
+                      className={`px-3 py-1.5 rounded-md text-sm ${
                         currentPage === pageNum
                           ? 'bg-primary text-white'
                           : 'border hover:bg-gray-100'
@@ -185,7 +165,7 @@ export default function CategoriesPage() {
                   pageNum === currentPage - 2 ||
                   pageNum === currentPage + 2
                 ) {
-                  return <span key={pageNum} className="px-2">...</span>;
+                  return <span key={pageNum} className="px-1">...</span>;
                 }
                 return null;
               })}
@@ -194,7 +174,7 @@ export default function CategoriesPage() {
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-4 py-2 border rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              className="px-3 py-1.5 border rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm"
             >
               Next <ChevronRight className="w-4 h-4 ml-1" />
             </button>

@@ -170,21 +170,23 @@ export default function FeaturedServices() {
               </p>
             )}
           </div>
-          <Link
-            href={`/${locationSlug}/${section.id}`}
-            className="text-primary font-medium hover:underline whitespace-nowrap"
-          >
-            View More →
-          </Link>
         </div>
 
-        {/* 6 columns grid - scrollable on mobile */}
-        <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-hide scroll-smooth sm:flex-nowrap lg:grid lg:grid-cols-6 lg:gap-6 lg:overflow-visible lg:pb-0">
+        {/* 6 columns grid if <= 6 items, otherwise scrollable */}
+        <div
+          className={`flex overflow-x-auto gap-4 pb-2 scrollbar-hide scroll-smooth sm:flex-nowrap ${
+            section.items.length <= 6
+              ? 'lg:grid lg:grid-cols-6 lg:gap-6 lg:overflow-visible lg:pb-0'
+              : ''
+          }`}
+        >
           {section.items.map((item) => (
             <Link
               key={item.id}
               href={`/${locationSlug}/${item.slug}`}
-              className="group block relative rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 flex-shrink-0 w-40 lg:w-auto"
+              className={`group block relative rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 flex-shrink-0 w-40 ${
+                section.items.length <= 6 ? 'lg:w-auto' : ''
+              }`}
             >
               {/* Image */}
               <div className="relative h-48 sm:h-56 md:h-64 w-full aspect-square">
