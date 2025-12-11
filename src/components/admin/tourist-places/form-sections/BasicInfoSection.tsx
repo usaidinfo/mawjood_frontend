@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -15,6 +15,7 @@ interface BasicInfoSectionProps {
   cityId: string;
   isActive: boolean;
   cities: City[];
+  selectedCityName?: string; // Fallback city name from touristPlace
   onTitleChange: (value: string) => void;
   onSlugChange: (value: string) => void;
   onSubtitleChange: (value: string) => void;
@@ -30,6 +31,7 @@ export function BasicInfoSection({
   cityId,
   isActive,
   cities,
+  selectedCityName,
   onTitleChange,
   onSlugChange,
   onSubtitleChange,
@@ -39,11 +41,28 @@ export function BasicInfoSection({
 }: BasicInfoSectionProps) {
   const [citySearch, setCitySearch] = useState('');
 
-  const filteredCities = cities.filter(city =>
-    city.name.toLowerCase().includes(citySearch.toLowerCase())
-  );
+  const selectedCity = useMemo(() => {
+    const found = cities.find(city => city.id === cityId);
+    // If city not found in list but we have cityId and cityName, create a temporary city object
+    if (!found && cityId && selectedCityName) {
+      return { id: cityId, name: selectedCityName } as City;
+    }
+    return found;
+  }, [cities, cityId, selectedCityName]);
 
-  const selectedCity = cities.find(city => city.id === cityId);
+  // Always include selected city in filtered list, even if it doesn't match search
+  const filteredCities = useMemo(() => {
+    const filtered = cities.filter(city =>
+      city.name.toLowerCase().includes(citySearch.toLowerCase())
+    );
+    
+    // If we have a selected city and it's not in the filtered list, add it at the top
+    if (selectedCity && cityId && !filtered.find(c => c.id === cityId)) {
+      return [selectedCity, ...filtered];
+    }
+    
+    return filtered;
+  }, [cities, citySearch, selectedCity, cityId]);
 
   return (
     <div className="bg-white p-6 rounded-lg border space-y-4">
@@ -89,17 +108,15 @@ export function BasicInfoSection({
         <div>
           <Label htmlFor="city">City *</Label>
           <Select 
-            value={cityId} 
+            value={cityId || undefined} 
             onValueChange={(value) => {
               onCityChange(value);
-              setCitySearch(''); // Clear search when city is selected
+              setCitySearch(''); 
             }}
             required
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Search and select a city">
-                {selectedCity ? selectedCity.name : 'Search and select a city'}
-              </SelectValue>
+              <SelectValue placeholder="Search and select a city" />
             </SelectTrigger>
             <SelectContent>
               {/* Search Input */}
@@ -137,9 +154,14 @@ export function BasicInfoSection({
                       {city.name}
                     </SelectItem>
                   ))
+                ) : cityId && selectedCityName ? (
+                  // Show selected city even if not in filtered list
+                  <SelectItem key={cityId} value={cityId}>
+                    {selectedCityName}
+                  </SelectItem>
                 ) : (
                   <div className="px-2 py-6 text-center text-sm text-gray-500">
-                    No cities found matching "{citySearch}"
+                    {citySearch ? `No cities found matching "${citySearch}"` : 'No cities available'}
                   </div>
                 )}
               </div>

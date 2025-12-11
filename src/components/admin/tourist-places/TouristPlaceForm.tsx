@@ -269,6 +269,7 @@ export function TouristPlaceForm({ touristPlace, onSubmit, isSubmitting }: Touri
         cityId={cityId}
         isActive={isActive}
         cities={cities}
+        selectedCityName={touristPlace?.city?.name}
         onTitleChange={handleTitleChange}
         onSlugChange={setSlug}
         onSubtitleChange={setSubtitle}
