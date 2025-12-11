@@ -93,29 +93,6 @@ class EnquiryService {
   }
 
   /**
-   * Get all enquiries (Admin)
-   */
-  async getAllEnquiries(filters?: EnquiryFilters): Promise<EnquiryListResponse['data']> {
-    try {
-      const params = new URLSearchParams();
-      if (filters?.page) params.append('page', filters.page.toString());
-      if (filters?.limit) params.append('limit', filters.limit.toString());
-      if (filters?.status) params.append('status', filters.status);
-      if (filters?.search) params.append('search', filters.search);
-      if (filters?.startDate) params.append('startDate', filters.startDate);
-      if (filters?.endDate) params.append('endDate', filters.endDate);
-
-      const response = await axiosInstance.get<EnquiryListResponse>(
-        `/api/enquiries/admin/all?${params.toString()}`
-      );
-      return response.data.data;
-    } catch (error) {
-      const axiosError = error as AxiosError<{ message: string }>;
-      throw new Error(axiosError.response?.data?.message || 'Failed to fetch enquiries');
-    }
-  }
-
-  /**
    * Get business enquiries (Business Owner)
    */
   async getBusinessEnquiries(filters?: EnquiryFilters): Promise<EnquiryListResponse['data']> {
