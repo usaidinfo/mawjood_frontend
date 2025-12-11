@@ -1,11 +1,13 @@
 'use client';
 
-import { Star, MapPin, Phone, Globe, Heart, Share2, StarIcon } from 'lucide-react';
+import { Star, MapPin, Phone, Globe, Heart, Share2, StarIcon, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import { EnquiryDialog } from '@/components/enquiry/EnquiryDialog';
 
 interface Business {
   id: string;
@@ -43,8 +45,10 @@ interface Props {
 
 export default function BusinessHeader({ business }: Props) {
   const [copied, setCopied] = useState(false);
+  const [enquiryDialogOpen, setEnquiryDialogOpen] = useState(false);
   const { isFavorite, toggleFavorite, isLoading: favLoading } = useFavorites();
   const { isAuthenticated } = useAuthStore();
+  const router = useRouter();
   
   const handleShare = async () => {
     const url = window.location.href;
@@ -93,6 +97,14 @@ export default function BusinessHeader({ business }: Props) {
         }
       }, 500);
     }
+  };
+
+  const handleEnquiry = () => {
+    if (!isAuthenticated) {
+      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+    setEnquiryDialogOpen(true);
   };
 
   return (
@@ -226,10 +238,26 @@ export default function BusinessHeader({ business }: Props) {
                   </span>
                 )}
               </button>
+
+              <button 
+                onClick={handleEnquiry}
+                className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-semibold transition-colors text-sm md:text-base"
+              >
+                <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="hidden sm:inline">Send Enquiry</span>
+                <span className="sm:hidden">Enquiry</span>
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      <EnquiryDialog
+        open={enquiryDialogOpen}
+        onOpenChange={setEnquiryDialogOpen}
+        businessId={business.id}
+        businessName={business.name}
+      />
     </div>
   );
 }

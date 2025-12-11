@@ -77,11 +77,9 @@ export function TouristPlaceForm({ touristPlace, onSubmit, isSubmitting }: Touri
       setTitle(touristPlace.title || '');
       setSlug(touristPlace.slug || '');
       setSubtitle(touristPlace.subtitle || '');
-      // Ensure cityId is set properly
       if (touristPlace.city?.id) {
         setCityId(touristPlace.city.id);
       }
-      // Set about - handle both string and HTML
       const aboutValue = touristPlace.about || '';
       setAbout(aboutValue);
       setMetaTitle(touristPlace.metaTitle || '');
@@ -93,10 +91,8 @@ export function TouristPlaceForm({ touristPlace, onSubmit, isSubmitting }: Touri
         : touristPlace.galleryImages
           ? JSON.parse(touristPlace.galleryImages as any)
           : [];
-      // Convert existing URLs to gallery image format
       setGalleryImages(images.map((url: string) => ({ url })));
 
-      // Handle attractions - ensure they're in the right format
       const attractionsData = touristPlace.attractions || [];
       setAttractions(attractionsData.map((a: any) => ({
         name: a.name || '',
@@ -110,7 +106,6 @@ export function TouristPlaceForm({ touristPlace, onSubmit, isSubmitting }: Touri
         order: a.order || 0,
       })));
       
-      // Handle business sections - ensure categoryIds is an array
       const sectionsData = touristPlace.businessSections || [];
       setBusinessSections(sectionsData.map((s: any) => ({
         title: s.title || '',
@@ -141,7 +136,6 @@ export function TouristPlaceForm({ touristPlace, onSubmit, isSubmitting }: Touri
         setCities(citiesData);
         setCategories(categoriesData.data.categories || []);
         
-        // If editing and cityId is set but not in cities yet, wait for cities to load
         if (touristPlace && touristPlace.city?.id && citiesData.length > 0) {
           const cityExists = citiesData.find(c => c.id === touristPlace.city.id);
           if (cityExists && !cityId) {
@@ -196,34 +190,29 @@ export function TouristPlaceForm({ touristPlace, onSubmit, isSubmitting }: Touri
     if (metaDescription) formData.append('metaDescription', metaDescription);
     formData.append('isActive', isActive.toString());
     
-    // Add existing gallery images as JSON (URLs)
     if (existingImageUrls.length > 0) {
       formData.append('galleryImages', JSON.stringify(existingImageUrls));
     }
     
-    // Add new image files
     newImageFiles.forEach((file) => {
       formData.append('galleryImages', file);
     });
     
-    // Handle attraction images - separate existing URLs from new files
     const attractionsWithImages = attractions.map((a, i) => {
       const { imageFile, imagePreview, ...attractionData } = a;
       return {
         ...attractionData,
-        image: imageFile ? '' : a.image, // If file exists, image will be uploaded separately
+        image: imageFile ? '' : a.image, 
         order: i,
       };
     });
     
-    // Add attraction image files
     attractions.forEach((attraction, index) => {
       if (attraction.imageFile) {
         formData.append('attractionImages', attraction.imageFile);
       }
     });
     
-    // Add JSON fields
     formData.append('bestTimeToVisit', JSON.stringify(bestTimeToVisit));
     formData.append('attractions', JSON.stringify(attractionsWithImages));
     formData.append('businessSections', JSON.stringify(businessSections.map((s, i) => ({

@@ -19,6 +19,7 @@ import {
   BadgePercent,
   X,
   Map,
+  MessageSquare,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -47,6 +48,11 @@ const sidebarItems = [
     name: 'Reviews',
     href: '/admin/reviews',
     icon: Star,
+  },
+  {
+    name: 'Business Enquiry',
+    href: '/admin/enquiries',
+    icon: MessageSquare,
   },
   {
     name: 'Categories',

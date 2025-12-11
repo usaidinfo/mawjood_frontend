@@ -15,6 +15,7 @@ import {
   Settings,
   CreditCard,
   X,
+  MessageSquare,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -43,6 +44,11 @@ const sidebarItems = [
     name: 'Reviews',
     href: '/dashboard/reviews',
     icon: Star,
+  },
+  {
+    name: 'Enquiries',
+    href: '/dashboard/enquiries',
+    icon: MessageSquare,
   },
   {
     name: 'Transactions/Billing',

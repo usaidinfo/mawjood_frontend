@@ -1,9 +1,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Heart, Phone, MapPin, Star, Sparkles } from 'lucide-react';
+import { Heart, Phone, MapPin, Star, Sparkles, MessageSquare } from 'lucide-react';
 import { Business } from '@/services/business.service';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useCityStore } from '@/store/cityStore';
+import { useState } from 'react';
+import { EnquiryDialog } from '@/components/enquiry/EnquiryDialog';
+import { useAuthStore } from '@/store/authStore';
+import { useRouter } from 'next/navigation';
 
 interface BusinessCardProps {
   business: Business;
@@ -18,12 +22,26 @@ export default function BusinessCard({
 }: BusinessCardProps) {
   const { isFavorite, toggleFavorite, isLoading } = useFavorites();
   const { selectedCity, selectedLocation } = useCityStore();
+  const { isAuthenticated } = useAuthStore();
+  const router = useRouter();
+  const [enquiryDialogOpen, setEnquiryDialogOpen] = useState(false);
+  
   const descriptionText = business.description
     ? business.description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
     : '';
 
   // Check if business has active subscription (top placement)
   const hasActiveSubscription = business.promotedUntil && new Date(business.promotedUntil) > new Date();
+
+  const handleEnquiryClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      router.push('/login?redirect=' + encodeURIComponent(`/businesses/${business.slug}`));
+      return;
+    }
+    setEnquiryDialogOpen(true);
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
@@ -152,7 +170,25 @@ export default function BusinessCard({
             </span>
           </div>
         </div>
+
+        {/* Enquiry Button */}
+        <div className="pt-3 mt-3 border-t border-gray-200">
+          <button
+            onClick={handleEnquiryClick}
+            className="w-full flex items-center justify-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
+          >
+            <MessageSquare className="w-4 h-4" />
+            Send Enquiry
+          </button>
+        </div>
       </div>
+
+      <EnquiryDialog
+        open={enquiryDialogOpen}
+        onOpenChange={setEnquiryDialogOpen}
+        businessId={business.id}
+        businessName={business.name}
+      />
     </div>
   );
 }
