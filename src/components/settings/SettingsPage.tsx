@@ -18,12 +18,17 @@ import {
   XCircle,
   Trash2,
   CheckCheck,
+  MessageSquare,
+  Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { notificationService } from '@/services/notification.service';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 import Link from 'next/link';
+import { enquiryService, Enquiry, EnquiryStatus } from '@/services/enquiry.service';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 interface UserProfile {
   id: string;
@@ -40,11 +45,266 @@ interface UserProfile {
   updatedAt: string;
 }
 
-export default function SettingsPage() {
+const statusColors: Record<EnquiryStatus, string> = {
+  OPEN: 'bg-blue-100 text-blue-800',
+  IN_PROGRESS: 'bg-yellow-100 text-yellow-800',
+  CLOSED: 'bg-green-100 text-green-800',
+  REJECTED: 'bg-red-100 text-red-800',
+};
+
+const statusIcons: Record<EnquiryStatus, any> = {
+  OPEN: XCircle,
+  IN_PROGRESS: Clock,
+  CLOSED: CheckCircle2,
+  REJECTED: XCircle,
+};
+
+function EnquiriesTabContent() {
+  const [filters, setFilters] = useState<{ page: number; limit: number; status?: EnquiryStatus }>({
+    page: 1,
+    limit: 20,
+  });
+  const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['user-enquiries', filters],
+    queryFn: () => enquiryService.getUserEnquiries(filters),
+    staleTime: 30000,
+  });
+
+  const enquiries = data?.enquiries || [];
+  const pagination = data?.pagination;
+
+  const handleStatusChange = (status: EnquiryStatus | 'all') => {
+    setFilters({ ...filters, status: status === 'all' ? undefined : status, page: 1 });
+  };
+
+  const handleViewEnquiry = (enquiry: Enquiry) => {
+    setSelectedEnquiry(enquiry);
+    setViewDialogOpen(true);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <MessageSquare className="w-5 h-5" />
+            My Enquiries
+          </h2>
+        </div>
+
+        {/* Filters */}
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => handleStatusChange('all')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                !filters.status
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              All
+            </button>
+            {Object.values(EnquiryStatus).map((status) => {
+              const Icon = statusIcons[status];
+              return (
+                <button
+                  key={status}
+                  onClick={() => handleStatusChange(status)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                    filters.status === status
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {status.replace('_', ' ')}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Enquiries List */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : enquiries.length > 0 ? (
+          <>
+            <div className="space-y-4">
+              {enquiries.map((enquiry) => {
+                const StatusIcon = statusIcons[enquiry.status];
+                const hasResponse = !!enquiry.response;
+                return (
+                  <div
+                    key={enquiry.id}
+                    className={`p-4 rounded-lg border ${
+                      hasResponse
+                        ? 'bg-primary/5 border-primary/20'
+                        : 'bg-white border-gray-200'
+                    } hover:shadow-sm transition-shadow`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-gray-900">
+                            {enquiry.business?.name || 'Business'}
+                          </h3>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${statusColors[enquiry.status]}`}>
+                            <StatusIcon className="w-3 h-3" />
+                            {enquiry.status.replace('_', ' ')}
+                          </span>
+                          {hasResponse && (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              Response Received
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-700 mb-2 line-clamp-2">{enquiry.message}</p>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <span>{format(new Date(enquiry.createdAt), 'MMM dd, yyyy')}</span>
+                          {hasResponse && enquiry.responseDate && (
+                            <span className="text-green-600 font-medium">
+                              Response: {format(new Date(enquiry.responseDate), 'MMM dd, yyyy')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleViewEnquiry(enquiry)}
+                        className="px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Pagination */}
+            {pagination && pagination.pages > 1 && (
+              <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                <div className="text-sm text-gray-600">
+                  Showing {(filters.page - 1) * filters.limit + 1} to{' '}
+                  {Math.min(filters.page * filters.limit, pagination.total)} of {pagination.total} enquiries
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setFilters({ ...filters, page: Math.max(1, filters.page - 1) })}
+                    disabled={filters.page === 1 || isLoading}
+                    className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sm text-gray-600">
+                    Page {filters.page} of {pagination.pages}
+                  </span>
+                  <button
+                    onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
+                    disabled={filters.page >= pagination.pages || isLoading}
+                    className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500">No enquiries yet</p>
+            <p className="text-sm text-gray-400 mt-1">
+              Your enquiries will appear here
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* View Enquiry Dialog */}
+      {selectedEnquiry && (
+        <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Enquiry Details</DialogTitle>
+              <DialogDescription>
+                View your enquiry and response from {selectedEnquiry.business?.name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Business</Label>
+                <Link
+                  href={`/business/${selectedEnquiry.business?.slug}`}
+                  className="text-primary hover:underline font-medium"
+                >
+                  {selectedEnquiry.business?.name}
+                </Link>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Status</Label>
+                <div className="mt-1">
+                  {(() => {
+                    const StatusIcon = statusIcons[selectedEnquiry.status];
+                    return (
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 w-fit ${statusColors[selectedEnquiry.status]}`}>
+                        <StatusIcon className="w-4 h-4" />
+                        {selectedEnquiry.status.replace('_', ' ')}
+                      </span>
+                    );
+                  })()}
+                </div>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Your Message</Label>
+                <p className="mt-1 text-gray-900 whitespace-pre-wrap">{selectedEnquiry.message}</p>
+              </div>
+              {selectedEnquiry.response ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <Label className="text-sm font-medium text-green-900 flex items-center gap-2 mb-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Response from Business
+                    {selectedEnquiry.responseDate && (
+                      <span className="text-xs text-green-700 font-normal">
+                        ({format(new Date(selectedEnquiry.responseDate), 'MMM dd, yyyy hh:mm a')})
+                      </span>
+                    )}
+                  </Label>
+                  <p className="text-gray-900 whitespace-pre-wrap">{selectedEnquiry.response}</p>
+                </div>
+              ) : (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <p className="text-sm text-yellow-800">
+                    No response yet. The business owner will respond soon.
+                  </p>
+                </div>
+              )}
+              <div className="text-xs text-gray-500">
+                Submitted on {format(new Date(selectedEnquiry.createdAt), 'MMM dd, yyyy hh:mm a')}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+}
+
+export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 'profile' | 'security' | 'notifications' | 'enquiries' | 'preferences' }) {
   const { user, setUser } = useAuthStore();
   const queryClient = useQueryClient();
-  const [selectedTab, setSelectedTab] = useState<'profile' | 'security' | 'notifications' | 'preferences'>('profile');
+  const [selectedTab, setSelectedTab] = useState<'profile' | 'security' | 'notifications' | 'enquiries' | 'preferences'>(initialTab);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  // Update tab when initialTab changes
+  useEffect(() => {
+    setSelectedTab(initialTab);
+  }, [initialTab]);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -218,6 +478,7 @@ export default function SettingsPage() {
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'enquiries', label: 'My Enquiries', icon: MessageSquare },
   ];
 
   return (
@@ -601,6 +862,8 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+
+      {selectedTab === 'enquiries' && <EnquiriesTabContent />}
 
       {selectedTab === 'preferences' && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">

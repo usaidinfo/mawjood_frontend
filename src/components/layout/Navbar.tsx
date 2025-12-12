@@ -126,7 +126,6 @@ export default function Navbar() {
               {/* Auth / User Menu */}
               {showAuthUI && isAuthenticated && user ? (
                 <div className="flex items-center gap-4 pl-2 border-l border-gray-200 h-8">
-                  
                   <Popover open={showUserMenu} onOpenChange={setShowUserMenu}>
                     <PopoverTrigger asChild>
                       <button className="flex items-center gap-2 hover:bg-gray-50 p-1 rounded-full transition-colors">

@@ -13,6 +13,7 @@ export default function PlacesToVisit({ attractions }: PlacesToVisitProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<{ [key: string]: boolean }>({});
 
   const checkScroll = () => {
     if (scrollContainerRef.current) {
@@ -38,6 +39,18 @@ export default function PlacesToVisit({ attractions }: PlacesToVisitProps) {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' });
     }
+  };
+
+  const toggleDescription = (attractionId: string) => {
+    setExpandedDescriptions(prev => ({
+      ...prev,
+      [attractionId]: !prev[attractionId]
+    }));
+  };
+
+  const shouldTruncate = (description: string | null | undefined) => {
+    if (!description) return false;
+    return description.length > 100;
   };
 
   if (!attractions || attractions.length === 0) return null;
@@ -73,44 +86,64 @@ export default function PlacesToVisit({ attractions }: PlacesToVisitProps) {
           className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-hide px-1"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {attractions.map((attraction) => (
-            <div
-              key={attraction.id}
-              className="flex-shrink-0 w-[280px] sm:w-[300px] md:w-[320px] bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-all"
-            >
-              <div className="relative h-[160px] sm:h-[180px] md:h-[200px] bg-gray-100">
-                <Image
-                  src={attraction.image}
-                  alt={attraction.name}
-                  fill
-                  className="object-cover"
-                  unoptimized
-                />
-                {attraction.rating && (
-                  <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-green-500 text-white px-2 py-1 rounded text-xs sm:text-sm font-semibold">
-                    {attraction.rating} ★
-                  </div>
-                )}
+          {attractions.map((attraction) => {
+            const isExpanded = expandedDescriptions[attraction.id];
+            const needsTruncation = shouldTruncate(attraction.description);
+            const showDescription = attraction.description ? (
+              isExpanded 
+                ? attraction.description 
+                : (needsTruncation ? attraction.description.substring(0, 100) + '...' : attraction.description)
+            ) : null;
+
+            return (
+              <div
+                key={attraction.id}
+                className="flex-shrink-0 w-[280px] sm:w-[300px] md:w-[320px] bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-all"
+              >
+                <div className="relative h-[160px] sm:h-[180px] md:h-[200px] bg-gray-100">
+                  <Image
+                    src={attraction.image}
+                    alt={attraction.name}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+                  {attraction.rating && (
+                    <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-green-500 text-white px-2 py-1 rounded text-xs sm:text-sm font-semibold">
+                      {attraction.rating} ★
+                    </div>
+                  )}
+                </div>
+                <div className="p-3 sm:p-4">
+                  <h3 className="font-bold text-base sm:text-lg text-gray-900 mb-1">
+                    {attraction.name}
+                  </h3>
+                  {showDescription && (
+                    <div className="mb-2 sm:mb-3">
+                      <p className="text-xs sm:text-sm text-gray-600">
+                        {showDescription}
+                      </p>
+                      {needsTruncation && (
+                        <button
+                          onClick={() => toggleDescription(attraction.id)}
+                          className="text-xs sm:text-sm text-primary hover:text-primary/80 font-medium mt-1"
+                        >
+                          {isExpanded ? 'Read less' : 'Read more...'}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {(attraction.openTime || attraction.closeTime) && (
+                    <p className="text-xs text-gray-500">
+                      {attraction.openTime && `Opens: ${attraction.openTime}`}
+                      {attraction.openTime && attraction.closeTime && ' • '}
+                      {attraction.closeTime && `Closes: ${attraction.closeTime}`}
+                    </p>
+                  )}
+                </div>
               </div>
-              <div className="p-3 sm:p-4">
-                <h3 className="font-bold text-base sm:text-lg text-gray-900 mb-1">
-                  {attraction.name}
-                </h3>
-                {attraction.description && (
-                  <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 line-clamp-2">
-                    {attraction.description}
-                  </p>
-                )}
-                {(attraction.openTime || attraction.closeTime) && (
-                  <p className="text-xs text-gray-500">
-                    {attraction.openTime && `Opens: ${attraction.openTime}`}
-                    {attraction.openTime && attraction.closeTime && ' • '}
-                    {attraction.closeTime && `Closes: ${attraction.closeTime}`}
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {canScrollRight && (

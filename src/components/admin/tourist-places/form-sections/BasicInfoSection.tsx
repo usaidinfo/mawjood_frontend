@@ -116,7 +116,7 @@ export function BasicInfoSection({
             required
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Search and select a city" />
+              <SelectValue placeholder={selectedCity ? selectedCity.name : "Search and select a city"} />
             </SelectTrigger>
             <SelectContent>
               {/* Search Input */}

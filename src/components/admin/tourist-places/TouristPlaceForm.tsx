@@ -77,8 +77,10 @@ export function TouristPlaceForm({ touristPlace, onSubmit, isSubmitting }: Touri
       setTitle(touristPlace.title || '');
       setSlug(touristPlace.slug || '');
       setSubtitle(touristPlace.subtitle || '');
-      if (touristPlace.city?.id) {
-        setCityId(touristPlace.city.id);
+      // Set cityId immediately from touristPlace.city.id
+      const placeCityId = touristPlace.city?.id;
+      if (placeCityId) {
+        setCityId(placeCityId);
       }
       const aboutValue = touristPlace.about || '';
       setAbout(aboutValue);
@@ -136,10 +138,18 @@ export function TouristPlaceForm({ touristPlace, onSubmit, isSubmitting }: Touri
         setCities(citiesData);
         setCategories(categoriesData.data.categories || []);
         
-        if (touristPlace && touristPlace.city?.id && citiesData.length > 0) {
-          const cityExists = citiesData.find(c => c.id === touristPlace.city.id);
-          if (cityExists && !cityId) {
-            setCityId(touristPlace.city.id);
+        // Ensure cityId is set if we have touristPlace with city
+        if (touristPlace) {
+          const placeCityId = touristPlace.city?.id;
+          if (placeCityId) {
+            // Verify city exists in loaded cities, if not, keep the cityId anyway (will use selectedCityName)
+            const cityExists = citiesData.find(c => c.id === placeCityId);
+            if (cityExists) {
+              setCityId(placeCityId);
+            } else if (!cityId) {
+              // If cityId is not set yet, set it even if city not found in list
+              setCityId(placeCityId);
+            }
           }
         }
       } catch (error: any) {
@@ -163,8 +173,27 @@ export function TouristPlaceForm({ touristPlace, onSubmit, isSubmitting }: Touri
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!title || !slug || !cityId) {
-      toast.error('Please fill in all required fields');
+    // Validate required fields with specific messages
+    const missingFields: string[] = [];
+    if (!title || title.trim() === '') missingFields.push('Title');
+    if (!slug || slug.trim() === '') missingFields.push('Slug');
+    if (!cityId || cityId.trim() === '') missingFields.push('City');
+
+    if (missingFields.length > 0) {
+      toast.error(`Please fill in the following required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    // Validate attractions if any are added
+    const invalidAttractions: string[] = [];
+    attractions.forEach((attraction, index) => {
+      if (!attraction.name || attraction.name.trim() === '') {
+        invalidAttractions.push(`Attraction ${index + 1} - Name is required`);
+      }
+    });
+
+    if (invalidAttractions.length > 0) {
+      toast.error(`Please fix the following:\n${invalidAttractions.join('\n')}`);
       return;
     }
 

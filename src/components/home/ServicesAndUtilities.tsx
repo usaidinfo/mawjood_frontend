@@ -122,7 +122,7 @@ function ServiceIcon({
 }) {
   return (
     <div className="flex flex-col items-center w-[85px]">
-      <div className="w-[70px] h-[70px] rounded-[18px] border border-gray-200 flex items-center justify-center bg-white hover:border-[#FF4D4F] transition-colors shadow-sm mb-3">
+      <div className="w-[70px] h-[70px] rounded-[18px] border border-gray-200 flex items-center justify-center bg-white hover:border-primary transition-colors shadow-sm mb-3">
         <div className="[&>svg]:w-8 [&>svg]:h-8">
           {icon}
         </div>

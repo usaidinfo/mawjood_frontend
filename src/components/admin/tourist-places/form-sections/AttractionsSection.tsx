@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Trash2, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface Attraction {
   name: string;
@@ -23,18 +24,84 @@ interface AttractionsSectionProps {
   onAttractionsChange: (attractions: Attraction[]) => void;
 }
 
+const parseTime = (timeStr: string) => {
+  if (!timeStr || !timeStr.includes(':')) return { hour: 9, minute: 0 };
+  const [hour, minute] = timeStr.split(':').map(Number);
+  return {
+    hour: Number.isFinite(hour) ? (hour as number) : 9,
+    minute: Number.isFinite(minute) ? (minute as number) : 0,
+  };
+};
+
+const TimePickerContent = ({ 
+  timeStr, 
+  onTimeChange 
+}: { 
+  timeStr: string; 
+  onTimeChange: (time: string) => void;
+}) => {
+  const defaultTime = timeStr || '09:00';
+  const { hour: currentHour, minute: currentMinute } = parseTime(defaultTime);
+
+  const handleTimeChange = (hour: number, minute: number) => {
+    const formattedTime = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+    onTimeChange(formattedTime);
+  };
+
+  return (
+    <div className="flex gap-4 p-3">
+      <div className="w-16 max-h-48 overflow-y-auto">
+        <div className="mb-2 text-center text-xs font-semibold text-gray-500">Hours</div>
+        {Array.from({ length: 24 }, (_, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => handleTimeChange(i, currentMinute)}
+            className={`block w-full rounded-md px-2 py-2 text-sm transition-colors ${
+              currentHour === i ? 'bg-primary text-white hover:bg-primary/90' : 'hover:bg-gray-100'
+            }`}
+          >
+            {String(i).padStart(2, '0')}
+          </button>
+        ))}
+      </div>
+
+      <div className="w-18 max-h-48 overflow-y-auto border-l border-gray-200 p-3">
+        <div className="mb-2 text-center text-xs font-semibold text-gray-500">Minutes</div>
+        {Array.from({ length: 60 }, (_, i) => i).map((min) => (
+          <button
+            key={min}
+            type="button"
+            onClick={() => handleTimeChange(currentHour, min)}
+            className={`block w-full rounded-md px-2 py-2 text-sm transition-colors ${
+              currentMinute === min ? 'bg-primary text-white hover:bg-primary/90' : 'hover:bg-gray-100'
+            }`}
+          >
+            {String(min).padStart(2, '0')}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export function AttractionsSection({
   attractions,
   onAttractionsChange,
 }: AttractionsSectionProps) {
   const fileInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
   const [expandedItems, setExpandedItems] = useState<{ [key: number]: boolean }>({});
+  const [openTimePickers, setOpenTimePickers] = useState<{ [key: string]: boolean }>({});
 
   const toggleExpand = (index: number) => {
     setExpandedItems(prev => ({
       ...prev,
       [index]: !prev[index]
     }));
+  };
+
+  const toggleTimePicker = (key: string) => {
+    setOpenTimePickers(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   const addAttraction = () => {
@@ -257,21 +324,47 @@ export function AttractionsSection({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1.5 block">Open Time</label>
-                    <Input
-                      type="time"
-                      value={attraction.openTime}
-                      onChange={(e) => updateAttraction(index, 'openTime', e.target.value)}
-                      className="w-full"
-                    />
+                    <Popover 
+                      open={openTimePickers[`${index}-open`] || false} 
+                      onOpenChange={(open) => toggleTimePicker(`${index}-open`)}
+                    >
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:border-gray-400 focus:border-transparent focus:ring-2 focus:ring-primary min-w-[120px]"
+                        >
+                          <span>{attraction.openTime || '09:00'}</span>
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <TimePickerContent 
+                          timeStr={attraction.openTime} 
+                          onTimeChange={(time) => updateAttraction(index, 'openTime', time)}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1.5 block">Close Time</label>
-                    <Input
-                      type="time"
-                      value={attraction.closeTime}
-                      onChange={(e) => updateAttraction(index, 'closeTime', e.target.value)}
-                      className="w-full"
-                    />
+                    <Popover 
+                      open={openTimePickers[`${index}-close`] || false} 
+                      onOpenChange={(open) => toggleTimePicker(`${index}-close`)}
+                    >
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:border-gray-400 focus:border-transparent focus:ring-2 focus:ring-primary min-w-[120px]"
+                        >
+                          <span>{attraction.closeTime || '18:00'}</span>
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <TimePickerContent 
+                          timeStr={attraction.closeTime} 
+                          onTimeChange={(time) => updateAttraction(index, 'closeTime', time)}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
               </div>
@@ -287,4 +380,3 @@ export function AttractionsSection({
     </div>
   );
 }
-

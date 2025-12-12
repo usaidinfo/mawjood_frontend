@@ -71,6 +71,10 @@ export interface TouristPlace {
   } | null;
   attractions?: TouristPlaceAttraction[];
   businessSections?: TouristPlaceBusinessSection[];
+  _count?: {
+    attractions?: number;
+    businessSections?: number;
+  };
   createdAt: string;
   updatedAt: string;
 }

@@ -51,12 +51,10 @@ export function TouristPlacesTable<TData, TValue>({
   const [searchValue, setSearchValue] = useState(externalSearchValue);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Sync with external search value
   useEffect(() => {
     setSearchValue(externalSearchValue);
   }, [externalSearchValue]);
 
-  // Debounce search input
   useEffect(() => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
