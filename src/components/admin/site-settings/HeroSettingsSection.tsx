@@ -4,6 +4,7 @@ import { HeroCardSettings, HeroSettings } from '@/services/settings.service';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Plus, Trash2, Upload, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -123,40 +124,39 @@ export function HeroSettingsSection({ value, onChange, onSave, isSaving }: HeroS
           </Button>
         </div>
 
-        <div className="grid gap-4">
-          {cards.length === 0 && (
-            <p className="text-sm text-gray-500">
-              No cards configured yet. Add highlight cards to showcase key categories.
-            </p>
-          )}
+        {cards.length === 0 && (
+          <p className="text-sm text-gray-500">
+            No cards configured yet. Add highlight cards to showcase key categories.
+          </p>
+        )}
 
+        <Accordion type="multiple" className="w-full">
           {cards.map((card, index) => (
-            <div
-              key={card.id ?? index}
-              className={cn(
-                'rounded-lg border border-gray-200 p-4 shadow-sm transition hover:shadow-md',
-                'bg-white'
-              )}
-            >
-              <div className="mb-4 flex items-start justify-between gap-3">
-                <div>
-                  <h4 className="text-base font-semibold">Card {index + 1}</h4>
-                  <p className="text-xs text-gray-500">
-                    Configure the category highlight displayed in the hero carousel.
-                  </p>
+            <AccordionItem key={card.id ?? index} value={`card-${index}`} className="border border-gray-200 rounded-lg mb-4 px-4 bg-white">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center justify-between w-full pr-4">
+                  <div className="text-left">
+                    <h4 className="text-base font-semibold">Card {index + 1}</h4>
+                    <p className="text-xs text-gray-500">
+                      {card.title || 'Configure the category highlight displayed in the hero carousel.'}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeCard(index);
+                    }}
+                    className="text-red-500 hover:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeCard(index)}
-                  className="text-red-500 hover:text-red-600"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-2">
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="grid gap-3 md:grid-cols-2 pt-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">Title</label>
                   <Input
@@ -234,10 +234,11 @@ export function HeroSettingsSection({ value, onChange, onSave, isSaving }: HeroS
                     />
                   </label>
                 </div>
-              </div>
-            </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
           ))}
-        </div>
+        </Accordion>
       </CardContent>
     </Card>
   );

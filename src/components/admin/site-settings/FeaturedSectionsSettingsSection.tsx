@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Plus, Trash2, Upload, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -227,36 +228,41 @@ export function FeaturedSectionsSettingsSection({
           </p>
         )}
 
-        {sections.map((section, sectionIndex) => {
-          const items = section.items ?? [];
-          return (
-            <div
-              key={section.id ?? sectionIndex}
-              className={cn(
-                'rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md'
-              )}
-            >
-              <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <h4 className="text-lg font-semibold">
-                    {section.title?.length ? section.title : `Featured Section ${sectionIndex + 1}`}
-                  </h4>
-                  <p className="text-xs text-gray-500">
-                    Customize the section card grid and featured items.
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeSection(sectionIndex)}
-                  className="text-red-500 hover:text-red-600"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
+        <Accordion type="multiple" className="w-full space-y-4">
+          {sections.map((section, sectionIndex) => {
+            const items = section.items ?? [];
+            return (
+              <AccordionItem
+                key={section.id ?? sectionIndex}
+                value={`section-${sectionIndex}`}
+                className="rounded-lg border border-gray-200 bg-white px-5 shadow-sm transition hover:shadow-md"
+              >
+                <AccordionTrigger className="hover:no-underline py-4">
+                  <div className="flex items-center justify-between w-full pr-4">
+                    <div className="text-left">
+                      <h4 className="text-lg font-semibold">
+                        {section.title?.length ? section.title : `Featured Section ${sectionIndex + 1}`}
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        Customize the section card grid and featured items.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeSection(sectionIndex);
+                      }}
+                      className="text-red-500 hover:text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="grid gap-4 md:grid-cols-2 pb-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">Section Title</label>
                   <Input
@@ -288,37 +294,44 @@ export function FeaturedSectionsSettingsSection({
                 </Button>
               </div>
 
-              <div className="mt-4 grid gap-4">
-                {items.length === 0 && (
-                  <p className="text-xs text-gray-500">
-                    No items added. Add cards to highlight categories within this section.
-                  </p>
-                )}
-
-                {items.map((item, itemIndex) => (
-                  <div
-                    key={item.id ?? itemIndex}
-                    className="rounded-md border border-dashed border-gray-300 p-4"
-                  >
-                    <div className="mb-3 flex items-start justify-between gap-3">
-                      <p className="text-sm font-medium text-gray-800">
-                        Item {itemIndex + 1}{' '}
-                        {item.name ? (
-                          <span className="text-xs text-gray-500">({item.name})</span>
-                        ) : null}
+                  <div className="mt-4">
+                    {items.length === 0 && (
+                      <p className="text-xs text-gray-500">
+                        No items added. Add cards to highlight categories within this section.
                       </p>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeItem(sectionIndex, itemIndex)}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    )}
 
-                    <div className="grid gap-3 md:grid-cols-2">
+                    <Accordion type="multiple" className="w-full">
+                      {items.map((item, itemIndex) => (
+                        <AccordionItem
+                          key={item.id ?? itemIndex}
+                          value={`item-${sectionIndex}-${itemIndex}`}
+                          className="rounded-md border border-dashed border-gray-300 mb-3 px-4"
+                        >
+                          <AccordionTrigger className="hover:no-underline py-3">
+                            <div className="flex items-center justify-between w-full pr-4">
+                              <p className="text-sm font-medium text-gray-800">
+                                Item {itemIndex + 1}{' '}
+                                {item.name ? (
+                                  <span className="text-xs text-gray-500">({item.name})</span>
+                                ) : null}
+                              </p>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeItem(sectionIndex, itemIndex);
+                                }}
+                                className="text-red-500 hover:text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="grid gap-3 md:grid-cols-2 pt-3 pb-4">
                       <div className="space-y-2">
                         <label className="text-xs font-semibold uppercase text-gray-600">
                           Name
@@ -429,14 +442,18 @@ export function FeaturedSectionsSettingsSection({
                           }
                           placeholder="cleaning-services"
                         />
-                      </div>
-                    </div>
+                            </div>
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
                   </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
+        </Accordion>
       </CardContent>
     </Card>
   );

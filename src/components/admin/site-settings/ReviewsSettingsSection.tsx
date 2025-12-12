@@ -4,6 +4,7 @@ import { ReviewSettings } from '@/services/settings.service';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Plus, Trash2, Upload, X } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
@@ -102,29 +103,39 @@ export function ReviewsSettingsSection({
           </p>
         )}
 
-        {reviews.map((review, index) => (
-          <div key={review.id ?? index} className="rounded-lg border border-gray-200 p-5 shadow-sm">
-            <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-              <div>
-                <h4 className="text-lg font-semibold">
-                  {review.name || `Reviewer ${index + 1}`}
-                </h4>
-                <p className="text-xs text-gray-500">
-                  Showcase a happy customer or partner testimonial.
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => removeReview(index)}
-                className="text-red-500 hover:text-red-600"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
+        <Accordion type="multiple" className="w-full">
+          {reviews.map((review, index) => (
+            <AccordionItem
+              key={review.id ?? index}
+              value={`review-${index}`}
+              className="rounded-lg border border-gray-200 px-5 shadow-sm mb-4"
+            >
+              <AccordionTrigger className="hover:no-underline py-4">
+                <div className="flex items-center justify-between w-full pr-4">
+                  <div className="text-left">
+                    <h4 className="text-lg font-semibold">
+                      {review.name || `Reviewer ${index + 1}`}
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      {review.comment ? review.comment.substring(0, 50) + '...' : 'Showcase a happy customer or partner testimonial.'}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeReview(index);
+                    }}
+                    className="text-red-500 hover:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="grid gap-4 md:grid-cols-2 pb-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Name</label>
                 <Input
@@ -223,10 +234,12 @@ export function ReviewsSettingsSection({
                   rows={4}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#1c4233] focus:outline-none focus:ring-1 focus:ring-[#1c4233]"
                 />
-              </div>
-            </div>
-          </div>
-        ))}
+                </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </CardContent>
     </Card>
   );

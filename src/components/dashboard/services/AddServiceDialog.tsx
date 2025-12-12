@@ -175,8 +175,8 @@ export default function AddServiceDialog({ open, onOpenChange, editingService, b
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-2xl font-bold text-gray-900">
             {editingService ? 'Edit Service' : 'Add New Service'}
           </DialogTitle>
@@ -185,7 +185,7 @@ export default function AddServiceDialog({ open, onOpenChange, editingService, b
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4 overflow-y-auto flex-1 min-h-0">
           <div className={`grid grid-cols-1 ${!editingService ? 'md:grid-cols-2' : ''} gap-4`}>
             {/* Business Selection */}
             {!editingService && (
@@ -370,7 +370,7 @@ export default function AddServiceDialog({ open, onOpenChange, editingService, b
           )}
 
           {/* Footer Buttons */}
-          <DialogFooter className="gap-2 mt-6">
+          <DialogFooter className="gap-2 mt-6 flex-shrink-0">
             <button
               type="button"
               onClick={handleClose}

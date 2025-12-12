@@ -4,6 +4,7 @@ import { AboutSettings, AboutValue, AboutHeroStat, AboutStat } from '@/services/
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Plus, Trash2 } from 'lucide-react';
 
 interface AboutSettingsSectionProps {
@@ -95,15 +96,20 @@ export function AboutSettingsSection({
         </Button>
       </CardHeader>
 
-      <CardContent className="space-y-10">
-        {/* Hero */}
-        <section className="space-y-4">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">Hero</h3>
-            <p className="text-sm text-gray-500">
-              Update the hero message and stats displayed on the About page.
-            </p>
-          </div>
+      <CardContent>
+        <Accordion type="multiple" className="w-full space-y-4" defaultValue={['hero', 'mission-vision', 'story', 'values', 'stats']}>
+          {/* Hero */}
+          <AccordionItem value="hero" className="border border-gray-200 rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="text-left">
+                <h3 className="text-lg font-semibold text-gray-900">Hero</h3>
+                <p className="text-sm text-gray-500">
+                  Update the hero message and stats displayed on the About page.
+                </p>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-4 pt-4 pb-4">
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
@@ -196,18 +202,30 @@ export function AboutSettingsSection({
                 </div>
               </div>
             ))}
-          </div>
-        </section>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
 
         {/* Mission & Vision */}
-        <section className="grid gap-6 md:grid-cols-2">
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Mission</h3>
+        <AccordionItem value="mission-vision" className="border border-gray-200 rounded-lg px-4">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="text-left">
+              <h3 className="text-lg font-semibold text-gray-900">Mission & Vision</h3>
               <p className="text-sm text-gray-500">
-                Share the mission statement for the About page.
+                Share the mission and vision statements for the About page.
               </p>
             </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="grid gap-6 md:grid-cols-2 pt-4 pb-4">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Mission</h3>
+                  <p className="text-sm text-gray-500">
+                    Share the mission statement for the About page.
+                  </p>
+                </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Title</label>
               <Input
@@ -253,29 +271,36 @@ export function AboutSettingsSection({
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#1c4233] focus:outline-none focus:ring-1 focus:ring-[#1c4233]"
               />
             </div>
-          </div>
-        </section>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
 
         {/* Story */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Our Story</h3>
-              <p className="text-sm text-gray-500">
-                Tell the story behind Mawjood with multiple paragraphs.
-              </p>
+        <AccordionItem value="story" className="border border-gray-200 rounded-lg px-4">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center justify-between w-full pr-4">
+              <div className="text-left">
+                <h3 className="text-lg font-semibold text-gray-900">Our Story</h3>
+                <p className="text-sm text-gray-500">
+                  Tell the story behind Mawjood with multiple paragraphs.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  updateStoryField('paragraphs', [...storyParagraphs, '']);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Paragraph
+              </Button>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => updateStoryField('paragraphs', [...storyParagraphs, ''])}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Paragraph
-            </Button>
-          </div>
-
-          <div className="space-y-4">
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-4 pt-4 pb-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Story Title</label>
               <Input
@@ -327,36 +352,43 @@ export function AboutSettingsSection({
                 </div>
               ))}
             </div>
-          </div>
-        </section>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
 
         {/* Values */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Core Values</h3>
-              <p className="text-sm text-gray-500">
-                Highlight the values that drive Mawjood forward.
-              </p>
+        <AccordionItem value="values" className="border border-gray-200 rounded-lg px-4">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center justify-between w-full pr-4">
+              <div className="text-left">
+                <h3 className="text-lg font-semibold text-gray-900">Core Values</h3>
+                <p className="text-sm text-gray-500">
+                  Highlight the values that drive Mawjood forward.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  updateAboutField('values', [...values, createEmptyValue()]);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Value
+              </Button>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => updateAboutField('values', [...values, createEmptyValue()])}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Value
-            </Button>
-          </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-4 pt-4 pb-4">
+              <div className="grid gap-4">
+                {values.length === 0 && (
+                  <p className="text-xs text-gray-500">
+                    No values yet. Add value statements to build trust.
+                  </p>
+                )}
 
-          <div className="grid gap-4">
-            {values.length === 0 && (
-              <p className="text-xs text-gray-500">
-                No values yet. Add value statements to build trust.
-              </p>
-            )}
-
-            {values.map((valueItem, index) => (
+                {values.map((valueItem, index) => (
               <div key={index} className="rounded-lg border border-gray-200 p-4">
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <p className="text-sm font-medium text-gray-800">
@@ -425,38 +457,46 @@ export function AboutSettingsSection({
                     />
                   </div>
                 </div>
+                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
 
         {/* Stats */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Key Statistics</h3>
-              <p className="text-sm text-gray-500">
-                Display key numbers summarizing Mawjood&apos;s impact.
-              </p>
+        <AccordionItem value="stats" className="border border-gray-200 rounded-lg px-4">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center justify-between w-full pr-4">
+              <div className="text-left">
+                <h3 className="text-lg font-semibold text-gray-900">Key Statistics</h3>
+                <p className="text-sm text-gray-500">
+                  Display key numbers summarizing Mawjood&apos;s impact.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  updateAboutField('stats', [...stats, createEmptyStat()]);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Stat
+              </Button>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => updateAboutField('stats', [...stats, createEmptyStat()])}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Stat
-            </Button>
-          </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-4 pt-4 pb-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                {stats.length === 0 && (
+                  <p className="text-xs text-gray-500 md:col-span-2">
+                    No stats added yet. Highlight user growth, coverage, or usage metrics.
+                  </p>
+                )}
 
-          <div className="grid gap-3 md:grid-cols-2">
-            {stats.length === 0 && (
-              <p className="text-xs text-gray-500 md:col-span-2">
-                No stats added yet. Highlight user growth, coverage, or usage metrics.
-              </p>
-            )}
-
-            {stats.map((stat, index) => (
+                {stats.map((stat, index) => (
               <div key={index} className="rounded-lg border border-gray-200 p-4">
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <p className="text-sm font-medium text-gray-800">Stat {index + 1}</p>
@@ -505,10 +545,13 @@ export function AboutSettingsSection({
                     placeholder="1,000+"
                   />
                 </div>
+                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+        </Accordion>
       </CardContent>
     </Card>
   );

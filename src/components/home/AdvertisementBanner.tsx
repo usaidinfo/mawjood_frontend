@@ -82,7 +82,7 @@ export default function AdvertisementBanner() {
   const firstAd = adsArray.length > 0 ? adsArray[0] : null;
 
   return (
-    <section className="py-8 px-4 sm:px-6 lg:px-8 bg-gray-50">
+    <section className="py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {displayBanners.length > 0 && (
           <Link
