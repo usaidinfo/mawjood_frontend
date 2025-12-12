@@ -1,10 +1,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Heart, Phone, MapPin, Star, Eye, Sparkles } from 'lucide-react';
+import { Heart, Phone, MapPin, Star, Eye, Sparkles, MessageSquare } from 'lucide-react';
 import { Business } from '@/services/business.service';
 import { useState } from 'react';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useCityStore } from '@/store/cityStore';
+import { useAuthStore } from '@/store/authStore';
+import { toast } from 'sonner';
+import { EnquiryDialog } from '@/components/enquiry/EnquiryDialog';
 
 interface BusinessListCardProps {
   business: Business;
@@ -20,6 +23,8 @@ export default function BusinessListCard({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { isFavorite, toggleFavorite, isLoading } = useFavorites();
   const { selectedCity, selectedLocation } = useCityStore();
+  const { isAuthenticated } = useAuthStore();
+  const [enquiryDialogOpen, setEnquiryDialogOpen] = useState(false);
 
   const allImages = [
     business.logo,
@@ -49,6 +54,16 @@ export default function BusinessListCard({
 
   // Check if business has active subscription (top placement)
   const hasActiveSubscription = business.promotedUntil && new Date(business.promotedUntil) > new Date();
+
+  const handleEnquiryClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      toast.error('Please login to send an enquiry to this business');
+      return;
+    }
+    setEnquiryDialogOpen(true);
+  };
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
@@ -239,9 +254,24 @@ export default function BusinessListCard({
                 WhatsApp
               </button>
             )}
+
+            <button
+              onClick={handleEnquiryClick}
+              className="bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2.5 rounded flex items-center justify-center gap-2 transition-colors"
+            >
+              <MessageSquare className="w-4 h-4" />
+              Enquiry
+            </button>
           </div>
         </div>
       </div>
+
+      <EnquiryDialog
+        open={enquiryDialogOpen}
+        onOpenChange={setEnquiryDialogOpen}
+        businessId={business.id}
+        businessName={business.name}
+      />
     </div>
   );
 }

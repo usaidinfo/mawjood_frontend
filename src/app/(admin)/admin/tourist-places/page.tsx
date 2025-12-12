@@ -25,7 +25,8 @@ export default function TouristPlacesPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [touristPlaces, setTouristPlaces] = useState<TouristPlace[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -33,14 +34,25 @@ export default function TouristPlacesPage() {
     placeId: string | null;
   }>({ open: false, placeId: null });
 
-  // Fetch tourist places
+  // Fetch tourist places on mount
   useEffect(() => {
-    fetchTouristPlaces();
+    fetchTouristPlaces(true);
+  }, []);
+
+  // Fetch tourist places on search change
+  useEffect(() => {
+    if (!initialLoading) {
+      fetchTouristPlaces(false);
+    }
   }, [searchInput]);
 
-  const fetchTouristPlaces = async () => {
+  const fetchTouristPlaces = async (isInitial = false) => {
     try {
-      setLoading(true);
+      if (isInitial) {
+        setInitialLoading(true);
+      } else {
+        setSearchLoading(true);
+      }
       const params: any = {
         page: 1,
         limit: 100,
@@ -56,7 +68,11 @@ export default function TouristPlacesPage() {
       console.error('Error fetching tourist places:', error);
       toast.error(error.message || 'Failed to fetch tourist places');
     } finally {
-      setLoading(false);
+      if (isInitial) {
+        setInitialLoading(false);
+      } else {
+        setSearchLoading(false);
+      }
     }
   };
 
@@ -81,7 +97,7 @@ export default function TouristPlacesPage() {
     mutationFn: async (id: string) => {
       await touristPlaceService.delete(id);
     },
-    onSuccess: () => {
+    onSuccess: () => {  
       toast.success('Tourist place deleted successfully');
       queryClient.invalidateQueries({ queryKey: ['tourist-places'] });
       fetchTouristPlaces();
@@ -130,7 +146,7 @@ export default function TouristPlacesPage() {
       </div>
 
       {/* Table */}
-      {loading ? (
+      {initialLoading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -140,7 +156,7 @@ export default function TouristPlacesPage() {
           data={filteredPlaces}
           onSearchChange={setSearchInput}
           searchValue={searchInput}
-          loading={loading}
+          loading={searchLoading}
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
         />

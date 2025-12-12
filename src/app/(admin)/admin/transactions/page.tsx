@@ -9,21 +9,26 @@ import { SubscriptionsTable } from '@/components/admin/transactions/Subscription
 import { createPaymentColumns } from '@/components/admin/transactions/paymentColumns';
 import { createSubscriptionColumns } from '@/components/admin/transactions/subscriptionColumns';
 import { toast } from 'sonner';
-import { Loader2, Receipt, CreditCard, CalendarIcon, X } from 'lucide-react';
+import { Loader2, Receipt, CreditCard, CalendarIcon, X, UserPlus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useRouter, useSearchParams } from 'next/navigation';
+import AssignSponsorDialog from '@/components/admin/subscription-plans/AssignSponsorDialog';
 
 type TabType = 'payments' | 'subscriptions';
 
 export default function TransactionsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [subscriptions, setSubscriptions] = useState<BusinessSubscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('payments');
+  const [isAssignSponsorOpen, setIsAssignSponsorOpen] = useState(false);
   const [paymentSearchInput, setPaymentSearchInput] = useState('');
   const [subscriptionSearchInput, setSubscriptionSearchInput] = useState('');
   const [debouncedPaymentSearch, setDebouncedPaymentSearch] = useState('');
@@ -194,6 +199,25 @@ export default function TransactionsPage() {
     { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
   ] as const;
 
+  // Sync active tab with URL
+  useEffect(() => {
+    const tabParam = searchParams.get('tab') as TabType | null;
+    if (tabParam && (tabParam === 'payments' || tabParam === 'subscriptions')) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === 'payments') {
+      params.delete('tab');
+    } else {
+      params.set('tab', tab);
+    }
+    router.replace(`/admin/transactions?${params.toString()}`, { scroll: false });
+  };
+
   if (loading && payments.length === 0 && subscriptions.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -205,11 +229,21 @@ export default function TransactionsPage() {
   return (
     <div className="py-4 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Transactions Management</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Manage all payments and subscriptions
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Transactions Management</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            Manage all payments and subscriptions
+          </p>
+        </div>
+        <Button
+          onClick={() => setIsAssignSponsorOpen(true)}
+          variant="outline"
+          className="border-amber-500 text-amber-600 hover:bg-amber-50 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-900/20"
+        >
+          <UserPlus className="w-4 h-4 mr-2" />
+          Assign Sponsor
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -232,7 +266,7 @@ export default function TransactionsPage() {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as TabType)}
+                onClick={() => handleTabChange(tab.id as TabType)}
                 className={`relative py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
                   activeTab === tab.id
                     ? 'border-[#1c4233] text-[#1c4233] dark:border-green-400 dark:text-green-400'
@@ -436,6 +470,15 @@ export default function TransactionsPage() {
           </>
         )}
       </div>
+
+      <AssignSponsorDialog
+        open={isAssignSponsorOpen}
+        onOpenChange={setIsAssignSponsorOpen}
+        onSuccess={() => {
+          handleTabChange('subscriptions');
+          fetchSubscriptions();
+        }}
+      />
     </div>
   );
 }

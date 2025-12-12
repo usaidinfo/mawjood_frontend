@@ -174,7 +174,8 @@ export default function LocationSelector({
         type="button"
         onClick={() => setShowDropdown(!showDropdown)}
         disabled={loadingCities}
-        className="w-full pl-12 pr-10 py-4 text-lg border-0 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 bg-gray-50 text-left"
+        // REDUCED HEIGHT: Changed py-4 to py-3 and text-lg to text-base, added h-[52px]
+        className="w-full pl-12 pr-10 py-3 text-base border-0 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 bg-gray-50 text-left h-[52px]"
       >
         {loadingCities ? (
           <span className="text-gray-400">Loading locations...</span>

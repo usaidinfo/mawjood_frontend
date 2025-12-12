@@ -53,7 +53,7 @@ export default function QuickLinks() {
   }
 
   return (
-    <section className="bg-white py-16 px-4 sm:px-6 lg:px-8 border-t border-gray-100">
+    <section className="bg-white py-8 px-4 sm:px-6 lg:px-8 border-t border-gray-100">
       <div className="max-w-7xl mx-auto space-y-12">
         {/* Popular Categories */}
         <div>

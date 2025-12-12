@@ -8,15 +8,17 @@ import axiosInstance from '@/lib/axios';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Search } from 'lucide-react';
+import { Loader2, Search, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface AssignSponsorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
-export default function AssignSponsorDialog({ open, onOpenChange }: AssignSponsorDialogProps) {
+export default function AssignSponsorDialog({ open, onOpenChange, onSuccess }: AssignSponsorDialogProps) {
   const queryClient = useQueryClient();
   const [businessSearch, setBusinessSearch] = useState('');
   const [selectedBusinessId, setSelectedBusinessId] = useState('');
@@ -24,7 +26,7 @@ export default function AssignSponsorDialog({ open, onOpenChange }: AssignSponso
   const [endsAt, setEndsAt] = useState('');
   const [notes, setNotes] = useState('');
 
-  // Search businesses using admin endpoint
+  // Search businesses using admin endpoint - only APPROVED businesses
   const { data: businessesData, isLoading: loadingBusinesses } = useQuery({
     queryKey: ['admin-businesses-search', businessSearch],
     queryFn: async () => {
@@ -33,6 +35,7 @@ export default function AssignSponsorDialog({ open, onOpenChange }: AssignSponso
           search: businessSearch,
           limit: 20,
           page: 1,
+          status: 'APPROVED', // Only fetch approved businesses
         },
       });
       return response.data;
@@ -40,15 +43,53 @@ export default function AssignSponsorDialog({ open, onOpenChange }: AssignSponso
     enabled: open && businessSearch.length >= 2,
   });
 
-  const businesses = businessesData?.data?.businesses || [];
+  const businesses = (businessesData?.data?.businesses || []).filter(
+    (business: Business) => business.status === 'APPROVED'
+  );
+
+  // Check if selected business has active sponsor subscription
+  const { data: existingSubscriptionData } = useQuery({
+    queryKey: ['business-sponsor-subscription', selectedBusinessId],
+    queryFn: async () => {
+      if (!selectedBusinessId) return null;
+      try {
+        const response = await axiosInstance.get('/api/subscriptions/admin/all', {
+          params: {
+            businessId: selectedBusinessId,
+            status: 'ACTIVE',
+            limit: 100,
+          },
+        });
+        const subscriptions = response.data?.data?.subscriptions || [];
+        // Find sponsor subscription (has plan with isSponsorPlan = true or metadata.isSponsorSubscription = true)
+        return subscriptions.find((sub: any) => 
+          sub.plan?.isSponsorPlan === true || 
+          sub.metadata?.isSponsorSubscription === true
+        ) || null;
+      } catch (error) {
+        console.error('Error checking active sponsor subscription:', error);
+        return null;
+      }
+    },
+    enabled: !!selectedBusinessId && open,
+  });
+
+  const existingSubscription = existingSubscriptionData || null;
+  const hasActiveSponsorSubscription = existingSubscription && 
+    existingSubscription.status === 'ACTIVE' && 
+    new Date(existingSubscription.endsAt) > new Date();
 
   const assignMutation = useMutation({
     mutationFn: (data: any) => subscriptionService.assignSponsorSubscription(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
       queryClient.invalidateQueries({ queryKey: ['businesses'] });
+      queryClient.invalidateQueries({ queryKey: ['business-sponsor-subscription'] });
       toast.success('Sponsor access assigned successfully');
       handleClose();
+      if (onSuccess) {
+        onSuccess();
+      }
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to assign sponsor access');
@@ -69,6 +110,12 @@ export default function AssignSponsorDialog({ open, onOpenChange }: AssignSponso
     
     if (!selectedBusinessId) {
       toast.error('Please select a business');
+      return;
+    }
+
+    // Check if business already has active sponsor subscription
+    if (hasActiveSponsorSubscription) {
+      toast.error('This business already has an active sponsor subscription. Please wait until it expires before assigning a new one.');
       return;
     }
 
@@ -139,6 +186,18 @@ export default function AssignSponsorDialog({ open, onOpenChange }: AssignSponso
                 )}
               </div>
             )}
+            {hasActiveSponsorSubscription && selectedBusinessId && (
+              <Alert className="mt-2 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800">
+                <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <AlertDescription className="text-amber-800 dark:text-amber-300">
+                  This business already has an active sponsor subscription. It will expire on{' '}
+                  {existingSubscription?.endsAt 
+                    ? new Date(existingSubscription.endsAt).toLocaleDateString()
+                    : 'N/A'
+                  }. Please wait until it expires before assigning a new one.
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
 
@@ -192,7 +251,7 @@ export default function AssignSponsorDialog({ open, onOpenChange }: AssignSponso
             </Button>
             <Button
               type="submit"
-              disabled={!selectedBusinessId || assignMutation.isPending}
+              disabled={!selectedBusinessId || assignMutation.isPending || hasActiveSponsorSubscription}
               className="bg-[#1c4233] hover:bg-[#245240]"
             >
               {assignMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

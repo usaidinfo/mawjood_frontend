@@ -88,14 +88,6 @@ export default function CategoryListing() {
     return (
       <section ref={sectionRef} className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">
-              {t('categories.title')}
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              {t('categories.subtitle')}
-            </p>
-          </div>
           <div className="flex gap-4 overflow-x-auto pb-4 md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9 md:gap-6 md:overflow-visible">
             {Array.from({ length: 17 }).map((_, index) => (
               <CategorySkeleton key={index} />
@@ -128,16 +120,8 @@ export default function CategoryListing() {
   }
 
   return (
-    <section ref={sectionRef} className="py-8 px-4 sm:px-6 lg:px-8 bg-white  ">
+    <section ref={sectionRef} className="py-4 px-4 sm:px-6 lg:px-8 bg-white  ">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">
-            {t('categories.title')}
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            {t('categories.subtitle')}
-          </p>
-        </div>
 
         <div className="flex gap-4 overflow-x-auto pb-4 md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9 md:gap-6 md:overflow-visible">
           {categories.slice(0, 17).map((category) => (

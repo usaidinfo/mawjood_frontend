@@ -8,7 +8,6 @@ import { toast } from 'sonner';
 import { Plus, Edit, Archive, Loader2, UserPlus } from 'lucide-react';
 import { useCurrency } from '@/hooks/useCurrency';
 import PlanFormDialog, { PlanFormValues } from '@/components/admin/subscription-plans/PlanFormDialog';
-import AssignSponsorDialog from '@/components/admin/subscription-plans/AssignSponsorDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +26,6 @@ export default function SubscriptionPlansPage() {
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
   const [planToArchive, setPlanToArchive] = useState<SubscriptionPlan | null>(null);
   const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
-  const [isAssignSponsorOpen, setIsAssignSponsorOpen] = useState(false);
   const [formData, setFormData] = useState<PlanFormValues>({
     name: '',
     slug: '',
@@ -257,14 +255,6 @@ export default function SubscriptionPlansPage() {
         </div>
         <div className="flex gap-2">
           <Button
-            onClick={() => setIsAssignSponsorOpen(true)}
-            variant="outline"
-            className="border-amber-500 text-amber-600 hover:bg-amber-50 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-900/20"
-          >
-            <UserPlus className="w-4 h-4 mr-2" />
-            Assign Sponsor
-          </Button>
-          <Button
             onClick={() => {
               resetForm();
               setIsDialogOpen(true);
@@ -416,11 +406,6 @@ export default function SubscriptionPlansPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <AssignSponsorDialog
-        open={isAssignSponsorOpen}
-        onOpenChange={setIsAssignSponsorOpen}
-      />
     </div>
   );
 }

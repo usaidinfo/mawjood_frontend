@@ -18,7 +18,7 @@ import {
 export default function ServicesAndUtilities() {
   
   return (
-    <section className="py-8 font-sans select-none">
+    <section className="py-6 font-sans select-none">
       <div className="max-w-7xl mx-auto">
         
         {/* Main Card Container */}

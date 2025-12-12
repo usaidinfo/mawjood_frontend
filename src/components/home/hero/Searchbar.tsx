@@ -85,7 +85,8 @@ export default function SearchBar({ onSearch, selectedCityId }: SearchBarProps) 
         }}
         onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
         onKeyPress={handleKeyPress}
-        className="w-full px-6 py-4 text-lg border-0 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 bg-gray-50"
+        // REDUCED HEIGHT: Changed py-4 to py-3 and text-lg to text-base
+        className="w-full px-6 py-3 text-base border-0 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 bg-gray-50 h-[52px]" 
       />
 
       {showSuggestions && searchQuery.length >= 2 && (

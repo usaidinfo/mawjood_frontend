@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
 import { EnquiryDialog } from '@/components/enquiry/EnquiryDialog';
 
 interface Business {
@@ -48,7 +47,6 @@ export default function BusinessHeader({ business }: Props) {
   const [enquiryDialogOpen, setEnquiryDialogOpen] = useState(false);
   const { isFavorite, toggleFavorite, isLoading: favLoading } = useFavorites();
   const { isAuthenticated } = useAuthStore();
-  const router = useRouter();
   
   const handleShare = async () => {
     const url = window.location.href;
@@ -101,7 +99,7 @@ export default function BusinessHeader({ business }: Props) {
 
   const handleEnquiry = () => {
     if (!isAuthenticated) {
-      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+      toast.error('Please login to send an enquiry to this business');
       return;
     }
     setEnquiryDialogOpen(true);

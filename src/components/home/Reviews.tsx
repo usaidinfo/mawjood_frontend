@@ -68,12 +68,14 @@ const defaultReviews: Review[] = [
 export default function Reviews() {
   const { data: siteSettings } = useSiteSettings();
   const reviews = siteSettings?.reviews?.length ? (siteSettings.reviews as Review[]) : defaultReviews;
+  
+  // Track the current PAGE (Slide), not the item index
   const [currentSlide, setCurrentSlide] = useState(0);
   
   // Responsive reviews per page
   const [reviewsPerPage, setReviewsPerPage] = useState(1);
   
-  // Update reviews per page based on screen size
+  // Update visible count based on screen size
   useEffect(() => {
     const updateReviewsPerPage = () => {
       if (window.innerWidth >= 1024) {
@@ -89,13 +91,42 @@ export default function Reviews() {
     window.addEventListener('resize', updateReviewsPerPage);
     return () => window.removeEventListener('resize', updateReviewsPerPage);
   }, []);
-  
-  const totalSlides = reviews.length ? Math.ceil(reviews.length / reviewsPerPage) : 1;
 
-  const renderReviewCard = (review: Review) => (
+  // Calculate total pages based on array length and reviews per page
+  const totalPages = Math.ceil(reviews.length / reviewsPerPage);
+
+  // Move forward by one PAGE (looping back to 0)
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % totalPages);
+  };
+
+  // Move backward by one PAGE (looping to end)
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + totalPages) % totalPages);
+  };
+
+  // Get the reviews to display for the current slide
+  const getVisibleReviews = () => {
+    if (!reviews.length) return [];
+    
+    const visibleReviews = [];
+    // The starting index for the current page
+    const startIndex = currentSlide * reviewsPerPage;
+
+    for (let i = 0; i < reviewsPerPage; i++) {
+      // Use modulo to wrap around to the beginning if we run out of items
+      // This creates the "2 items + 2 previous items" effect on the last page
+      const index = (startIndex + i) % reviews.length;
+      visibleReviews.push(reviews[index]);
+    }
+    return visibleReviews;
+  };
+
+  const renderReviewCard = (review: Review, index: number) => (
     <div
-      key={review.id}
-      className="group relative bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full"
+      // Composite key ensures React renders them uniquely even if the same review appears twice (looping)
+      key={`${review.id}-${index}`} 
+      className="group relative bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full w-full"
     >
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary to-emerald-500" />
 
@@ -144,31 +175,8 @@ export default function Reviews() {
     </div>
   );
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % totalSlides);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
-  };
-
-  const goToSlide = (index: number) => {
-    setCurrentSlide(index);
-  };
-
-  const getVisibleReviews = () => {
-    if (!reviews.length) return [];
-    const start = currentSlide * reviewsPerPage;
-    return reviews.slice(start, start + reviewsPerPage);
-  };
-
-  // Reset to first slide when reviewsPerPage changes
-  useEffect(() => {
-    setCurrentSlide(0);
-  }, [reviewsPerPage]);
-
   return (
-    <section className="py-20 bg-gray-100">
+    <section className="py-8 bg-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
@@ -184,30 +192,11 @@ export default function Reviews() {
         <div className="relative">
           {/* Carousel Container */}
           <div className="overflow-hidden">
-            <div 
-              className="flex transition-transform duration-500 ease-in-out"
-              style={{ 
-                transform: `translateX(-${currentSlide * 100}%)`
-              }}
-            >
-              {reviews.length ? (
-                // Create slides based on reviewsPerPage
-                Array.from({ length: totalSlides }).map((_, slideIndex) => {
-                  const slideReviews = reviews.slice(
-                    slideIndex * reviewsPerPage,
-                    slideIndex * reviewsPerPage + reviewsPerPage
-                  );
-                  return (
-                    <div 
-                      key={slideIndex}
-                      className="w-full flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 px-2"
-                    >
-                      {slideReviews.map((review) => renderReviewCard(review))}
-                    </div>
-                  );
-                })
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              {reviews.length > 0 ? (
+                getVisibleReviews().map((review, idx) => renderReviewCard(review, idx))
               ) : (
-                <div className="w-full text-center text-gray-500 py-10">
+                <div className="col-span-full w-full text-center text-gray-500 py-10">
                   No reviews available at the moment.
                 </div>
               )}
@@ -215,20 +204,18 @@ export default function Reviews() {
           </div>
 
           {/* Navigation Buttons */}
-          {reviews.length > 0 && totalSlides > 1 && (
+          {reviews.length > 0 && (
             <>
               <button
                 onClick={prevSlide}
-                disabled={currentSlide === 0}
-                className="absolute left-0 sm:-left-4 md:-left-6 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-800 rounded-full p-2 sm:p-3 shadow-lg transition-colors z-10 flex items-center justify-center"
+                className="absolute left-0 sm:-left-4 md:-left-12 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-2 sm:p-3 shadow-lg transition-colors z-10 flex items-center justify-center border border-gray-100"
                 aria-label="Previous reviews"
               >
                 <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
               <button
                 onClick={nextSlide}
-                disabled={currentSlide >= totalSlides - 1}
-                className="absolute right-0 sm:-right-4 md:-right-6 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-800 rounded-full p-2 sm:p-3 shadow-lg transition-colors z-10 flex items-center justify-center"
+                className="absolute right-0 sm:-right-4 md:-right-12 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-2 sm:p-3 shadow-lg transition-colors z-10 flex items-center justify-center border border-gray-100"
                 aria-label="Next reviews"
               >
                 <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -237,18 +224,19 @@ export default function Reviews() {
           )}
         </div>
 
-        {/* Pagination Dots */}
-        {reviews.length > 0 && totalSlides > 1 && (
+        {/* Pagination Dots (Representing Pages, not individual items) */}
+        {reviews.length > 0 && totalPages > 1 && (
           <div className="flex justify-center gap-2 mt-8">
-            {[...Array(totalSlides)].map((_, index) => (
+            {[...Array(totalPages)].map((_, index) => (
               <button
                 key={index}
-                onClick={() => goToSlide(index)}
-                className={`h-2 rounded-full transition-all ${index === currentSlide
+                onClick={() => setCurrentSlide(index)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === currentSlide
                     ? 'bg-primary w-8'
                     : 'bg-gray-300 hover:bg-gray-400 w-2'
-                  }`}
-                aria-label={`Go to slide ${index + 1}`}
+                }`}
+                aria-label={`Go to page ${index + 1}`}
               />
             ))}
           </div>

@@ -81,7 +81,7 @@ export default function TrendingSearches() {
   const locationSlug = selectedCity?.slug || 'riyadh';
 
   return (
-    <section className="py-8 font-sans">
+    <section className="py-6 font-sans">
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
           

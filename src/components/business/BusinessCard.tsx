@@ -7,7 +7,7 @@ import { useCityStore } from '@/store/cityStore';
 import { useState } from 'react';
 import { EnquiryDialog } from '@/components/enquiry/EnquiryDialog';
 import { useAuthStore } from '@/store/authStore';
-import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface BusinessCardProps {
   business: Business;
@@ -23,7 +23,6 @@ export default function BusinessCard({
   const { isFavorite, toggleFavorite, isLoading } = useFavorites();
   const { selectedCity, selectedLocation } = useCityStore();
   const { isAuthenticated } = useAuthStore();
-  const router = useRouter();
   const [enquiryDialogOpen, setEnquiryDialogOpen] = useState(false);
   
   const descriptionText = business.description
@@ -37,7 +36,7 @@ export default function BusinessCard({
     e.preventDefault();
     e.stopPropagation();
     if (!isAuthenticated) {
-      router.push('/login?redirect=' + encodeURIComponent(`/businesses/${business.slug}`));
+      toast.error('Please login to send an enquiry to this business');
       return;
     }
     setEnquiryDialogOpen(true);

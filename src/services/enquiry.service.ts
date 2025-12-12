@@ -31,6 +31,11 @@ export interface Enquiry {
     slug: string;
     email: string;
     phone: string;
+    category?: {
+      id: string;
+      name: string;
+      slug: string;
+    };
   };
   createdAt: string;
   updatedAt: string;
@@ -54,6 +59,7 @@ export interface EnquiryFilters {
   limit?: number;
   status?: EnquiryStatus;
   search?: string;
+  categoryId?: string;
   startDate?: string;
   endDate?: string;
 }
@@ -89,6 +95,30 @@ class EnquiryService {
     } catch (error) {
       const axiosError = error as AxiosError<{ message: string }>;
       throw new Error(axiosError.response?.data?.message || 'Failed to create enquiry');
+    }
+  }
+
+  /**
+   * Get all enquiries (Admin only)
+   */
+  async getAllEnquiries(filters?: EnquiryFilters): Promise<EnquiryListResponse['data']> {
+    try {
+      const params = new URLSearchParams();
+      if (filters?.page) params.append('page', filters.page.toString());
+      if (filters?.limit) params.append('limit', filters.limit.toString());
+      if (filters?.status) params.append('status', filters.status);
+      if (filters?.search) params.append('search', filters.search);
+      if (filters?.categoryId) params.append('categoryId', filters.categoryId);
+      if (filters?.startDate) params.append('startDate', filters.startDate);
+      if (filters?.endDate) params.append('endDate', filters.endDate);
+
+      const response = await axiosInstance.get<EnquiryListResponse>(
+        `/api/enquiries/admin/all?${params.toString()}`
+      );
+      return response.data.data;
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || 'Failed to fetch enquiries');
     }
   }
 

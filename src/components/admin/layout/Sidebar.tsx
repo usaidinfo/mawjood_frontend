@@ -19,6 +19,7 @@ import {
   BadgePercent,
   X,
   Map,
+  MessageSquare,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -83,6 +84,11 @@ const sidebarItems = [
     href: '/admin/advertisements/list ',
     icon:  Megaphone,
   },
+  {
+    name: 'Enquiries',
+    href: '/admin/enquiries',
+    icon: MessageSquare,
+  },
 ];
 
 export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
@@ -129,7 +135,7 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         <ul className="space-y-1">
           {sidebarItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
 
             return (
               <li key={item.href}>

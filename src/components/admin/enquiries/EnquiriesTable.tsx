@@ -24,49 +24,45 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Eye } from 'lucide-react';
-import { BulkActionsToolbar } from '@/components/admin/common/BulkActionsToolbar';
-import { BlogCategory } from '@/services/blog.service';
+import { Search, X } from 'lucide-react';
+import { Category } from '@/services/category.service';
 
-interface BlogsTableProps<TData, TValue> {
+interface EnquiriesTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   onSearchChange: (value: string) => void;
   searchValue?: string;
-  onBulkExport?: (selectedRows: TData[]) => void;
-  onBulkDelete?: (selectedRows: TData[]) => void;
   loading?: boolean;
   statusFilter?: string;
-  dateFilter?: string;
   categoryFilter?: string;
-  categories?: BlogCategory[];
+  categories?: Category[];
   onStatusFilterChange?: (value: string) => void;
-  onDateFilterChange?: (value: string) => void;
   onCategoryFilterChange?: (value: string) => void;
 }
 
-export function BlogsTable<TData, TValue>({
+export function EnquiriesTable<TData, TValue>({
   columns,
   data,
   onSearchChange,
   searchValue: externalSearchValue = '',
-  onBulkExport,
-  onBulkDelete,
   loading = false,
   statusFilter = 'all',
-  dateFilter = 'all',
   categoryFilter = 'all',
   categories = [],
   onStatusFilterChange,
-  onDateFilterChange,
   onCategoryFilterChange,
-}: BlogsTableProps<TData, TValue>) {
+}: EnquiriesTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = useState({});
   const [searchValue, setSearchValue] = useState(externalSearchValue);
+  const [categorySearch, setCategorySearch] = useState('');
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Filter categories based on search
+  const filteredCategories = categories.filter((category) =>
+    category.name.toLowerCase().includes(categorySearch.toLowerCase())
+  );
 
   // Sync with external search value
   useEffect(() => {
@@ -100,79 +96,27 @@ export function BlogsTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
-      rowSelection,
+    },
+    initialState: {
+      pagination: {
+        pageSize: 10,
+      },
     },
   });
 
-  const selectedRows = table.getFilteredSelectedRowModel().rows.map(row => row.original);
-  const selectedCount = selectedRows.length;
-
-  const handleExportCSV = () => {
-    if (onBulkExport) {
-      onBulkExport(selectedRows);
-    } else {
-      const headers = ['ID', 'Title', 'Slug', 'Author', 'Category', 'Status', 'Created At'];
-      const rows = selectedRows.length > 0 
-        ? selectedRows.map((row: any) => [
-            row.id,
-            row.title,
-            row.slug,
-            `${row.author?.firstName || ''} ${row.author?.lastName || ''}`,
-            row.category?.name || '',
-            row.status,
-            new Date(row.createdAt).toLocaleDateString(),
-          ])
-        : data.map((row: any) => [
-            row.id,
-            row.title,
-            row.slug,
-            `${row.author?.firstName || ''} ${row.author?.lastName || ''}`,
-            row.category?.name || '',
-            row.status,
-            new Date(row.createdAt).toLocaleDateString(),
-          ]);
-
-      const csvContent = [
-        headers.join(','),
-        ...rows.map(row => row.map((cell: any) => `"${cell}"`).join(','))
-      ].join('\n');
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `blogs-${new Date().toISOString().split('T')[0]}.csv`;
-      link.click();
-    }
-  };
-
-  const handleBulkDelete = () => {
-    if (onBulkDelete && selectedRows.length > 0) {
-      onBulkDelete(selectedRows);
-    }
-  };
-
   return (
     <div className="space-y-4">
-      {/* Bulk Actions Toolbar */}
-      <BulkActionsToolbar
-        selectedCount={selectedCount}
-        onExportCSV={handleExportCSV}
-        onBulkDelete={onBulkDelete ? handleBulkDelete : undefined}
-        exportFileName="blogs"
-      />
-
       {/* Search and Filters */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
-          {/* Aligned icon exactly like your example (left-3, w-4 h-4) */}
+          {/* Aligned icon standard: left-3, w-4 h-4 */}
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
-            placeholder="Search by title or content..."
+            placeholder="Search by name, email, phone, message, or business..."
             value={searchValue}
             onChange={(e) => {
               const value = e.target.value;
@@ -184,53 +128,84 @@ export function BlogsTable<TData, TValue>({
                 e.stopPropagation();
               }
             }}
-            // REMOVED custom h-11 and borders. Kept only padding for the icon.
+            // Standard padding, default height (h-10)
             className="pl-10"
           />
         </div>
         
-        {/* Filters */}
+        {/* Status Filter */}
         {onStatusFilterChange && (
           <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-            {/* REMOVED custom heights. Used simple width class like your example. */}
-            <SelectTrigger className="w-full md:w-[180px]">
+            {/* Standard height, fixed width */}
+            <SelectTrigger className="w-full md:w-[160px]">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="PUBLISHED">Published</SelectItem>
-              <SelectItem value="DRAFT">Draft</SelectItem>
-              <SelectItem value="SCHEDULED">Scheduled</SelectItem>
+              <SelectItem value="OPEN">Open</SelectItem>
+              <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+              <SelectItem value="CLOSED">Closed</SelectItem>
+              <SelectItem value="REJECTED">Rejected</SelectItem>
             </SelectContent>
           </Select>
         )}
 
-        {onDateFilterChange && (
-          <Select value={dateFilter} onValueChange={onDateFilterChange}>
+        {/* Category Filter */}
+        {onCategoryFilterChange && categories.length > 0 && (
+          <Select 
+            value={categoryFilter} 
+            onValueChange={(value) => {
+              onCategoryFilterChange(value);
+              setCategorySearch('');
+            }}
+          >
+            {/* Standard height, fixed width */}
             <SelectTrigger className="w-full md:w-[180px]">
-              <SelectValue placeholder="All Time" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Time</SelectItem>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="week">Last 7 Days</SelectItem>
-              <SelectItem value="month">Last 30 Days</SelectItem>
-            </SelectContent>
-          </Select>
-        )}
-
-        {onCategoryFilterChange && (
-          <Select value={categoryFilter} onValueChange={onCategoryFilterChange}>
-            <SelectTrigger className="w-full md:w-[200px]">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
-                </SelectItem>
-              ))}
+              {/* Search Input */}
+              <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b p-2">
+                <div className="relative">
+                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Search categories..."
+                    value={categorySearch}
+                    onChange={(e) => setCategorySearch(e.target.value)}
+                    className="pl-8 pr-8 h-8 text-sm"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  />
+                  {categorySearch && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCategorySearch('');
+                      }}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+              
+              {/* Filtered Categories List */}
+              <div className="max-h-[200px] overflow-y-auto">
+                <SelectItem value="all">All Categories</SelectItem>
+                {filteredCategories.length > 0 ? (
+                  filteredCategories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="px-2 py-6 text-center text-sm text-gray-500">
+                    {categorySearch ? `No categories found matching "${categorySearch}"` : 'No categories available'}
+                  </div>
+                )}
+              </div>
             </SelectContent>
           </Select>
         )}
@@ -292,7 +267,7 @@ export function BlogsTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center text-gray-500"
                 >
-                  No blogs found.
+                  No enquiries found.
                 </TableCell>
               </TableRow>
             )}
@@ -303,12 +278,12 @@ export function BlogsTable<TData, TValue>({
       {/* Pagination */}
       <div className="flex items-center justify-between px-2">
         <div className="flex-1 text-sm text-muted-foreground">
-          {selectedCount > 0 && (
-            <>
-              {table.getFilteredSelectedRowModel().rows.length} of{' '}
-              {table.getFilteredRowModel().rows.length} row(s) selected.
-            </>
-          )}
+          Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
+          {Math.min(
+            (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+            data.length
+          )}{' '}
+          of {data.length} enquiries
         </div>
         <div className="flex items-center space-x-6 lg:space-x-8">
           <div className="flex items-center space-x-2">

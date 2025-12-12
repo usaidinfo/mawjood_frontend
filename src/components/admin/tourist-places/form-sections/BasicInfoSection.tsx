@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -41,24 +41,52 @@ export function BasicInfoSection({
 }: BasicInfoSectionProps) {
   const [citySearch, setCitySearch] = useState('');
 
+  // Reset search when cityId changes (e.g., when editing a different place)
+  useEffect(() => {
+    setCitySearch('');
+  }, [cityId]);
+
+  // Get the selected city - prioritize finding it in cities array, fallback to creating from cityId + selectedCityName
   const selectedCity = useMemo(() => {
-    const found = cities.find(city => city.id === cityId);
-    // If city not found in list but we have cityId and cityName, create a temporary city object
-    if (!found && cityId && selectedCityName) {
+    // First, try to find in cities array
+    if (cityId && cities.length > 0) {
+      const found = cities.find(city => city.id === cityId);
+      if (found) {
+        return found;
+      }
+    }
+    
+    // If not found but we have cityId and cityName, create a temporary city object
+    // This handles the case where cityId is set but cities haven't loaded yet, or city is not in the list
+    if (cityId && selectedCityName) {
       return { id: cityId, name: selectedCityName } as City;
     }
-    return found;
+    
+    return undefined;
   }, [cities, cityId, selectedCityName]);
 
-  // Always include selected city in filtered list, even if it doesn't match search
+  // Filter cities based on search, but ALWAYS include selected city at the top if it exists
   const filteredCities = useMemo(() => {
-    const filtered = cities.filter(city =>
-      city.name.toLowerCase().includes(citySearch.toLowerCase())
+    const lowerSearch = citySearch.toLowerCase().trim();
+    
+    // Filter cities based on search
+    let filtered = cities.filter(city =>
+      city.name.toLowerCase().includes(lowerSearch)
     );
     
-    // If we have a selected city and it's not in the filtered list, add it at the top
-    if (selectedCity && cityId && !filtered.find(c => c.id === cityId)) {
-      return [selectedCity, ...filtered];
+    // If we have a selected city (from cities array or fallback), ensure it's in the list
+    if (selectedCity && cityId) {
+      // Check if selected city is already in filtered list
+      const isInFiltered = filtered.some(c => c.id === cityId);
+      
+      // If not in filtered list, add it at the top
+      if (!isInFiltered) {
+        filtered = [selectedCity, ...filtered];
+      } else {
+        // If it's in the list, move it to the top
+        filtered = filtered.filter(c => c.id !== cityId);
+        filtered = [selectedCity, ...filtered];
+      }
     }
     
     return filtered;
@@ -114,9 +142,10 @@ export function BasicInfoSection({
               setCitySearch(''); 
             }}
             required
+            key={cityId} // Force re-render when cityId changes
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder={selectedCity ? selectedCity.name : "Search and select a city"} />
+              <SelectValue placeholder={selectedCity?.name || selectedCityName || "Search and select a city"} />
             </SelectTrigger>
             <SelectContent>
               {/* Search Input */}

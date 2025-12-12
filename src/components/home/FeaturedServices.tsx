@@ -154,8 +154,8 @@ export default function FeaturedServices() {
   const sections = settingsSections?.length ? settingsSections : defaultSections;
 
   return (
-    <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
-  <div className="max-w-7xl mx-auto space-y-14">
+    <section className="py-4 px-4 sm:px-6 lg:px-8 bg-white">
+  <div className="max-w-7xl mx-auto space-y-8">
     {sections.map((section) => (
       <div key={section.id}>
         {/* Section Title */}

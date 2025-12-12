@@ -72,16 +72,36 @@ export function TouristPlaceForm({ touristPlace, onSubmit, isSubmitting }: Touri
     },
   });
 
+  // Load cities and categories on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [citiesData, categoriesData] = await Promise.all([
+          cityService.fetchCities(),
+          categoryService.fetchCategories(1, 100),
+        ]);
+        setCities(citiesData);
+        setCategories(categoriesData.data.categories || []);
+      } catch (error: any) {
+        toast.error('Failed to load data');
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Load tourist place data when touristPlace prop changes
   useEffect(() => {
     if (touristPlace) {
       setTitle(touristPlace.title || '');
       setSlug(touristPlace.slug || '');
       setSubtitle(touristPlace.subtitle || '');
-      // Set cityId immediately from touristPlace.city.id
+      
+      // ALWAYS set cityId from touristPlace.city.id - this is the source of truth
       const placeCityId = touristPlace.city?.id;
       if (placeCityId) {
         setCityId(placeCityId);
       }
+      
       const aboutValue = touristPlace.about || '';
       setAbout(aboutValue);
       setMetaTitle(touristPlace.metaTitle || '');
@@ -126,37 +146,6 @@ export function TouristPlaceForm({ touristPlace, onSubmit, isSubmitting }: Touri
         });
       }
     }
-  }, [touristPlace]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [citiesData, categoriesData] = await Promise.all([
-          cityService.fetchCities(),
-          categoryService.fetchCategories(1, 100),
-        ]);
-        setCities(citiesData);
-        setCategories(categoriesData.data.categories || []);
-        
-        // Ensure cityId is set if we have touristPlace with city
-        if (touristPlace) {
-          const placeCityId = touristPlace.city?.id;
-          if (placeCityId) {
-            // Verify city exists in loaded cities, if not, keep the cityId anyway (will use selectedCityName)
-            const cityExists = citiesData.find(c => c.id === placeCityId);
-            if (cityExists) {
-              setCityId(placeCityId);
-            } else if (!cityId) {
-              // If cityId is not set yet, set it even if city not found in list
-              setCityId(placeCityId);
-            }
-          }
-        }
-      } catch (error: any) {
-        toast.error('Failed to load data');
-      }
-    };
-    fetchData();
   }, [touristPlace]);
 
   const handleTitleChange = (value: string) => {
