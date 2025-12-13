@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Clock, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { paymentService } from '@/services/payment.service';
+
+const POLL_INTERVAL = 2500; // 2.5 seconds (2-3 seconds as recommended)
+const POLL_TIMEOUT = 30000; // 30 seconds timeout
 
 export default function PaymentPendingPage() {
   const searchParams = useSearchParams();
@@ -13,14 +16,35 @@ export default function PaymentPendingPage() {
   const [paymentDetails, setPaymentDetails] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
+  const [timeElapsed, setTimeElapsed] = useState(0);
+  const [pollingStopped, setPollingStopped] = useState(false);
+  
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const startTimeRef = useRef<number>(Date.now());
 
   const paymentId = searchParams.get('paymentId');
   const tranRef = searchParams.get('tranRef');
 
-  const fetchPaymentDetails = async () => {
+  const stopPolling = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setPollingStopped(true);
+  }, []);
+
+  const isInitialLoadRef = useRef(true);
+
+  const fetchPaymentDetails = useCallback(async () => {
     if (!paymentId) {
       setError('Payment ID not found');
       setLoading(false);
+      stopPolling();
       return;
     }
 
@@ -31,25 +55,66 @@ export default function PaymentPendingPage() {
 
       // If payment status changed, redirect accordingly
       if (response.data.status === 'COMPLETED') {
-        router.push(`/dashboard/payments/success?paymentId=${paymentId}&tranRef=${tranRef}`);
+        stopPolling();
+        router.push(`/dashboard/payments/success?paymentId=${paymentId}&tranRef=${tranRef || response.data.transactionId || ''}`);
+        return;
       } else if (response.data.status === 'FAILED') {
-        router.push(`/dashboard/payments/failed?paymentId=${paymentId}&tranRef=${tranRef}`);
+        stopPolling();
+        router.push(`/dashboard/payments/failed?paymentId=${paymentId}&tranRef=${tranRef || response.data.transactionId || ''}`);
+        return;
       }
+      
+      // Update elapsed time
+      const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      setTimeElapsed(elapsed);
     } catch (err) {
       console.error('Error fetching payment details:', err);
-      setError('Failed to fetch payment details');
+      // Don't set error on first load, only on subsequent polls
+      if (!isInitialLoadRef.current) {
+        setError('Failed to fetch payment details');
+      }
     } finally {
+      if (isInitialLoadRef.current) {
+        isInitialLoadRef.current = false;
+      }
       setLoading(false);
       setChecking(false);
     }
-  };
+  }, [paymentId, tranRef, router, stopPolling]);
 
   useEffect(() => {
+    if (!paymentId) {
+      setError('Payment ID not found');
+      setLoading(false);
+      return;
+    }
+
+    // Reset start time and initial load flag
+    startTimeRef.current = Date.now();
+    isInitialLoadRef.current = true;
+    setTimeElapsed(0);
+    setPollingStopped(false);
+    setError(null);
+
+    // Initial fetch
     fetchPaymentDetails();
-    // Auto-refresh every 5 seconds
-    const interval = setInterval(fetchPaymentDetails, 5000);
-    return () => clearInterval(interval);
-  }, [paymentId]);
+
+    // Start polling every 2-3 seconds
+    intervalRef.current = setInterval(() => {
+      fetchPaymentDetails();
+    }, POLL_INTERVAL);
+
+    // Stop polling after timeout
+    timeoutRef.current = setTimeout(() => {
+      stopPolling();
+      setError('Payment status check timed out. Please check your payment status manually.');
+    }, POLL_TIMEOUT);
+
+    // Cleanup on unmount
+    return () => {
+      stopPolling();
+    };
+  }, [paymentId, fetchPaymentDetails, stopPolling]);
 
   if (loading) {
     return (
@@ -68,11 +133,16 @@ export default function PaymentPendingPage() {
           </div>
           
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Payment Pending
+            Processing Payment...
           </h1>
           
           <p className="text-gray-600 mb-6">
             Your payment is being processed. This may take a few moments.
+            {!pollingStopped && (
+              <span className="block mt-2 text-sm text-gray-500">
+                Checking status... ({timeElapsed}s / {POLL_TIMEOUT / 1000}s)
+              </span>
+            )}
           </p>
 
           {error && (
@@ -140,11 +210,21 @@ export default function PaymentPendingPage() {
             </Button>
           </div>
 
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-800">
-              <strong>Note:</strong> This page will automatically refresh every 5 seconds to check your payment status.
-            </p>
-          </div>
+          {!pollingStopped ? (
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Note:</strong> This page is automatically checking your payment status every few seconds. 
+                You will be redirected automatically once the payment is processed.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-6 p-4 bg-yellow-50 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                <strong>Note:</strong> Automatic status checking has stopped. 
+                Please click "Check Status" to manually verify your payment status.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
