@@ -185,7 +185,7 @@ export default function AddServiceDialog({ open, onOpenChange, editingService, b
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4 overflow-y-auto flex-1 min-h-0">
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4 overflow-y-auto flex-1 min-h-0 scrollbar-hide">
           <div className={`grid grid-cols-1 ${!editingService ? 'md:grid-cols-2' : ''} gap-4`}>
             {/* Business Selection */}
             {!editingService && (

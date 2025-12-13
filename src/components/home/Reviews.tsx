@@ -176,7 +176,7 @@ export default function Reviews() {
   );
 
   return (
-    <section className="py-8 bg-gray-100">
+    <section className="py-4 bg-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">

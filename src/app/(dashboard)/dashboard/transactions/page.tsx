@@ -7,12 +7,16 @@ import { paymentService } from '@/services/payment.service';
 import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { Receipt, CreditCard, Calendar, Building2, Loader2, AlertCircle, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useCurrency } from '@/hooks/useCurrency';
 import { parseDecimal } from '@/services/subscription.service';
 
 export default function TransactionsPage() {
   const { currency } = useCurrency();
   const [selectedBusinessId, setSelectedBusinessId] = useState<string>('');
+  const [subscriptionsPage, setSubscriptionsPage] = useState(1);
+  const [paymentsPage, setPaymentsPage] = useState(1);
+  const pageSize = 10;
 
   // Fetch user's businesses
   const { data: businesses, isLoading: businessesLoading } = useQuery({
@@ -20,48 +24,37 @@ export default function TransactionsPage() {
     queryFn: () => businessService.getMyBusinesses(),
   });
 
-  // Fetch subscriptions for all businesses (backend will filter by user's businesses)
+  // Fetch subscriptions with pagination
   const { data: subscriptionsData, isLoading: subscriptionsLoading } = useQuery({
-    queryKey: ['subscriptions', selectedBusinessId],
+    queryKey: ['subscriptions', selectedBusinessId, subscriptionsPage],
     queryFn: () => subscriptionService.getSubscriptions({
       businessId: selectedBusinessId || undefined,
-      limit: 100,
+      page: subscriptionsPage,
+      limit: pageSize,
     }),
     enabled: !!businesses && businesses.length > 0,
   });
 
-  // Fetch payments for all businesses
-  const { data: payments, isLoading: paymentsLoading } = useQuery({
-    queryKey: ['payments', selectedBusinessId],
+  // Fetch payments with pagination (only if a business is selected)
+  const { data: paymentsData, isLoading: paymentsLoading } = useQuery({
+    queryKey: ['payments', selectedBusinessId, paymentsPage],
     queryFn: async () => {
-      if (selectedBusinessId) {
-        return paymentService.getBusinessPayments(selectedBusinessId);
+      if (!selectedBusinessId) {
+        // If no business selected, return empty result
+        return { payments: [], pagination: { total: 0, page: 1, limit: pageSize, pages: 0 } };
       }
-      // Get payments for all businesses
-      const allPayments = await Promise.all(
-        (businesses || []).map(business => 
-          paymentService.getBusinessPayments(business.id).catch(() => [])
-        )
-      );
-
-      return allPayments.flat();
+      return paymentService.getBusinessPayments(selectedBusinessId, {
+        page: paymentsPage,
+        limit: pageSize,
+      });
     },
     enabled: !!businesses && businesses.length > 0,
   });
 
   const subscriptions = subscriptionsData?.data?.subscriptions || [];
-  const allPayments = payments || [];
-
-  // Filter subscriptions and payments by selected business
-  const filteredSubscriptions = useMemo(() => {
-    if (!selectedBusinessId) return subscriptions;
-    return subscriptions.filter(sub => sub.businessId === selectedBusinessId);
-  }, [subscriptions, selectedBusinessId]);
-
-  const filteredPayments = useMemo(() => {
-    if (!selectedBusinessId) return allPayments;
-    return allPayments.filter(payment => payment.businessId === selectedBusinessId);
-  }, [allPayments, selectedBusinessId]);
+  const subscriptionsPagination = subscriptionsData?.data?.pagination;
+  const payments = paymentsData?.payments || [];
+  const paymentsPagination = paymentsData?.pagination;
 
   const isLoading = businessesLoading || subscriptionsLoading || paymentsLoading;
 
@@ -125,44 +118,49 @@ export default function TransactionsPage() {
       </div>
 
       {/* Business Filter */}
-      {businesses.length > 1 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Filter by Business
-          </label>
-          <select
-            value={selectedBusinessId}
-            onChange={(e) => setSelectedBusinessId(e.target.value)}
-            className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1c4233] focus:border-transparent"
-          >
-            <option value="">All Businesses</option>
-            {businesses.map((business) => (
-              <option key={business.id} value={business.id}>
-                {business.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Filter by Business
+        </label>
+        <select
+          value={selectedBusinessId}
+          onChange={(e) => {
+            setSelectedBusinessId(e.target.value);
+            setSubscriptionsPage(1);
+            setPaymentsPage(1);
+          }}
+          className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1c4233] focus:border-transparent"
+        >
+          <option value="">All Businesses</option>
+          {businesses.map((business) => (
+            <option key={business.id} value={business.id}>
+              {business.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {/* Subscriptions Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center gap-2 mb-4">
           <CreditCard className="w-5 h-5 text-[#1c4233]" />
           <h2 className="text-xl font-semibold text-gray-900">Subscriptions</h2>
-          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#1c4233] text-white">
-            {filteredSubscriptions.length}
-          </span>
+          {subscriptionsPagination && (
+            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#1c4233] text-white">
+              {subscriptionsPagination.total}
+            </span>
+          )}
         </div>
 
-        {filteredSubscriptions.length === 0 ? (
+        {subscriptions.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <CreditCard className="w-12 h-12 mx-auto mb-2 text-gray-400" />
             <p>No subscriptions found</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredSubscriptions.map((subscription) => (
+          <>
+            <div className="space-y-4">
+              {subscriptions.map((subscription) => (
               <div
                 key={subscription.id}
                 className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
@@ -205,8 +203,37 @@ export default function TransactionsPage() {
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            {/* Subscriptions Pagination */}
+            {subscriptionsPagination && subscriptionsPagination.totalPages > 1 && (
+              <div className="mt-4 flex items-center justify-between border-t pt-4">
+                <div className="text-sm text-gray-600">
+                  Showing {((subscriptionsPagination.page - 1) * subscriptionsPagination.limit) + 1} to{' '}
+                  {Math.min(subscriptionsPagination.page * subscriptionsPagination.limit, subscriptionsPagination.total)} of{' '}
+                  {subscriptionsPagination.total} subscriptions
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSubscriptionsPage(p => Math.max(1, p - 1))}
+                    disabled={subscriptionsPagination.page === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSubscriptionsPage(p => Math.min(subscriptionsPagination.totalPages, p + 1))}
+                    disabled={subscriptionsPagination.page >= subscriptionsPagination.totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -215,30 +242,41 @@ export default function TransactionsPage() {
         <div className="flex items-center gap-2 mb-4">
           <Receipt className="w-5 h-5 text-[#1c4233]" />
           <h2 className="text-xl font-semibold text-gray-900">Payments</h2>
-          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#1c4233] text-white">
-            {filteredPayments.length}
-          </span>
+          {!selectedBusinessId && (
+            <p className="text-sm text-gray-500 ml-2">Select a business to view payments</p>
+          )}
+          {paymentsPagination && (
+            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#1c4233] text-white">
+              {paymentsPagination.total}
+            </span>
+          )}
         </div>
 
-        {filteredPayments.length === 0 ? (
+        {!selectedBusinessId ? (
+          <div className="text-center py-8 text-gray-500">
+            <Receipt className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+            <p>Please select a business to view payments</p>
+          </div>
+        ) : payments.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <Receipt className="w-12 h-12 mx-auto mb-2 text-gray-400" />
             <p>No payments found</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Payment Method</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Amount</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Status</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Date</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Transaction ID</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPayments.map((payment) => (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Payment Method</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Amount</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Status</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Date</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Transaction ID</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.map((payment) => (
                   <tr key={payment.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="py-3 px-4">
                       <div className="font-medium text-gray-900">
@@ -260,10 +298,39 @@ export default function TransactionsPage() {
                       {payment.transactionId || '-'}
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Payments Pagination */}
+            {paymentsPagination && paymentsPagination.pages > 1 && (
+              <div className="mt-4 flex items-center justify-between border-t pt-4">
+                <div className="text-sm text-gray-600">
+                  Showing {((paymentsPagination.page - 1) * paymentsPagination.limit) + 1} to{' '}
+                  {Math.min(paymentsPagination.page * paymentsPagination.limit, paymentsPagination.total)} of{' '}
+                  {paymentsPagination.total} payments
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPaymentsPage(p => Math.max(1, p - 1))}
+                    disabled={paymentsPagination.page === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPaymentsPage(p => Math.min(paymentsPagination.pages, p + 1))}
+                    disabled={paymentsPagination.page >= paymentsPagination.pages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

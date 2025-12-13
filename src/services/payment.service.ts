@@ -55,7 +55,7 @@ export interface PaginatedResponse<T> {
       total: number;
       page: number;
       limit: number;
-      totalPages: number;
+      pages: number;
     };
   };
 }
@@ -92,11 +92,17 @@ export const paymentService = {
     }
   },
 
-  async getBusinessPayments(businessId: string): Promise<Payment[]> {
+  async getBusinessPayments(
+    businessId: string,
+    params?: { page?: number; limit?: number }
+  ): Promise<PaginatedResponse<Payment>['data']> {
     try {
-      const response = await axiosInstance.get<ApiResponse<Payment[]>>(
-        API_ENDPOINTS.PAYMENTS.GET_BUSINESS_PAYMENTS(businessId)
-      );
+      const queryParams = new URLSearchParams();
+      if (params?.page) queryParams.append('page', params.page.toString());
+      if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+      const url = `${API_ENDPOINTS.PAYMENTS.GET_BUSINESS_PAYMENTS(businessId)}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const response = await axiosInstance.get<PaginatedResponse<Payment>>(url);
       return response.data.data;
     } catch (error) {
       console.error('Error fetching business payments:', error);

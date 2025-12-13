@@ -33,8 +33,10 @@ const statusIcons: Record<EnquiryStatus, any> = {
 };
 
 export default function EnquiriesPage() {
-  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [allEnquiries, setAllEnquiries] = useState<Enquiry[]>([]); // All enquiries for stats
+  const [enquiries, setEnquiries] = useState<Enquiry[]>([]); // Filtered enquiries for table
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -55,14 +57,38 @@ export default function EnquiriesPage() {
     fetchCategories();
   }, []);
 
-  // Fetch enquiries
+  // Fetch all enquiries on mount for stats
   useEffect(() => {
-    fetchEnquiries();
+    fetchAllEnquiries();
+  }, []);
+
+  // Fetch filtered enquiries on search/filter change
+  useEffect(() => {
+    if (!initialLoading) {
+      fetchEnquiries();
+    }
   }, [searchInput, statusFilter, categoryFilter]);
+
+  const fetchAllEnquiries = async () => {
+    try {
+      setInitialLoading(true);
+      const response = await enquiryService.getAllEnquiries({
+        page: 1,
+        limit: 1000, // Get all for stats
+      });
+      setAllEnquiries(response.enquiries || []);
+      setEnquiries(response.enquiries || []); // Initially show all
+    } catch (error: any) {
+      console.error('Error fetching all enquiries:', error);
+      toast.error(error.message || 'Failed to fetch enquiries');
+    } finally {
+      setInitialLoading(false);
+    }
+  };
 
   const fetchEnquiries = async () => {
     try {
-      setLoading(true);
+      setSearchLoading(true);
       const params: any = {
         page: 1,
         limit: 100,
@@ -86,7 +112,7 @@ export default function EnquiriesPage() {
       console.error('Error fetching enquiries:', error);
       toast.error(error.message || 'Failed to fetch enquiries');
     } finally {
-      setLoading(false);
+      setSearchLoading(false);
     }
   };
 
@@ -97,15 +123,15 @@ export default function EnquiriesPage() {
 
   const columns = createColumns(handleView);
 
-  // Calculate stats
+  // Calculate stats from ALL enquiries (not filtered)
   const stats = {
-    total: enquiries.length,
-    open: enquiries.filter((e) => e.status === EnquiryStatus.OPEN).length,
-    inProgress: enquiries.filter((e) => e.status === EnquiryStatus.IN_PROGRESS).length,
-    closed: enquiries.filter((e) => e.status === EnquiryStatus.CLOSED).length,
+    total: allEnquiries.length,
+    open: allEnquiries.filter((e) => e.status === EnquiryStatus.OPEN).length,
+    inProgress: allEnquiries.filter((e) => e.status === EnquiryStatus.IN_PROGRESS).length,
+    closed: allEnquiries.filter((e) => e.status === EnquiryStatus.CLOSED).length,
   };
 
-  if (loading && enquiries.length === 0) {
+  if (initialLoading && allEnquiries.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-[#1c4233]" />
@@ -150,7 +176,7 @@ export default function EnquiriesPage() {
           data={enquiries}
           onSearchChange={setSearchInput}
           searchValue={searchInput}
-          loading={loading}
+          loading={searchLoading}
           statusFilter={statusFilter}
           categoryFilter={categoryFilter}
           categories={categories}

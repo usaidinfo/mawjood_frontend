@@ -66,16 +66,6 @@ export const createColumns = ({ onEdit, onDelete, onView }: ColumnsProps): Colum
     },
   },
   {
-    accessorKey: 'businessSections',
-    header: 'Business Sections',
-    cell: ({ row }) => {
-      const place = row.original;
-      // Use _count if available, otherwise use array length
-      const count = place._count?.businessSections ?? (place.businessSections?.length || 0);
-      return <span>{count}</span>;
-    },
-  },
-  {
     accessorKey: 'createdAt',
     header: 'Created',
     cell: ({ row }) => {

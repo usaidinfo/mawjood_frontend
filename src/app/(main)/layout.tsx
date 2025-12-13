@@ -7,7 +7,8 @@ import Footer from "@/components/layout/Footer";
 import QueryProvider from "@/providers/QueryProvider";
 import AuthProvider from "@/providers/AuthProvider";
 import { Toaster } from '@/components/ui/sonner';
-import EnquiryChatButton from "@/components/layout/EnquiryChatButton"; 
+import EnquiryChatButton from "@/components/layout/EnquiryChatButton";
+import LocationPermissionModal from "@/components/common/LocationPermissionModal"; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +38,7 @@ export default function RootLayout({
               <main>{children}</main>
               <Footer />
               <EnquiryChatButton />
+              <LocationPermissionModal />
             </AuthProvider>
           </QueryProvider>
           <Toaster />
