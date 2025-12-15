@@ -97,7 +97,7 @@ export function NavbarSettingsSection({
               <p className="text-sm text-gray-600">
                 <span className="font-semibold">Click to upload</span> logo
               </p>
-              <p className="text-xs text-gray-500 mt-1">PNG, JPG, SVG up to 10MB</p>
+              <p className="text-xs text-gray-500 mt-1">PNG, JPG, SVG up to 15MB</p>
             </div>
             <input
               id="logo-upload"

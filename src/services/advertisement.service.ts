@@ -16,7 +16,7 @@ export interface Advertisement {
   regionId?: string | null;
   cityId?: string | null;
   categoryId?: string | null;
-  adType?: 'CATEGORY' | 'TOP' | 'FOOTER' | 'BUSINESS_LISTING' | 'BLOG_LISTING' | 'HOMEPAGE';
+  adType?: 'CATEGORY' | 'TOP' | 'FOOTER' | 'BUSINESS_LISTING' | 'BLOG_LISTING' | 'HOMEPAGE' | 'HERO_STRIP';
   createdAt: string;
   updatedAt: string;
 }
@@ -25,7 +25,7 @@ export interface AdvertisementQuery {
   locationId?: string;
   locationType?: 'city' | 'region' | 'country';
   categoryId?: string;
-  adType?: 'CATEGORY' | 'TOP' | 'FOOTER' | 'BUSINESS_LISTING' | 'BLOG_LISTING' | 'HOMEPAGE';
+  adType?: 'CATEGORY' | 'TOP' | 'FOOTER' | 'BUSINESS_LISTING' | 'BLOG_LISTING' | 'HOMEPAGE' | 'HERO_STRIP';
 }
 
 interface ApiResponse<T> {

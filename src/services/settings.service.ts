@@ -5,14 +5,21 @@ export interface HeroCardSettings {
   id: string;
   title: string;
   buttonText?: string;
-  buttonColor?: string;
   image?: string;
   slug: string;
+}
+
+export interface HeroCarouselItem {
+  id: string;
+  image: string;
+  slug: string;
+  title?: string;
 }
 
 export interface HeroSettings {
   title?: string;
   subtitle?: string;
+  carousel?: HeroCarouselItem[];
   cards?: HeroCardSettings[];
 }
 

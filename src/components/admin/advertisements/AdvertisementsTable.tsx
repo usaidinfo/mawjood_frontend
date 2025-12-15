@@ -169,6 +169,7 @@ export function AdvertisementsTable<TData, TValue>({
             <SelectItem value="BUSINESS_LISTING">Business Listing</SelectItem>
             <SelectItem value="BLOG_LISTING">Blog Listing</SelectItem>
             <SelectItem value="HOMEPAGE">Homepage</SelectItem>
+            <SelectItem value="HERO_STRIP">Hero Strip</SelectItem>
             <SelectItem value="TOP">Top Banner</SelectItem>
             <SelectItem value="FOOTER">Footer Banner</SelectItem>
           </SelectContent>

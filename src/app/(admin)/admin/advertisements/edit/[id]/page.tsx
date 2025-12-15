@@ -15,7 +15,7 @@ import { Loader2, Upload, ArrowLeft } from 'lucide-react';
 import axiosInstance from '@/lib/axios';
 import { API_ENDPOINTS } from '@/config/api.config';
 
-type AdType = 'CATEGORY' | 'TOP' | 'FOOTER' | 'BUSINESS_LISTING' | 'BLOG_LISTING' | 'HOMEPAGE';
+type AdType = 'CATEGORY' | 'TOP' | 'FOOTER' | 'BUSINESS_LISTING' | 'BLOG_LISTING' | 'HOMEPAGE' | 'HERO_STRIP';
 type LocationType = 'city' | 'region' | 'country' | 'global';
 
 interface Advertisement {
@@ -271,7 +271,7 @@ export default function EditAdvertisementPage() {
 
   // Clear category and location when switching to ad types that don't need them
   useEffect(() => {
-    if (adType === 'HOMEPAGE' || adType === 'BUSINESS_LISTING' || adType === 'BLOG_LISTING') {
+    if (adType === 'HOMEPAGE' || adType === 'BUSINESS_LISTING' || adType === 'BLOG_LISTING' || adType === 'HERO_STRIP') {
       setCategoryId('none');
       setLocationType('global');
       setSelectedCityId('');
@@ -303,6 +303,7 @@ export default function EditAdvertisementPage() {
     if (!targetUrl.trim()) newErrors.targetUrl = 'Redirect URL is required';
     
     // Only validate location for CATEGORY, TOP, and FOOTER ad types
+    // HOMEPAGE, BUSINESS_LISTING, BLOG_LISTING, and HERO_STRIP don't need location targeting
     if (adType === 'CATEGORY' || adType === 'TOP' || adType === 'FOOTER') {
       if (locationType === 'city' && !selectedCityId) {
         newErrors.location = 'Please select a city';
@@ -341,6 +342,7 @@ export default function EditAdvertisementPage() {
       }
       
       // Only add category and location for CATEGORY, TOP, and FOOTER ad types
+      // HOMEPAGE, BUSINESS_LISTING, BLOG_LISTING, and HERO_STRIP don't need targeting
       if (adType === 'CATEGORY' || adType === 'TOP' || adType === 'FOOTER') {
         if (categoryId && categoryId !== 'none') {
           formData.append('categoryId', categoryId);
@@ -354,6 +356,7 @@ export default function EditAdvertisementPage() {
         } else if (locationType === 'country' && selectedCountryId) {
           formData.append('countryId', selectedCountryId);
         }
+        // If global, don't add any location fields
       }
       
       // Only append image if a new one was selected
@@ -457,6 +460,17 @@ export default function EditAdvertisementPage() {
                   </button>
                   <button
                     type="button"
+                    onClick={() => setAdType('HERO_STRIP')}
+                    className={`px-4 py-3 text-sm font-semibold rounded-lg transition-colors ${
+                      adType === 'HERO_STRIP'
+                        ? 'bg-[#1c4233] text-white'
+                        : 'bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600'
+                    }`}
+                  >
+                    Hero Strip
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setAdType('TOP')}
                     className={`px-4 py-3 text-sm font-semibold rounded-lg transition-colors ${
                       adType === 'TOP'
@@ -484,6 +498,7 @@ export default function EditAdvertisementPage() {
                     {adType === 'BUSINESS_LISTING' && '📍 Business Listing Sidebar (Right Sidebar on /businesses)'}
                     {adType === 'BLOG_LISTING' && '📍 Blog Listing Sidebar (Right Sidebar on Blog Listing)'}
                     {adType === 'HOMEPAGE' && '📍 Homepage Banner (Top of Homepage)'}
+                    {adType === 'HERO_STRIP' && '📍 Hero Strip (Small Strip Above Hero Section)'}
                     {adType === 'TOP' && '📍 Top Banner (Top of Pages)'}
                     {adType === 'FOOTER' && '📍 Footer Banner (Bottom of Pages)'}
                   </p>
@@ -492,6 +507,7 @@ export default function EditAdvertisementPage() {
                     {adType === 'BUSINESS_LISTING' && 'Displays in the right sidebar on the businesses listing page (/businesses). Vertical format recommended (300×350px). No category/location targeting needed.'}
                     {adType === 'BLOG_LISTING' && 'Displays in the right sidebar on blog listing pages. Vertical format recommended (300×350px). No category/location targeting needed.'}
                     {adType === 'HOMEPAGE' && 'Displays as a prominent banner on the homepage. Horizontal format recommended (1278×184px). No category/location targeting needed.'}
+                    {adType === 'HERO_STRIP' && 'Displays as a small horizontal strip above the hero section on the homepage. Full width, small height format recommended (1920×48px for desktop, 1920×64px for mobile). No category/location targeting needed.'}
                     {adType === 'TOP' && 'Displays at the top of pages as a horizontal banner. Supports multiple ads with auto-rotation (1278×184px).'}
                     {adType === 'FOOTER' && 'Displays at the bottom of pages as a horizontal banner (1278×184px).'}
                   </p>
@@ -514,6 +530,9 @@ export default function EditAdvertisementPage() {
                     {(adType === 'TOP' || adType === 'FOOTER' || adType === 'HOMEPAGE') && (
                       <li><span className="font-semibold">Horizontal Banner:</span> 1278 × 184 pixels (wide banner)</li>
                     )}
+                    {adType === 'HERO_STRIP' && (
+                      <li><span className="font-semibold">Hero Strip:</span> 1920 × 48 pixels (desktop) or 1920 × 64 pixels (mobile) - full width, small height</li>
+                    )}
                   </ul>
                 </div>
                 {(imagePreview || existingImageUrl) && (
@@ -521,6 +540,8 @@ export default function EditAdvertisementPage() {
                     <div className={`relative ${
                       (adType === 'CATEGORY' || adType === 'BUSINESS_LISTING' || adType === 'BLOG_LISTING')
                         ? 'aspect-[300/350] max-w-[300px] mx-auto' 
+                        : adType === 'HERO_STRIP'
+                        ? 'aspect-[1920/48]'
                         : 'aspect-[1278/184]'
                     }`}>
                       <Image
@@ -536,6 +557,8 @@ export default function EditAdvertisementPage() {
                           ? 'Sidebar' 
                           : adType === 'HOMEPAGE' 
                             ? 'Homepage Banner' 
+                            : adType === 'HERO_STRIP'
+                            ? 'Hero Strip'
                             : adType === 'TOP' 
                               ? 'Top Banner' 
                               : 'Footer Banner'

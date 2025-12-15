@@ -12,12 +12,14 @@ import QuickLinks from '@/components/home/QuickLinks';
 import ServicesAndUtilities from '@/components/home/ServicesAndUtilities';
 import TrendingSearches from '@/components/home/TrendingSearches';
 import TouristPlacesSection from '@/components/home/TouristPlacesSection';
+import HeroStripAd from '@/components/home/HeroStripAd';
 
 export default function Home() {
     const { t, i18n } = useTranslation('common');
 
   return (
     <div className="font-sans">
+      <HeroStripAd />
       <HeroSection />
       <CategoryListing/>
 

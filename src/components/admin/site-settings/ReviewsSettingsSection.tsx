@@ -213,7 +213,7 @@ export function ReviewsSettingsSection({
                     <p className="text-sm text-gray-600">
                       <span className="font-semibold">Click to upload</span> avatar
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 10MB</p>
+                    <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 15MB</p>
                   </div>
                   <input
                     id={`avatar-upload-${index}`}

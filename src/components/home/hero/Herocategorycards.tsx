@@ -2,12 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { ChevronRight } from 'lucide-react';
 
 interface HeroCard {
   id: string;
   title: string;
   buttonText: string;
-  buttonColor: string;
   bgImage: string;
   slug: string;
 }
@@ -23,38 +23,52 @@ export default function HeroCategoryCards({ cards, locationSlug, loading }: Hero
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, idx) => (
           <div
             key={`hero-skeleton-${idx}`}
-            className="h-40 rounded-xl bg-white shadow-lg border border-gray-100 p-6 flex flex-col justify-between animate-pulse"
-          >
-            <div className="h-5 w-3/4 bg-gray-200 rounded-full" />
-            <div className="h-8 w-32 bg-gray-200 rounded-md self-start" />
-          </div>
+            className="h-64 rounded-2xl bg-gray-200 animate-pulse"
+          />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {cards.map((card) => (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full">
+      {cards.slice(0, 4).map((card) => (
         <div
           key={card.id}
           onClick={() => router.push(`/${locationSlug}/${card.slug}`)}
-          className="bg-blue-100 rounded-xl overflow-hidden shadow-lg transition-all duration-300 transform flex h-40 cursor-pointer hover:scale-105"
+          className="rounded-2xl overflow-hidden shadow-lg transition-all duration-300 transform cursor-pointer hover:scale-105 hover:shadow-xl relative h-60"
         >
-          <div className="flex-1 p-6 flex flex-col justify-between">
-            <h3 className="text-md font-bold text-gray-800 mb-3">{card.title}</h3>
-            <button
-              className={`${card.buttonColor} text-white font-bold py-2 px-4 rounded-sm hover:opacity-90 transition-all duration-300 text-xs uppercase tracking-wide w-fit`}
-            >
-              {card.buttonText}
-            </button>
+          {/* Image Background */}
+          <div className="absolute inset-0">
+            <Image 
+              src={card.bgImage} 
+              alt={card.title} 
+              fill 
+              className="object-cover" 
+              sizes="(max-width: 768px) 50vw, 25vw"
+            />
           </div>
-          <div className="w-32 relative">
-            <Image src={card.bgImage} alt={card.title} fill className="object-cover" sizes="128px" />
+
+          {/* Transparent Overlay with Text */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex flex-col justify-between p-4 md:p-5 z-10">
+            {/* Text Content at Top */}
+            <div className="flex flex-col">
+              <h3 className="text-base md:text-md text-white font-bold mb-1 leading-tight uppercase">
+                {card.title}
+              </h3>
+              <p className="text-xs md:text-xs text-white/90">
+                {card.buttonText}
+              </p>
+            </div>
+
+            {/* Navigation Arrow at Bottom */}
+            <div className="self-end bg-white/20 hover:bg-white/30 rounded-full p-1.5 transition-colors">
+              <ChevronRight className="w-4 h-4 text-white" />
+            </div>
           </div>
         </div>
       ))}

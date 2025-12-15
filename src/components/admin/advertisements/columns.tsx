@@ -21,7 +21,7 @@ export type Advertisement = {
   imageUrl: string;
   targetUrl?: string | null;
   openInNewTab?: boolean;
-  adType?: 'CATEGORY' | 'TOP' | 'FOOTER' | 'BUSINESS_LISTING' | 'BLOG_LISTING' | 'HOMEPAGE';
+  adType?: 'CATEGORY' | 'TOP' | 'FOOTER' | 'BUSINESS_LISTING' | 'BLOG_LISTING' | 'HOMEPAGE' | 'HERO_STRIP';
   isActive: boolean;
   startsAt?: string | null;
   endsAt?: string | null;
@@ -43,6 +43,7 @@ const adTypeLabels: Record<string, string> = {
   BUSINESS_LISTING: 'Business Listing',
   BLOG_LISTING: 'Blog Listing',
   HOMEPAGE: 'Homepage',
+  HERO_STRIP: 'Hero Strip',
   TOP: 'Top Banner',
   FOOTER: 'Footer Banner',
 };

@@ -10,12 +10,12 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import SearchBar from '@/components/home/hero/Searchbar';
 import LocationSelector from '@/components/home/hero/Locationselector';
 import HeroCategoryCards from '@/components/home/hero/Herocategorycards';
+import HeroCarousel from '@/components/home/hero/HeroCarousel';
 
 interface HeroCard {
   id: string;
   title: string;
   buttonText: string;
-  buttonColor: string;
   bgImage: string;
   slug: string;
 }
@@ -23,7 +23,7 @@ interface HeroCard {
 export default function HeroSection() {
   const { t } = useTranslation('common');
   const router = useRouter();
-  
+
   const {
     cities,
     regions,
@@ -71,7 +71,6 @@ export default function HeroSection() {
         title: t('hero.packersMovers'),
         buttonText: t('hero.getBestDeal'),
         bgImage: '/home/packers.jpg',
-        buttonColor: 'bg-orange-500 hover:bg-orange-600',
         slug: 'transporters',
       },
       {
@@ -79,7 +78,6 @@ export default function HeroSection() {
         title: t('hero.repairsServices'),
         buttonText: t('hero.bookNow'),
         bgImage: '/home/b2b.jpg',
-        buttonColor: 'bg-blue-500 hover:bg-blue-600',
         slug: 'repairs',
       },
       {
@@ -87,7 +85,6 @@ export default function HeroSection() {
         title: t('hero.realEstate'),
         buttonText: t('hero.explore'),
         bgImage: '/home/real-estate.jpg',
-        buttonColor: 'bg-purple-500 hover:bg-purple-600',
         slug: 'real-estate',
       },
       {
@@ -95,7 +92,6 @@ export default function HeroSection() {
         title: t('hero.doctors'),
         buttonText: t('hero.bookNow'),
         bgImage: '/home/doctors.jpg',
-        buttonColor: 'bg-green-500 hover:bg-green-600',
         slug: 'healthcare',
       },
     ],
@@ -109,13 +105,17 @@ export default function HeroSection() {
         id: card.id,
         title: card.title,
         buttonText: card.buttonText ?? t('hero.explore'),
-        buttonColor: card.buttonColor ?? 'bg-primary hover:bg-primary/90',
         bgImage: card.image ?? '/home/placeholder.jpg',
         slug: card.slug,
       }));
     }
     return defaultCategoryCards;
   }, [heroSettings?.cards, defaultCategoryCards, t]);
+
+  // Carousel items from settings
+  const carouselItems = useMemo(() => {
+    return heroSettings?.carousel ?? [];
+  }, [heroSettings?.carousel]);
 
   // Location slug for routing
   const routingLocationSlug = useMemo(() => {
@@ -252,7 +252,7 @@ export default function HeroSection() {
       <div className="max-w-7xl mx-auto flex-1 flex flex-col justify-center w-full">
         {/* Hero Title */}
         {siteSettingsLoading ? (
-          <div className="mb-8 flex flex-col items-center gap-4 animate-pulse">
+          <div className="mb-6 flex flex-col items-center gap-4 animate-pulse">
             <div className="h-10 w-full max-w-2xl rounded-full bg-gray-200" />
             <div className="h-4 w-full max-w-xl rounded-full bg-gray-200" />
           </div>
@@ -264,7 +264,7 @@ export default function HeroSection() {
               </h1>
             )}
             {heroSubtitle && (
-              <p className=" text-gray-600 mb-3 max-w-3xl">
+              <p className="text-gray-600 mb-6 max-w-3xl">
                 {heroSubtitle}
               </p>
             )}
@@ -274,8 +274,8 @@ export default function HeroSection() {
         {/* Search Bar */}
         <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl p-2 mb-12 border border-gray-100">
           <div className="flex flex-col md:flex-row gap-2 w-full">
-            <SearchBar 
-              onSearch={handleSearch} 
+            <SearchBar
+              onSearch={handleSearch}
               selectedCityId={selectedCity?.id}
             />
 
@@ -303,16 +303,31 @@ export default function HeroSection() {
             </button>
           </div>
         </div>
+
+         {/* Carousel and Cards Row */}
+         <div className="flex flex-col lg:flex-row gap-4 mb-8">
+          {/* Hero Carousel - Takes more width on large screens */}
+          {carouselItems.length > 0 && (
+            <div className="lg:w-[50%] w-full">
+              <HeroCarousel
+                items={carouselItems}
+                locationSlug={routingLocationSlug}
+                loading={siteSettingsLoading}
+              />
+            </div>
+          )}
+
+          {/* Category Cards - Takes remaining width on large screens */}
+          <div className={carouselItems.length > 0 ? "lg:w-[50%] w-full" : "w-full"}>
+            <HeroCategoryCards
+              cards={categoryCards}
+              locationSlug={routingLocationSlug}
+              loading={siteSettingsLoading}
+            />
+          </div>
+         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto pb-12 w-full">
-        <HeroCategoryCards
-          cards={categoryCards}
-          locationSlug={routingLocationSlug}
-          loading={siteSettingsLoading}
-        />
-      </div>
-      
       {/* Fade gradient from primary to white */}
       <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent via-primary/10 to-white pointer-events-none" />
     </section>
