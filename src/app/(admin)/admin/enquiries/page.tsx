@@ -256,12 +256,21 @@ export default function EnquiriesPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Message</label>
-                <p className="mt-1 text-gray-900 dark:text-gray-100 whitespace-pre-wrap bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                  {selectedEnquiry.message}
-                </p>
-              </div>
+              {selectedEnquiry.message ? (
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Message</label>
+                  <p className="mt-1 text-gray-900 dark:text-gray-100 whitespace-pre-wrap bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                    {selectedEnquiry.message}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Message</label>
+                  <p className="mt-1 text-gray-400 dark:text-gray-500 italic bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                    No message provided
+                  </p>
+                </div>
+              )}
 
               {selectedEnquiry.response && (
                 <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">

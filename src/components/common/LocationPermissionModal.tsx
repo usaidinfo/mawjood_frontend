@@ -35,6 +35,8 @@ export default function LocationPermissionModal() {
     fetchCities,
     fetchRegions,
     fetchCountries,
+    isRequestingLocation,
+    setRequestingLocation,
   } = useCityStore();
 
   const [open, setOpen] = useState(false);
@@ -42,6 +44,7 @@ export default function LocationPermissionModal() {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'requesting' | 'fetching' | 'matching' | 'success' | 'error'>('idle');
   const [hasChecked, setHasChecked] = useState(false);
+  const [permissionState, setPermissionState] = useState<PermissionState | null>(null);
 
   // Debug: Log when component mounts
   useEffect(() => {
@@ -49,6 +52,45 @@ export default function LocationPermissionModal() {
     return () => {
       console.log('[LocationModal] Component unmounted');
     };
+  }, []);
+
+  // Check geolocation permission status and listen for changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const checkPermission = async () => {
+      try {
+        if (navigator.permissions) {
+          const result = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+          setPermissionState(result.state);
+          
+          // Listen for permission changes (when user grants/denies)
+          result.onchange = () => {
+            const newState = result.state;
+            setPermissionState(newState);
+            console.log('[LocationModal] Permission state changed:', newState);
+            
+            // Close modal if permission was granted or denied
+            if (newState === 'granted' || newState === 'denied') {
+              setRequestingLocation(false);
+              if (newState === 'denied') {
+                setError('Location permission denied. Please allow location access or select manually.');
+                setStatus('error');
+              }
+            }
+          };
+        } else {
+          // Permission API not supported, assume prompt state
+          setPermissionState('prompt');
+        }
+      } catch (err) {
+        console.warn('[LocationModal] Could not check permission status:', err);
+        // If permission API is not supported, assume prompt state
+        setPermissionState('prompt');
+      }
+    };
+
+    checkPermission();
   }, []);
 
   // Fetch cities, regions, and countries on mount if not already loaded
@@ -70,67 +112,41 @@ export default function LocationPermissionModal() {
     initializeData();
   }, []);
 
-  // Check if we should show the modal (only if location hasn't been selected)
+  // Show modal ONLY when browser is actually asking for permission
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (hasChecked) return; // Only check once
-
+    
     // Check for test mode in URL (for debugging)
     const urlParams = new URLSearchParams(window.location.search);
     const forceShow = urlParams.get('showLocationModal') === 'true';
 
-    // Check localStorage directly to see if location was persisted
-    const checkPersistedLocation = () => {
-      try {
-        const stored = localStorage.getItem('city-storage');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          return parsed?.state?.selectedLocation;
-        }
-      } catch (e) {
-        console.warn('[LocationModal] Error reading localStorage:', e);
-      }
-      return null;
-    };
+    // Show modal ONLY if:
+    // 1. Force show is enabled (for testing), OR
+    // 2. Location is being requested AND permission state is 'prompt' (browser is asking)
+    //    This means the browser permission dialog is showing or about to show
+    const shouldShow = forceShow || (isRequestingLocation && permissionState === 'prompt');
 
-    // Wait for store to hydrate (check multiple times)
-    let attempts = 0;
-    const maxAttempts = 10;
-    const checkInterval = setInterval(() => {
-      attempts++;
-      const persistedLocation = checkPersistedLocation();
-      
-      console.log('[LocationModal] Checking conditions (attempt', attempts, '):', {
-        selectedLocation,
-        persistedLocation,
-        citiesCount: cities.length,
-        hasChecked,
+    if (shouldShow && !open) {
+      console.log('[LocationModal] Opening modal - browser is asking for permission', {
+        isRequestingLocation,
+        permissionState,
         forceShow,
       });
-      
-      // Show modal if:
-      // 1. Force show is enabled, OR
-      // 2. No location is selected in store AND no location in localStorage
-      const shouldShow = forceShow || (!selectedLocation && !persistedLocation);
-      
-      if (shouldShow || attempts >= maxAttempts) {
-        clearInterval(checkInterval);
-        
-        if (shouldShow) {
-          console.log('[LocationModal] Opening modal');
-          setOpen(true);
-        } else {
-          console.log('[LocationModal] Not showing - location already selected');
-        }
-        setHasChecked(true);
-      }
-    }, 200); // Check every 200ms
+      setOpen(true);
+    } else if (!shouldShow && open && !forceShow) {
+      // Close modal if permission was already granted/denied
+      console.log('[LocationModal] Closing modal - permission already handled', {
+        permissionState,
+        isRequestingLocation,
+      });
+      setOpen(false);
+    }
 
-    // Cleanup
-    return () => {
-      clearInterval(checkInterval);
-    };
-  }, [selectedLocation, hasChecked, cities.length]);
+    // Mark as checked after first evaluation
+    if (!hasChecked) {
+      setHasChecked(true);
+    }
+  }, [isRequestingLocation, permissionState, hasChecked, open]);
 
   const normalizeName = (name: string): string => {
     return name.toLowerCase().trim().replace(/\s+/g, ' ');
@@ -237,8 +253,12 @@ export default function LocationPermissionModal() {
     if (!navigator.geolocation) {
       setError('Geolocation is not supported by your browser');
       setStatus('error');
+      setRequestingLocation(false);
       return;
     }
+
+    // Mark that we're requesting location
+    setRequestingLocation(true);
 
     // Ensure we have cities, regions, and countries loaded before matching
     if (cities.length === 0) {
@@ -294,6 +314,7 @@ export default function LocationPermissionModal() {
             regionId: matchedCity.regionId,
           });
           setStatus('success');
+          setRequestingLocation(false);
           setTimeout(() => setOpen(false), 1500);
           return;
         }
@@ -311,6 +332,7 @@ export default function LocationPermissionModal() {
             id: matchedRegion.id,
           });
           setStatus('success');
+          setRequestingLocation(false);
           setTimeout(() => setOpen(false), 1500);
           return;
         }
@@ -328,6 +350,7 @@ export default function LocationPermissionModal() {
             id: matchedCountry.id,
           });
           setStatus('success');
+          setRequestingLocation(false);
           setTimeout(() => setOpen(false), 1500);
           return;
         }
@@ -336,6 +359,7 @@ export default function LocationPermissionModal() {
       // If no match found, set error
       setError('Could not find your location in our database. Please select manually.');
       setStatus('error');
+      setRequestingLocation(false);
     } catch (err: any) {
       console.error('Location error:', err);
       if (err.code === 1) {
@@ -348,12 +372,14 @@ export default function LocationPermissionModal() {
         setError(err.message || 'Failed to get your location. Please select manually.');
       }
       setStatus('error');
+      setRequestingLocation(false);
     } finally {
       setLoading(false);
     }
   };
 
   const handleSkip = () => {
+    setRequestingLocation(false);
     setOpen(false);
   };
 

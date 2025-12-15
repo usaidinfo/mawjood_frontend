@@ -20,6 +20,7 @@ interface CityState {
   error: string | null;
   hasLoaded: boolean;
   isUserSelectionLocked: boolean;
+  isRequestingLocation: boolean;
   fetchCities: () => Promise<void>;
   fetchRegions: () => Promise<void>;
   fetchCountries: () => Promise<void>;
@@ -27,6 +28,7 @@ interface CityState {
   setSelectedLocation: (location: LocationSelection | null) => void;
   lockUserSelection: () => void;
   unlockUserSelection: () => void;
+  setRequestingLocation: (requesting: boolean) => void;
 }
 
 const isSameLocation = (
@@ -57,6 +59,7 @@ export const useCityStore = create<CityState>()(
         error: null,
         hasLoaded: false,
         isUserSelectionLocked: false,
+        isRequestingLocation: false,
 
         fetchCities: async () => {
           const { loading } = get();
@@ -156,6 +159,10 @@ export const useCityStore = create<CityState>()(
 
         unlockUserSelection: () => {
           set({ isUserSelectionLocked: false });
+        },
+
+        setRequestingLocation: (requesting: boolean) => {
+          set({ isRequestingLocation: requesting });
         },
       }),
       {

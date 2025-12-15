@@ -174,7 +174,11 @@ export default function BusinessOwnerEnquiriesPage() {
                     <tr key={enquiry.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{enquiry.name}</div>
-                        <div className="text-sm text-gray-500 truncate max-w-xs">{enquiry.message.substring(0, 50)}...</div>
+                        {enquiry.message ? (
+                          <div className="text-sm text-gray-500 truncate max-w-xs">{enquiry.message.substring(0, 50)}...</div>
+                        ) : (
+                          <div className="text-sm text-gray-400 italic">No message</div>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{enquiry.business?.name || 'N/A'}</div>
@@ -283,10 +287,17 @@ export default function BusinessOwnerEnquiriesPage() {
                   </p>
                 </div>
               </div>
-              <div>
-                <Label>Message</Label>
-                <p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedEnquiry.message}</p>
-              </div>
+              {selectedEnquiry.message ? (
+                <div>
+                  <Label>Message</Label>
+                  <p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedEnquiry.message}</p>
+                </div>
+              ) : (
+                <div>
+                  <Label>Message</Label>
+                  <p className="text-sm text-gray-400 italic">No message provided</p>
+                </div>
+              )}
               {selectedEnquiry.response && (
                 <div>
                   <Label>Your Response</Label>

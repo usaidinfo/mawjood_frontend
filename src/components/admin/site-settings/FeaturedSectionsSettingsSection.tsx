@@ -135,28 +135,40 @@ export function FeaturedSectionsSettingsSection({
     await onSave(sections);
   };
 
-  // Flatten categories to include both parent categories and subcategories
-  const flattenedCategories = useMemo(() => {
-    const result: Array<{ category: Category; isSubcategory: boolean; parentName?: string }> = [];
-    
-    categories.forEach((category) => {
-      // Add parent category
-      result.push({ category, isSubcategory: false });
-      
-      // Add subcategories if they exist
-      if (category.subcategories && category.subcategories.length > 0) {
-        category.subcategories.forEach((subcategory) => {
-          result.push({
-            category: subcategory,
-            isSubcategory: true,
-            parentName: category.name,
+  // Get available subcategories for a section based on its parent category
+  const getAvailableSubcategories = (sectionIndex: number) => {
+    const section = sections[sectionIndex];
+    const parentCategoryId = section?.parentCategoryId;
+
+    if (!parentCategoryId) {
+      // If no parent category selected, return all subcategories
+      const result: Array<{ category: Category; isSubcategory: boolean; parentName?: string }> = [];
+      categories.forEach((category) => {
+        if (category.subcategories && category.subcategories.length > 0) {
+          category.subcategories.forEach((subcategory) => {
+            result.push({
+              category: subcategory,
+              isSubcategory: true,
+              parentName: category.name,
+            });
           });
-        });
-      }
-    });
-    
-    return result;
-  }, [categories]);
+        }
+      });
+      return result;
+    }
+
+    // Find the parent category and return only its subcategories
+    const parentCategory = categories.find((cat) => cat.id === parentCategoryId);
+    if (!parentCategory?.subcategories || parentCategory.subcategories.length === 0) {
+      return [];
+    }
+
+    return parentCategory.subcategories.map((subcategory) => ({
+      category: subcategory,
+      isSubcategory: true,
+      parentName: parentCategory.name,
+    }));
+  };
 
   const handleCategorySelect = (
     sectionIndex: number,
@@ -168,14 +180,22 @@ export function FeaturedSectionsSettingsSection({
       return;
     }
 
-    // Search in both parent categories and subcategories
+    const section = sections[sectionIndex];
+    const parentCategoryId = section?.parentCategoryId;
+
+    // Only search in subcategories of the selected parent category
     let selectedCategory: Category | undefined;
 
-    // First, try to find in parent categories
-    selectedCategory = categories.find((category) => category.id === categoryId);
-    
-    // If not found, search in subcategories
-    if (!selectedCategory) {
+    if (parentCategoryId) {
+      // Find the parent category
+      const parentCategory = categories.find((cat) => cat.id === parentCategoryId);
+      
+      // Then find the subcategory within that parent
+      if (parentCategory?.subcategories) {
+        selectedCategory = parentCategory.subcategories.find((sub) => sub.id === categoryId);
+      }
+    } else {
+      // If no parent category is selected, search in all subcategories
       for (const category of categories) {
         if (category.subcategories) {
           const subcategory = category.subcategories.find((sub) => sub.id === categoryId);
@@ -244,21 +264,30 @@ export function FeaturedSectionsSettingsSection({
                         {section.title?.length ? section.title : `Featured Section ${sectionIndex + 1}`}
                       </h4>
                       <p className="text-xs text-gray-500">
-                        Customize the section card grid and featured items.
+                        {section.parentCategoryId 
+                          ? `Parent Category: ${categories.find(cat => cat.id === section.parentCategoryId)?.name || 'Unknown'}`
+                          : 'Customize the section card grid and featured items.'}
                       </p>
                     </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
+                    <div
+                      role="button"
+                      tabIndex={0}
                       onClick={(e) => {
                         e.stopPropagation();
+                        e.preventDefault();
                         removeSection(sectionIndex);
                       }}
-                      className="text-red-500 hover:text-red-600"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          removeSection(sectionIndex);
+                        }
+                      }}
+                      className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10 text-red-500 hover:text-red-600 hover:bg-red-50 cursor-pointer"
                     >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </div>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
@@ -281,6 +310,56 @@ export function FeaturedSectionsSettingsSection({
                     }
                     placeholder="Top-rated services for your home"
                   />
+                </div>
+              </div>
+
+              <div className="mt-4 pb-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Parent Category <span className="text-xs text-gray-500">(Required - for "View More" link)</span>
+                  </label>
+                  <Select
+                    key={`parent-category-${sectionIndex}-${section.parentCategoryId || 'none'}`}
+                    value={section.parentCategoryId ? section.parentCategoryId : 'none'}
+                    onValueChange={(value) => {
+                      const newParentCategoryId = value === 'none' ? undefined : value;
+                      const currentParentCategoryId = section.parentCategoryId;
+                      
+                      // Always update, but clear items if parent category actually changed
+                      if (newParentCategoryId !== currentParentCategoryId) {
+                        updateSection(sectionIndex, { 
+                          parentCategoryId: newParentCategoryId,
+                          items: [] 
+                        });
+                      } else {
+                        updateSection(sectionIndex, { parentCategoryId: newParentCategoryId });
+                      }
+                    }}
+                    disabled={categoriesLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          categoriesLoading
+                            ? 'Loading categories...'
+                            : 'Select parent category'
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No parent category</SelectItem>
+                      {categories
+                        .filter((cat) => !cat.parentId) // Only show parent categories (no parentId)
+                        .map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500">
+                    Select a parent category. The "View More" button will link to this category, and only its subcategories will be available for items.
+                  </p>
                 </div>
               </div>
 
@@ -316,18 +395,25 @@ export function FeaturedSectionsSettingsSection({
                                   <span className="text-xs text-gray-500">({item.name})</span>
                                 ) : null}
                               </p>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
+                              <div
+                                role="button"
+                                tabIndex={0}
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  e.preventDefault();
                                   removeItem(sectionIndex, itemIndex);
                                 }}
-                                className="text-red-500 hover:text-red-600"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    removeItem(sectionIndex, itemIndex);
+                                  }
+                                }}
+                                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10 text-red-500 hover:text-red-600 hover:bg-red-50 cursor-pointer"
                               >
                                 <Trash2 className="h-4 w-4" />
-                              </Button>
+                              </div>
                             </div>
                           </AccordionTrigger>
                           <AccordionContent>
@@ -349,27 +435,29 @@ export function FeaturedSectionsSettingsSection({
 
                       <div className="space-y-2">
                         <label className="text-xs font-semibold uppercase text-gray-600">
-                          Linked Category
+                          Linked Category (Subcategory)
                         </label>
                         <Select
                           value={item.categoryId ?? 'none'}
                           onValueChange={(value) =>
                             handleCategorySelect(sectionIndex, itemIndex, value === 'none' ? '' : value)
                           }
-                          disabled={categoriesLoading}
+                          disabled={categoriesLoading || !sections[sectionIndex]?.parentCategoryId}
                         >
                           <SelectTrigger>
                             <SelectValue
                               placeholder={
                                 categoriesLoading
                                   ? 'Loading categories...'
-                                  : 'Select category (optional)'
+                                  : !sections[sectionIndex]?.parentCategoryId
+                                  ? 'Select parent category first'
+                                  : 'Select subcategory (optional)'
                               }
                             />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">No linked category</SelectItem>
-                            {flattenedCategories.map(({ category, isSubcategory, parentName }) => (
+                            {getAvailableSubcategories(sectionIndex).map(({ category, isSubcategory, parentName }) => (
                               <SelectItem 
                                 key={category.id} 
                                 value={category.id}
@@ -381,7 +469,9 @@ export function FeaturedSectionsSettingsSection({
                           </SelectContent>
                         </Select>
                         <p className="text-[11px] text-gray-500">
-                          Selecting a category will auto-fill the name, slug, and image for this card.
+                          {!sections[sectionIndex]?.parentCategoryId 
+                            ? 'Please select a parent category for this section first to see available subcategories.'
+                            : 'Selecting a subcategory will auto-fill the name, slug, and image for this card. Only subcategories of the selected parent category are shown.'}
                         </p>
                       </div>
 
@@ -458,5 +548,6 @@ export function FeaturedSectionsSettingsSection({
     </Card>
   );
 }
+
 
 

@@ -62,9 +62,15 @@ export const createColumns = (
     header: 'Message',
     cell: ({ row }) => (
       <div className="max-w-[300px]">
-        <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
-          {row.original.message}
-        </p>
+        {row.original.message ? (
+          <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
+            {row.original.message}
+          </p>
+        ) : (
+          <p className="text-sm text-gray-400 dark:text-gray-500 italic">
+            No message
+          </p>
+        )}
       </div>
     ),
   },

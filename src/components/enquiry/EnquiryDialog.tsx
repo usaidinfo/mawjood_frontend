@@ -21,7 +21,7 @@ interface EnquiryDialogProps {
 export function EnquiryDialog({ open, onOpenChange, businessId, businessName }: EnquiryDialogProps) {
   const { user } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<CreateEnquiryData>({
+  const [formData, setFormData] = useState<CreateEnquiryData & { message: string }>({
     businessId,
     name: user ? `${user.firstName} ${user.lastName}` : '',
     phone: user?.phone || '',
@@ -37,14 +37,22 @@ export function EnquiryDialog({ open, onOpenChange, businessId, businessName }: 
       return;
     }
 
-    if (!formData.name || !formData.phone || !formData.email || !formData.message) {
-      toast.error('Please fill in all fields');
+    if (!formData.name || !formData.phone || !formData.email) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await enquiryService.createEnquiry(formData);
+      // Only include message if it's not empty
+      const enquiryData: CreateEnquiryData = {
+        businessId: formData.businessId,
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+        ...(formData.message?.trim() && { message: formData.message.trim() }),
+      };
+      await enquiryService.createEnquiry(enquiryData);
       toast.success('Enquiry submitted successfully! The business owner will contact you soon.');
       setFormData({
         businessId,
@@ -119,14 +127,13 @@ export function EnquiryDialog({ open, onOpenChange, businessId, businessName }: 
           <div>
             <Label htmlFor="message" className="flex items-center gap-2">
               <MessageSquare className="w-4 h-4" />
-              Message *
+              Message
             </Label>
             <Textarea
               id="message"
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              required
-              placeholder="Tell the business owner what you're looking for..."
+              placeholder="Tell the business owner what you're looking for... (optional)"
               rows={5}
               className="resize-none"
             />

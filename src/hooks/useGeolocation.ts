@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { City as CityType } from '@/services/city.service';
 import { cityService } from '@/services/city.service';
+import { useCityStore } from '@/store/cityStore';
 
 interface UseGeolocationProps {
   cities: CityType[];
@@ -18,6 +19,7 @@ export function useGeolocation({
   isUserSelectionLocked,
 }: UseGeolocationProps) {
   const [geoLoading, setGeoLoading] = useState(false);
+  const { setRequestingLocation } = useCityStore();
 
   useEffect(() => {
     if (isUserSelectionLocked) {
@@ -166,6 +168,7 @@ export function useGeolocation({
     // ALWAYS request location permission on every page load/visit
     // This ensures the browser prompt appears every time (browser will handle if already granted/denied)
     setGeoLoading(true);
+    setRequestingLocation(true); // Notify that location is being requested
 
     let watchId: number | null = null;
     let fallbackTimeout: NodeJS.Timeout | null = null;
@@ -194,6 +197,7 @@ export function useGeolocation({
                   await selectCityFromAddress(geocodeData?.address);
                 } else {
                   setGeoLoading(false);
+                  setRequestingLocation(false);
                 }
               } catch (error) {
                 console.error('Geolocation lookup error:', error);
@@ -201,16 +205,19 @@ export function useGeolocation({
                   trySelectDefault();
                 }
                 setGeoLoading(false);
+                setRequestingLocation(false);
               } finally {
                 // Ensure loading state is cleared
                 if (!isDefaultSelection) {
                   setGeoLoading(false);
+                  setRequestingLocation(false);
                 }
               }
             },
           (error) => {
             console.warn('Geolocation error:', error);
             setGeoLoading(false);
+            setRequestingLocation(false);
             if (isDefaultSelection) {
               trySelectDefault();
             }
@@ -234,6 +241,7 @@ export function useGeolocation({
           }
           console.warn('Geolocation permission denied or unavailable:', error);
           setGeoLoading(false);
+          setRequestingLocation(false);
           if (isDefaultSelection) {
             trySelectDefault();
           }
@@ -262,6 +270,7 @@ export function useGeolocation({
                 await selectCityFromAddress(geocodeData?.address);
               } else {
                 setGeoLoading(false);
+                setRequestingLocation(false);
               }
             } catch (error) {
               console.error('Geolocation lookup error:', error);
@@ -269,11 +278,13 @@ export function useGeolocation({
                 trySelectDefault();
               }
               setGeoLoading(false);
+              setRequestingLocation(false);
             }
           },
           (error) => {
             console.warn('Geolocation error:', error);
             setGeoLoading(false);
+            setRequestingLocation(false);
             if (isDefaultSelection) {
               trySelectDefault();
             }

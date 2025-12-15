@@ -37,6 +37,7 @@ export interface FeaturedSectionSettings {
   subtitle?: string;
   layout?: 'grid' | 'carousel';
   cardsPerRow?: number;
+  parentCategoryId?: string;
   items?: FeaturedSectionCard[];
 }
 

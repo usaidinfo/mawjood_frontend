@@ -6,6 +6,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCityStore } from '@/store/cityStore';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { useCategoryStore } from '@/store/categoryStore';
+import { ChevronRight } from 'lucide-react';
 
 interface ServiceItem {
   id: string;
@@ -18,6 +20,8 @@ interface ServiceSection {
   id: string;
   title: string;
   subtitle?: string;
+  parentCategoryId?: string;
+  parentCategorySlug?: string;
   items: ServiceItem[];
 }
 
@@ -25,6 +29,7 @@ export default function FeaturedServices() {
   const { t } = useTranslation('common');
   const { data: siteSettings } = useSiteSettings();
   const { selectedLocation, selectedCity, cities, fetchCities } = useCityStore();
+  const { categories, fetchCategories } = useCategoryStore();
 
   const locationSlug =
     selectedLocation?.slug ||
@@ -38,6 +43,10 @@ export default function FeaturedServices() {
       fetchCities();
     }
   }, [cities.length, fetchCities]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const defaultSections: ServiceSection[] = [
     {
@@ -139,17 +148,26 @@ export default function FeaturedServices() {
   ];
 
   const settingsSections =
-    siteSettings?.featuredSections?.map((section) => ({
-      id: section.id,
-      title: section.title,
-      subtitle: section.subtitle,
-      items: section.items?.map((item) => ({
-        id: item.id,
-        name: item.name,
-        image: item.image ?? '',
-        slug: item.slug,
-      })) ?? [],
-    })) ?? null;
+    siteSettings?.featuredSections?.map((section) => {
+      // Find parent category to get its slug
+      const parentCategory = section.parentCategoryId
+        ? categories.find((cat) => cat.id === section.parentCategoryId)
+        : null;
+
+      return {
+        id: section.id,
+        title: section.title,
+        subtitle: section.subtitle,
+        parentCategoryId: section.parentCategoryId,
+        parentCategorySlug: parentCategory?.slug,
+        items: section.items?.map((item) => ({
+          id: item.id,
+          name: item.name,
+          image: item.image ?? '',
+          slug: item.slug,
+        })) ?? [],
+      };
+    }) ?? null;
 
   const sections = settingsSections?.length ? settingsSections : defaultSections;
 
@@ -170,6 +188,15 @@ export default function FeaturedServices() {
               </p>
             )}
           </div>
+          {section.parentCategorySlug && (
+            <Link
+              href={`/${locationSlug}/${section.parentCategorySlug}`}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#1c4233] bg-white border border-[#1c4233] rounded-lg hover:bg-[#1c4233] hover:text-white transition-colors duration-200"
+            >
+              View More
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          )}
         </div>
 
         <div

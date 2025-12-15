@@ -13,7 +13,7 @@ export interface Enquiry {
   name: string;
   phone: string;
   email: string;
-  message: string;
+  message: string | null;
   status: EnquiryStatus;
   response?: string | null;
   responseDate?: string | null;
@@ -46,7 +46,7 @@ export interface CreateEnquiryData {
   name: string;
   phone: string;
   email: string;
-  message: string;
+  message?: string;
 }
 
 export interface UpdateEnquiryStatusData {
