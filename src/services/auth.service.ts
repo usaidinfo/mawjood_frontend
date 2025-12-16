@@ -14,7 +14,7 @@ export interface User {
   phone: string;
   firstName: string;
   lastName: string;
-  role: 'USER' | 'BUSINESS_OWNER' | 'ADMIN';
+  role: 'BUSINESS_OWNER' | 'ADMIN';
   status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
   avatar: string | null;
   emailVerified: boolean;
@@ -36,28 +36,22 @@ export interface AuthResponse {
   };
 }
 
-export interface RegisterData {
-  email: string;
-  phone: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  role?: 'USER' | 'BUSINESS_OWNER';
+// RegisterData and LoginData removed - using unified OTP flow
+export interface OTPRequestData {
+  email?: string;
+  phone?: string;
+  firstName?: string; // Optional for new users
+  lastName?: string; // Optional for new users
 }
 
-export interface RegisterResponse {
+export interface OTPResponse {
   success: boolean;
   message: string;
   data: {
-    email: string;
-    otpSent: boolean;
-    userId?: string;
+    email?: string;
+    phone?: string;
+    isNewUser: boolean;
   };
-}
-
-export interface LoginData {
-  identifier: string; // email or phone
-  password: string;
 }
 
 export interface OTPVerifyData {
@@ -71,8 +65,7 @@ export type SocialProvider = 'google' | 'facebook';
 export interface SocialLoginPayload {
   provider: SocialProvider;
   token: string;
-  role?: 'USER' | 'BUSINESS_OWNER';
-  phone?: string;
+  phone?: string; // Required for new users
 }
 
 // Error handler
@@ -87,19 +80,7 @@ const handleError = (error: unknown): never => {
 // Auth Service
 export const authService = {
   /**
-   * Register new user
-   */
-  async register(data: RegisterData): Promise<RegisterResponse> {
-    try {
-      const response = await axiosInstance.post<RegisterResponse>(API_ENDPOINTS.AUTH.REGISTER, data);
-      return response.data;
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Social login/register
+   * Social login/register (unified flow)
    */
   async socialLogin(data: SocialLoginPayload): Promise<AuthResponse> {
     try {
@@ -114,11 +95,11 @@ export const authService = {
   },
 
   /**
-   * Login with password
+   * Send OTP to email (unified login/signup - auto-creates if doesn't exist)
    */
-  async loginWithPassword(data: LoginData): Promise<AuthResponse> {
+  async sendEmailOTP(data: OTPRequestData): Promise<OTPResponse> {
     try {
-      const response = await axiosInstance.post<AuthResponse>(API_ENDPOINTS.AUTH.LOGIN, data);
+      const response = await axiosInstance.post<OTPResponse>(API_ENDPOINTS.AUTH.SEND_EMAIL_OTP, data);
       return response.data;
     } catch (error) {
       return handleError(error);
@@ -126,23 +107,11 @@ export const authService = {
   },
 
   /**
-   * Send OTP to email
+   * Send OTP to phone (unified login/signup - auto-creates if doesn't exist, static OTP 12345)
    */
-  async sendEmailOTP(email: string): Promise<{ success: boolean; message: string }> {
+  async sendPhoneOTP(data: OTPRequestData): Promise<OTPResponse> {
     try {
-      const response = await axiosInstance.post(API_ENDPOINTS.AUTH.SEND_EMAIL_OTP, { email });
-      return response.data;
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Send OTP to phone
-   */
-  async sendPhoneOTP(phone: string): Promise<{ success: boolean; message: string }> {
-    try {
-      const response = await axiosInstance.post(API_ENDPOINTS.AUTH.SEND_PHONE_OTP, { phone });
+      const response = await axiosInstance.post<OTPResponse>(API_ENDPOINTS.AUTH.SEND_PHONE_OTP, data);
       return response.data;
     } catch (error) {
       return handleError(error);

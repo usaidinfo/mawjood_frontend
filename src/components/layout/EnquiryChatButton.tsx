@@ -10,11 +10,11 @@ import { MessageSquare } from 'lucide-react';
 export default function EnquiryChatButton() {
   const { user, isAuthenticated } = useAuthStore();
 
-  // Check for enquiries with responses (only for regular users)
+  // Check for enquiries with responses (for all authenticated users)
   const { data: userEnquiries } = useQuery({
     queryKey: ['user-enquiries-badge'],
     queryFn: () => enquiryService.getUserEnquiries({ page: 1, limit: 100 }),
-    enabled: isAuthenticated && user?.role === 'USER',
+    enabled: isAuthenticated,
     staleTime: 30000,
     refetchInterval: 60000, // Refetch every minute
   });
@@ -24,8 +24,8 @@ export default function EnquiryChatButton() {
     return userEnquiries.enquiries.some((enquiry) => !!enquiry.response);
   }, [userEnquiries]);
 
-  // Only show for regular users
-  if (!isAuthenticated || user?.role !== 'USER') {
+  // Show for all authenticated users
+  if (!isAuthenticated) {
     return null;
   }
 

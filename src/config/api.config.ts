@@ -13,8 +13,6 @@ export const API_VERSION = 'v1';
 export const API_ENDPOINTS = {
   // Auth endpoints
   AUTH: {
-    REGISTER: '/api/auth/register',
-    LOGIN: '/api/auth/login/password',
     LOGIN_SOCIAL: '/api/auth/login/social',
     LOGIN_OTP_EMAIL: '/api/auth/otp/verify-email',
     LOGIN_OTP_PHONE: '/api/auth/otp/verify-phone',

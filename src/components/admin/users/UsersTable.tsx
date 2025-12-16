@@ -195,7 +195,6 @@ export function UsersTable<TData, TValue>({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Roles</SelectItem>
-            <SelectItem value="USER">User</SelectItem>
             <SelectItem value="BUSINESS_OWNER">Business Owner</SelectItem>
             <SelectItem value="ADMIN">Admin</SelectItem>
           </SelectContent>

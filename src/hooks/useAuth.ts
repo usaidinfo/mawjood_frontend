@@ -15,7 +15,7 @@ export const useAuth = () => {
   }, [store.isAuthenticated, router]);
 
   const requireRole = useCallback((
-    role: 'USER' | 'BUSINESS_OWNER' | 'ADMIN', 
+    role: 'BUSINESS_OWNER' | 'ADMIN', 
     redirectTo: string = '/unauthorized'
   ) => {
     if (!store.isAuthenticated || store.user?.role !== role) {
@@ -25,7 +25,7 @@ export const useAuth = () => {
     return true;
   }, [store.isAuthenticated, store.user?.role, router]);
 
-  const hasRole = useCallback((role: 'USER' | 'BUSINESS_OWNER' | 'ADMIN') => {
+  const hasRole = useCallback((role: 'BUSINESS_OWNER' | 'ADMIN') => {
     return store.user?.role === role;
   }, [store.user?.role]);
 

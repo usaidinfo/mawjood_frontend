@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/authStore';
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  requiredRole?: 'USER' | 'BUSINESS_OWNER' | 'ADMIN';
+  requiredRole?: 'BUSINESS_OWNER' | 'ADMIN';
   redirectTo?: string;
 }
 

@@ -43,6 +43,7 @@ export default function LocationSelector({
   const [locationDetecting, setLocationDetecting] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const cityRef = useRef<HTMLDivElement>(null);
+  const hasTriggeredAutoLocation = useRef(false);
 
   const {
     cities: citiesFromStore,
@@ -66,6 +67,28 @@ export default function LocationSelector({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Auto-trigger location detection on page load
+  useEffect(() => {
+    // Only trigger once if no location is selected, geolocation is available, and cities are loaded
+    if (
+      !hasTriggeredAutoLocation.current &&
+      !selectedCity && 
+      !selectedLocation && 
+      navigator.geolocation && 
+      typeof window !== 'undefined' &&
+      cities.length > 0 &&
+      !locationDetecting
+    ) {
+      hasTriggeredAutoLocation.current = true;
+      // Small delay to ensure page is fully loaded
+      const timer = setTimeout(() => {
+        handleDetectLocation();
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cities.length, selectedCity, selectedLocation, locationDetecting]); // Run when cities are loaded or selection changes
 
   // Fetch regions when dropdown opens
   useEffect(() => {

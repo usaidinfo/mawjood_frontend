@@ -238,7 +238,7 @@ function EnquiriesTabContent() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label className="text-sm font-medium text-gray-700">Business</Label>
+                <Label className="text-sm font-medium text-gray-700 pr-2">Business :</Label>
                 <Link
                   href={`/business/${selectedEnquiry.business?.slug}`}
                   className="text-primary hover:underline font-medium"

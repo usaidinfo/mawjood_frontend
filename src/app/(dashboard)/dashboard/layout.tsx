@@ -19,8 +19,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const timer = setTimeout(() => {
         if (!isAuthenticated) {
           router.push('/');
-        } else if (user?.role === 'USER') {
-          router.push('/');
         } else {
           setChecking(false);
         }

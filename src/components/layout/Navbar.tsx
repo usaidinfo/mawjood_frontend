@@ -5,8 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
-import LoginModal from '@/components/auth/LoginModal';
-import SignupModal from '@/components/auth/SignupModal';
+import UnifiedAuthModal from '@/components/auth/UnifiedAuthModal';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import GTranslate from '@/components/GTranslate';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -24,9 +23,7 @@ export default function Navbar() {
   const { user, isAuthenticated, logout, checkAuth } = useAuthStore();
   const { data: siteSettings } = useSiteSettings();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showSignupModal, setShowSignupModal] = useState(false);
-  const [signupRole, setSignupRole] = useState<'USER' | 'BUSINESS_OWNER'>('USER');
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -48,17 +45,11 @@ export default function Navbar() {
 
   const handleAddBusiness = useCallback(() => {
     if (isAuthenticated) {
-      if (user?.role === 'USER') {
-        setSignupRole('BUSINESS_OWNER');
-        setShowLoginModal(true);
-      } else {
-        window.location.href = '/dashboard/add-listing';
-      }
+      window.location.href = '/dashboard/add-listing';
     } else {
-      setSignupRole('BUSINESS_OWNER');
-      setShowLoginModal(true);
+      setShowAuthModal(true);
     }
-  }, [isAuthenticated, user?.role]);
+  }, [isAuthenticated]);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -113,7 +104,7 @@ export default function Navbar() {
               </Link>
 
               {/* Free Listing Button */}
-              {(!isAuthenticated || user?.role !== 'USER') && (
+              {(!isAuthenticated || isBusinessOwner) && (
                 <button
                   onClick={handleAddBusiness}
                   className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm"
@@ -151,9 +142,6 @@ export default function Navbar() {
                         <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
                           <p className="text-sm font-semibold text-gray-900">{user.firstName} {user.lastName}</p>
                           <p className="text-xs text-gray-500 mt-0.5 truncate">{user.email}</p>
-                          <span className="inline-flex mt-2 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-medium rounded-full uppercase tracking-wide">
-                            {user.role.replace('_', ' ')}
-                          </span>
                         </div>
 
                         <div className="p-1">
@@ -198,7 +186,7 @@ export default function Navbar() {
               ) : showAuthUI ? (
                 <div className="flex items-center gap-4 pl-4 border-l border-gray-200 h-8">
                   <button
-                    onClick={() => setShowLoginModal(true)}
+                    onClick={() => setShowAuthModal(true)}
                     className="flex items-center gap-1.5 text-gray-600 hover:text-primary text-sm font-medium transition-colors"
                   >
                     <LogIn className="w-4 h-4" />
@@ -244,7 +232,7 @@ export default function Navbar() {
                     Advertise
                 </Link>
 
-                {(!isAuthenticated || user?.role !== 'USER') && (
+                {(!isAuthenticated || isBusinessOwner) && (
                   <div className="pt-2">
                     <button
                       onClick={() => {
@@ -285,7 +273,7 @@ export default function Navbar() {
                     <div className="space-y-3 px-1">
                       <button
                         onClick={() => {
-                          setShowLoginModal(true);
+                          setShowAuthModal(true);
                           closeMobileMenu();
                         }}
                         className="w-full flex items-center justify-center gap-2 border border-gray-300 text-gray-700 px-4 py-2.5 rounded-md font-medium hover:bg-gray-50"
@@ -295,8 +283,7 @@ export default function Navbar() {
                       </button>
                       <button
                         onClick={() => {
-                          setSignupRole('USER');
-                          setShowSignupModal(true);
+                          setShowAuthModal(true);
                           closeMobileMenu();
                         }}
                         className="w-full bg-gray-900 text-white px-4 py-2.5 rounded-md font-medium hover:bg-gray-800"
@@ -311,24 +298,9 @@ export default function Navbar() {
         )}
       </nav>
 
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onSwitchToSignup={() => {
-          setShowLoginModal(false);
-          setSignupRole('USER');
-          setShowSignupModal(true);
-        }}
-      />
-
-      <SignupModal
-        isOpen={showSignupModal}
-        onClose={() => setShowSignupModal(false)}
-        onSwitchToLogin={() => {
-          setShowSignupModal(false);
-          setShowLoginModal(true);
-        }}
-        defaultRole={signupRole}
+      <UnifiedAuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
       />
     </>
   );

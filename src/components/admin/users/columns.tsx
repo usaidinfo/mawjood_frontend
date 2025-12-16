@@ -20,7 +20,7 @@ export type User = {
   lastName: string;
   email: string;
   phone: string;
-  role: 'USER' | 'BUSINESS_OWNER' | 'ADMIN';
+  role: 'BUSINESS_OWNER' | 'ADMIN';
   status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
   emailVerified: boolean;
   phoneVerified: boolean;
@@ -192,9 +192,6 @@ export const createColumns = (
             <DropdownMenuLabel className="text-xs font-normal text-gray-500">
               Update Role
             </DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => onUpdateRole(user.id, 'USER')}>
-              Set as User
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onUpdateRole(user.id, 'BUSINESS_OWNER')}>
               Set as Business Owner
             </DropdownMenuItem>
