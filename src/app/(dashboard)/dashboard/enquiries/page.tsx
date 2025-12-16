@@ -272,9 +272,11 @@ export default function BusinessOwnerEnquiriesPage() {
                 </div>
                 <div>
                   <Label>Status</Label>
-                  <Badge className={statusColors[selectedEnquiry.status]}>
-                    {selectedEnquiry.status.replace('_', ' ')}
-                  </Badge>
+                  <div className="mt-1">
+                    <Badge className={statusColors[selectedEnquiry.status]}>
+                      {selectedEnquiry.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
                 </div>
                 <div>
                   <Label>Business</Label>
