@@ -382,7 +382,10 @@ export const adminService = {
     limit?: number;
     status?: string;
     businessId?: string;
+    planId?: string;
     search?: string;
+    startDate?: string;
+    endDate?: string;
   }): Promise<ApiResponse<any>> {
     try {
       const response = await axiosInstance.get(API_ENDPOINTS.SUBSCRIPTIONS.GET_ALL_ADMIN, { params });

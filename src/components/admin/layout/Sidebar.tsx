@@ -81,7 +81,7 @@ const sidebarItems = [
   },
   {
     name: 'Advertisements',
-    href: '/admin/advertisements/list ',
+    href: '/admin/advertisements/list',
     icon:  Megaphone,
   },
   {
@@ -135,7 +135,10 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         <ul className="space-y-1">
           {sidebarItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            // For Dashboard (/admin), only match exactly. For other routes, match exact or sub-routes
+            const isActive = item.href === '/admin' 
+              ? pathname === '/admin'
+              : pathname === item.href || pathname.startsWith(item.href + '/');
 
             return (
               <li key={item.href}>

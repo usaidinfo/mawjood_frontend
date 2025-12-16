@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -38,6 +38,8 @@ interface SubscriptionsTableProps<TData, TValue> {
   data: TData[];
   onSearchChange: (value: string) => void;
   searchValue?: string;
+  onPlanFilterChange?: (planId: string) => void;
+  selectedPlanId?: string;
   onBulkExport?: (selectedRows: TData[]) => void;
 }
 
@@ -46,6 +48,8 @@ export function SubscriptionsTable<TData, TValue>({
   data,
   onSearchChange,
   searchValue = '',
+  onPlanFilterChange,
+  selectedPlanId = '',
   onBulkExport,
 }: SubscriptionsTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);

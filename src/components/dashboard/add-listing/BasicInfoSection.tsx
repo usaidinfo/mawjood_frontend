@@ -12,7 +12,7 @@ export default function BasicInfoSection() {
 
   const { data: categoriesData } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => categoryService.fetchCategories(),
+    queryFn: () => categoryService.fetchCategories(1, 100),
   });
   
   useEffect(() => {

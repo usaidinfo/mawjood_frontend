@@ -8,9 +8,13 @@ import axiosInstance from '@/lib/axios';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Search, AlertCircle } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Loader2, Search, AlertCircle, CalendarIcon, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface AssignSponsorDialogProps {
   open: boolean;
@@ -22,8 +26,8 @@ export default function AssignSponsorDialog({ open, onOpenChange, onSuccess }: A
   const queryClient = useQueryClient();
   const [businessSearch, setBusinessSearch] = useState('');
   const [selectedBusinessId, setSelectedBusinessId] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endsAt, setEndsAt] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endsAt, setEndsAt] = useState<Date | undefined>();
   const [notes, setNotes] = useState('');
 
   // Search businesses using admin endpoint - only APPROVED businesses
@@ -99,8 +103,8 @@ export default function AssignSponsorDialog({ open, onOpenChange, onSuccess }: A
   const handleClose = () => {
     setBusinessSearch('');
     setSelectedBusinessId('');
-    setStartDate('');
-    setEndsAt('');
+    setStartDate(undefined);
+    setEndsAt(undefined);
     setNotes('');
     onOpenChange(false);
   };
@@ -122,8 +126,8 @@ export default function AssignSponsorDialog({ open, onOpenChange, onSuccess }: A
     // No planId needed - backend will auto-create or find a sponsor plan
     assignMutation.mutate({
       businessId: selectedBusinessId,
-      startDate: startDate || undefined,
-      endsAt: endsAt || undefined,
+      startDate: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
+      endsAt: endsAt ? format(endsAt, 'yyyy-MM-dd') : undefined,
       notes: notes || undefined,
     });
   };
@@ -201,18 +205,51 @@ export default function AssignSponsorDialog({ open, onOpenChange, onSuccess }: A
           </div>
 
 
-          {/* Start Date */}
+          {/* Start Date and End Date */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Start Date
               </label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                placeholder="Leave empty for today"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    disabled={(date) => {
+                      // Disable all previous dates (before today)
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      return date < today;
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              {startDate && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setStartDate(undefined)}
+                  className="mt-2 h-6 px-2 text-xs"
+                >
+                  <X className="w-3 h-3 mr-1" />
+                  Clear
+                </Button>
+              )}
               <p className="text-xs text-gray-500 mt-1">Leave empty to start today</p>
             </div>
 
@@ -220,12 +257,50 @@ export default function AssignSponsorDialog({ open, onOpenChange, onSuccess }: A
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 End Date (Optional)
               </label>
-              <Input
-                type="date"
-                value={endsAt}
-                onChange={(e) => setEndsAt(e.target.value)}
-                placeholder="Auto-calculated from plan"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !endsAt && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endsAt ? format(endsAt, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endsAt}
+                    onSelect={setEndsAt}
+                    disabled={(date) => {
+                      // Disable all previous dates (before today or before start date if selected)
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      if (startDate) {
+                        const start = new Date(startDate);
+                        start.setHours(0, 0, 0, 0);
+                        return date < start;
+                      }
+                      return date < today;
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              {endsAt && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEndsAt(undefined)}
+                  className="mt-2 h-6 px-2 text-xs"
+                >
+                  <X className="w-3 h-3 mr-1" />
+                  Clear
+                </Button>
+              )}
               <p className="text-xs text-gray-500 mt-1">Leave empty to use plan duration</p>
             </div>
           </div>

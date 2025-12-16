@@ -11,7 +11,7 @@ import { advertisementService, Advertisement } from '@/services/advertisement.se
 import { useCityStore } from '@/store/cityStore';
 import BusinessListCard from '@/components/business/BusinessListCard';
 import BusinessCard from '@/components/business/BusinessCard';
-import { LayoutGrid, List, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutGrid, List } from 'lucide-react';
 import SidebarAd from '@/components/common/SidebarAd';
 
 type FiltersState = {
@@ -70,11 +70,10 @@ export default function CityCategoryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
-  const [topAdvertisements, setTopAdvertisements] = useState<Advertisement[]>([]);
+  const [topAdvertisement, setTopAdvertisement] = useState<Advertisement | null>(null);
   const [footerAdvertisement, setFooterAdvertisement] = useState<Advertisement | null>(null);
   const [topAdLoading, setTopAdLoading] = useState(false);
   const [footerAdLoading, setFooterAdLoading] = useState(false);
-  const [currentAdIndex, setCurrentAdIndex] = useState(0);
   const [locationContext, setLocationContext] = useState<{
     requested: { id: string; type: string; name: string } | null;
     applied: { id: string; type: string; name: string } | null;
@@ -446,29 +445,29 @@ export default function CityCategoryPage() {
     fetchBusinesses();
   }, [category, currentPage, effectiveLocationId, effectiveLocationType, filters]);
 
-  // Fetch TOP advertisements for the top slider
+  // Fetch TOP advertisement (single banner, no carousel)
   useEffect(() => {
     if (!category) return;
 
-    const loadTopAdvertisements = async () => {
+    const loadTopAdvertisement = async () => {
       try {
         setTopAdLoading(true);
-        const ads = await advertisementService.getDisplayAdvertisements({
+        const ad = await advertisementService.getDisplayAdvertisement({
           categoryId: category.id,
           locationId: effectiveLocationId ?? undefined,
           locationType: effectiveLocationType,
           adType: 'TOP',
-        }, 5);
-        setTopAdvertisements(ads);
+        });
+        setTopAdvertisement(ad);
       } catch (err) {
-        console.error('Failed to fetch top advertisements:', err);
-        setTopAdvertisements([]);
+        console.error('Failed to fetch top advertisement:', err);
+        setTopAdvertisement(null);
       } finally {
         setTopAdLoading(false);
       }
     };
 
-    loadTopAdvertisements();
+    loadTopAdvertisement();
   }, [category, effectiveLocationId, effectiveLocationType]);
 
   // Fetch FOOTER advertisement for the bottom
@@ -496,16 +495,6 @@ export default function CityCategoryPage() {
     loadFooterAdvertisement();
   }, [category, effectiveLocationId, effectiveLocationType]);
 
-  // Auto-slide for top ad slider
-  useEffect(() => {
-    if (topAdvertisements.length <= 1) return;
-
-    const interval = setInterval(() => {
-      setCurrentAdIndex((prev) => (prev + 1) % topAdvertisements.length);
-    }, 5000); // Change ad every 5 seconds
-
-    return () => clearInterval(interval);
-  }, [topAdvertisements.length]);
 
   if (loadingCategory) {
     return (
@@ -572,83 +561,52 @@ export default function CityCategoryPage() {
     <div className="min-h-screen bg-white">
       <div className="py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-      {/* Top Ad Slider */}
-      <div className="space-y-6 mb-4">
-          {topAdLoading && (
-            <div className="h-48 bg-gray-200 rounded-2xl animate-pulse" />
-          )}
-          {!topAdLoading && topAdvertisements.length > 0 && (
-            <div className="relative overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
-              <div className="relative h-44 md:h-46 lg:h-46">
-                {topAdvertisements.map((ad, index) => {
-                  const resolvedUrl = getResolvedTargetUrl(ad);
-                  return (
-                    <div
-                      key={ad.id}
-                      className={`absolute inset-0 transition-opacity duration-500 ${
-                        index === currentAdIndex ? 'opacity-100' : 'opacity-0'
-                      }`}
-                    >
-                      {resolvedUrl ? (
-                        <Link href={resolvedUrl} target="_blank" rel="noopener noreferrer">
-                          <Image
-                            src={ad.imageUrl}
-                            alt={ad.title}
-                            fill
-                            className="object-contain"
-                            priority={index === 0}
-                          />
-                        </Link>
-                      ) : (
+      {/* Top Ad Banner (Single, no carousel) */}
+      {topAdLoading && (
+        <div className="mb-4">
+          <div className="h-48 bg-gray-200 rounded-2xl animate-pulse" />
+        </div>
+      )}
+      {!topAdLoading && topAdvertisement && (
+        <div className="mb-4">
+          <div className="relative overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
+            <div className="relative h-44 md:h-46 lg:h-46">
+              {(() => {
+                const ad = topAdvertisement;
+                const resolvedUrl = getResolvedTargetUrl(ad);
+                return (
+                  <>
+                    {resolvedUrl ? (
+                      <Link 
+                        href={resolvedUrl} 
+                        target={ad.openInNewTab !== false ? '_blank' : '_self'}
+                        rel={ad.openInNewTab !== false ? 'noopener noreferrer' : undefined}
+                        className="block w-full h-full"
+                      >
                         <Image
                           src={ad.imageUrl}
                           alt={ad.title}
                           fill
                           className="object-contain"
-                          priority={index === 0}
+                          priority
                         />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              
-              {topAdvertisements.length > 1 && (
-                <>
-                  <button
-                    onClick={() => setCurrentAdIndex((prev) => (prev - 1 + topAdvertisements.length) % topAdvertisements.length)}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg transition-all z-10"
-                    aria-label="Previous ad"
-                  >
-                    <ChevronLeft className="w-6 h-6" />
-                  </button>
-                  <button
-                    onClick={() => setCurrentAdIndex((prev) => (prev + 1) % topAdvertisements.length)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg transition-all z-10"
-                    aria-label="Next ad"
-                  >
-                    <ChevronRight className="w-6 h-6" />
-                  </button>
-                  {/* Slider Indicators */}
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
-                    {topAdvertisements.map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setCurrentAdIndex(index)}
-                        className={`h-2 rounded-full transition-all ${
-                          index === currentAdIndex
-                            ? 'w-8 bg-white'
-                            : 'w-2 bg-white/50 hover:bg-white/75'
-                        }`}
-                        aria-label={`Go to slide ${index + 1}`}
+                      </Link>
+                    ) : (
+                      <Image
+                        src={ad.imageUrl}
+                        alt={ad.title}
+                        fill
+                        className="object-contain"
+                        priority
                       />
-                    ))}
-                  </div>
-                </>
-              )}
+                    )}
+                  </>
+                );
+              })()}
             </div>
-          )}
+          </div>
         </div>
+      )}
         <nav className="flex mb-3 text-sm">
           <Link href="/" className="text-gray-500 hover:text-primary">
             {locationName}

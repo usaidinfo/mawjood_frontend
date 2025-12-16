@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { adminService } from '@/services/admin.service';
 import { paymentService, Payment } from '@/services/payment.service';
-import { subscriptionService, BusinessSubscription } from '@/services/subscription.service';
+import { subscriptionService, BusinessSubscription, SubscriptionPlan } from '@/services/subscription.service';
 import { PaymentsTable } from '@/components/admin/transactions/PaymentsTable';
 import { SubscriptionsTable } from '@/components/admin/transactions/SubscriptionsTable';
 import { createPaymentColumns } from '@/components/admin/transactions/paymentColumns';
@@ -14,6 +15,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -27,7 +30,7 @@ export default function TransactionsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [subscriptions, setSubscriptions] = useState<BusinessSubscription[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabType>('payments');
+  const [activeTab, setActiveTab] = useState<TabType>('subscriptions');
   const [isAssignSponsorOpen, setIsAssignSponsorOpen] = useState(false);
   const [paymentSearchInput, setPaymentSearchInput] = useState('');
   const [subscriptionSearchInput, setSubscriptionSearchInput] = useState('');
@@ -35,13 +38,42 @@ export default function TransactionsPage() {
   const [debouncedSubscriptionSearch, setDebouncedSubscriptionSearch] = useState('');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>('');
   const [subscriptionStatusFilter, setSubscriptionStatusFilter] = useState<string>('');
+  const [subscriptionPlanFilter, setSubscriptionPlanFilter] = useState<string>('');
   const [paymentStartDate, setPaymentStartDate] = useState<Date | undefined>();
   const [paymentEndDate, setPaymentEndDate] = useState<Date | undefined>();
   const [subscriptionStartDate, setSubscriptionStartDate] = useState<Date | undefined>();
   const [subscriptionEndDate, setSubscriptionEndDate] = useState<Date | undefined>();
+  const [planSearchQuery, setPlanSearchQuery] = useState('');
 
   const paymentDebounceTimer = useRef<NodeJS.Timeout | null>(null);
   const subscriptionDebounceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch all subscription plans (including sponsor plans)
+  const { data: plansData, isLoading: loadingPlans } = useQuery({
+    queryKey: ['subscription-plans', 'all'],
+    queryFn: async () => {
+      const response = await subscriptionService.getSubscriptionPlans({
+        page: 1,
+        limit: 1000,
+        includeSponsor: 'true',
+      });
+      return response.data.plans || [];
+    },
+  });
+
+  const plans = plansData || [];
+
+  // Filter plans based on search query
+  const filteredPlans = useMemo(() => {
+    if (!planSearchQuery.trim()) return plans;
+    const query = planSearchQuery.toLowerCase();
+    return plans.filter(
+      (plan: SubscriptionPlan) =>
+        plan.name.toLowerCase().includes(query) ||
+        plan.slug.toLowerCase().includes(query) ||
+        (plan.description && plan.description.toLowerCase().includes(query))
+    );
+  }, [plans, planSearchQuery]);
 
   // Debounce payment search
   useEffect(() => {
@@ -77,37 +109,40 @@ export default function TransactionsPage() {
     };
   }, [subscriptionSearchInput]);
 
-  // Fetch payments
+  // Fetch both payments and subscriptions on initial load
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([
+          fetchPayments(),
+          fetchSubscriptions(),
+        ]);
+      } catch (error) {
+        console.error('Error fetching initial data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInitialData();
+  }, []);
+
+  // Fetch payments when filters change (only if on payments tab)
   useEffect(() => {
     if (activeTab === 'payments') {
       fetchPayments();
     }
   }, [activeTab, debouncedPaymentSearch, paymentStatusFilter, paymentStartDate, paymentEndDate]);
 
+  // Fetch subscriptions when filters change (only if on subscriptions tab)
   useEffect(() => {
     if (activeTab === 'subscriptions') {
       fetchSubscriptions();
     }
-  }, [activeTab, debouncedSubscriptionSearch, subscriptionStatusFilter, subscriptionStartDate, subscriptionEndDate]);
-
-  useEffect(() => {
-    const fetchInitialSubscriptions = async () => {
-      try {
-        const response = await adminService.getAllSubscriptions({
-          page: 1,
-          limit: 100,
-        });
-        setSubscriptions(response.data.subscriptions || []);
-      } catch (error: any) {
-        console.error('Error fetching initial subscriptions:', error);
-      }
-    };
-    fetchInitialSubscriptions();
-  }, []);
+  }, [activeTab, debouncedSubscriptionSearch, subscriptionStatusFilter, subscriptionPlanFilter, subscriptionStartDate, subscriptionEndDate]);
 
   const fetchPayments = async () => {
     try {
-      setLoading(true);
       const params: any = {
         page: 1,
         limit: 100,
@@ -144,14 +179,11 @@ export default function TransactionsPage() {
     } catch (error: any) {
       console.error('Error fetching payments:', error);
       toast.error(error.message || 'Failed to fetch payments');
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchSubscriptions = async () => {
     try {
-      setLoading(true);
       const params: any = {
         page: 1,
         limit: 100,
@@ -159,6 +191,10 @@ export default function TransactionsPage() {
 
       if (subscriptionStatusFilter) {
         params.status = subscriptionStatusFilter;
+      }
+
+      if (subscriptionPlanFilter) {
+        params.planId = subscriptionPlanFilter;
       }
 
       if (debouncedSubscriptionSearch) {
@@ -178,8 +214,6 @@ export default function TransactionsPage() {
     } catch (error: any) {
       console.error('Error fetching subscriptions:', error);
       toast.error(error.message || 'Failed to fetch subscriptions');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -195,8 +229,8 @@ export default function TransactionsPage() {
   const subscriptionColumns = createSubscriptionColumns();
 
   const tabs = [
-    { id: 'payments', label: 'Payments', icon: Receipt },
     { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
+    { id: 'payments', label: 'Payments', icon: Receipt },
   ] as const;
 
   // Sync active tab with URL
@@ -210,7 +244,7 @@ export default function TransactionsPage() {
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
     const params = new URLSearchParams(searchParams.toString());
-    if (tab === 'payments') {
+    if (tab === 'subscriptions') {
       params.delete('tab');
     } else {
       params.set('tab', tab);
@@ -288,18 +322,22 @@ export default function TransactionsPage() {
             {/* Payment Filters */}
             <div className="mb-4 flex flex-wrap gap-4 items-end">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select
-                  value={paymentStatusFilter}
-                  onChange={(e) => setPaymentStatusFilter(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1c4233] focus:border-transparent"
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                <Select
+                  value={paymentStatusFilter || 'all'}
+                  onValueChange={(value) => setPaymentStatusFilter(value === 'all' ? '' : value)}
                 >
-                  <option value="">All Statuses</option>
-                  <option value="PENDING">Pending</option>
-                  <option value="COMPLETED">Completed</option>
-                  <option value="FAILED">Failed</option>
-                  <option value="REFUNDED">Refunded</option>
-                </select>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                    <SelectItem value="FAILED">Failed</SelectItem>
+                    <SelectItem value="REFUNDED">Refunded</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
@@ -380,23 +418,83 @@ export default function TransactionsPage() {
             {/* Subscription Filters */}
             <div className="mb-4 flex flex-wrap gap-4 items-end">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select
-                  value={subscriptionStatusFilter}
-                  onChange={(e) => setSubscriptionStatusFilter(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1c4233] focus:border-transparent"
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                <Select
+                  value={subscriptionStatusFilter || 'all'}
+                  onValueChange={(value) => setSubscriptionStatusFilter(value === 'all' ? '' : value)}
                 >
-                  <option value="">All Statuses</option>
-                  <option value="ACTIVE">Active</option>
-                  <option value="PENDING">Pending</option>
-                  <option value="CANCELLED">Cancelled</option>
-                  <option value="EXPIRED">Expired</option>
-                  <option value="FAILED">Failed</option>
-                </select>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="ACTIVE">Active</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                    <SelectItem value="EXPIRED">Expired</SelectItem>
+                    <SelectItem value="FAILED">Failed</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Plan</label>
+                <Select 
+                  value={subscriptionPlanFilter || 'all'} 
+                  onValueChange={(value) => setSubscriptionPlanFilter(value === 'all' ? '' : value)}
+                >
+                  <SelectTrigger className="w-[250px]">
+                    <SelectValue placeholder="Filter by plan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className="p-2 border-b sticky top-0 bg-white dark:bg-slate-800 z-10">
+                      <Input
+                        type="text"
+                        placeholder="Search plans..."
+                        value={planSearchQuery}
+                        onChange={(e) => {
+                          setPlanSearchQuery(e.target.value);
+                          e.stopPropagation();
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1c4233] bg-white dark:bg-slate-700"
+                      />
+                    </div>
+                    <SelectItem value="all">All Plans</SelectItem>
+                    <SelectItem value="sponsor">
+                      <div className="flex items-center gap-2">
+                        <span>Sponsor Plan</span>
+                        <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded">
+                          Sponsor
+                        </span>
+                      </div>
+                    </SelectItem>
+                    {loadingPlans ? (
+                      <div className="px-2 py-1.5 text-sm text-gray-500">Loading plans...</div>
+                    ) : filteredPlans.length === 0 ? (
+                      <div className="px-2 py-1.5 text-sm text-gray-500">
+                        {planSearchQuery ? 'No plans found' : 'No plans available'}
+                      </div>
+                    ) : (
+                      filteredPlans.map((plan: SubscriptionPlan) => (
+                        <SelectItem key={plan.id} value={plan.id}>
+                          <div className="flex items-center gap-2">
+                            <span>{plan.name}</span>
+                            {plan.isSponsorPlan && (
+                              <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded">
+                                Sponsor
+                              </span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -422,7 +520,7 @@ export default function TransactionsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -466,6 +564,8 @@ export default function TransactionsPage() {
               data={subscriptions}
               onSearchChange={handleSubscriptionSearchChange}
               searchValue={subscriptionSearchInput}
+              onPlanFilterChange={setSubscriptionPlanFilter}
+              selectedPlanId={subscriptionPlanFilter}
             />
           </>
         )}

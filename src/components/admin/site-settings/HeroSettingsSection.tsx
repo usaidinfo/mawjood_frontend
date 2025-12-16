@@ -5,13 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2, Upload, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axiosInstance from '@/lib/axios';
 import { API_ENDPOINTS } from '@/config/api.config';
 import { toast } from 'sonner';
+import { categoryService, Category } from '@/services/category.service';
 
 interface HeroSettingsSectionProps {
   value: HeroSettings;
@@ -43,6 +45,33 @@ export function HeroSettingsSection({ value, onChange, onSave, isSaving }: HeroS
   const [carouselImagePreviews, setCarouselImagePreviews] = useState<Record<number, string>>({});
   const [uploadingCarouselImages, setUploadingCarouselImages] = useState<Record<number, boolean>>({});
   const [uploadingCardImages, setUploadingCardImages] = useState<Record<number, boolean>>({});
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const response = await categoryService.fetchCategories(1, 1000);
+        const allCategories: Category[] = [];
+        response.data.categories.forEach((cat: Category) => {
+          allCategories.push(cat);
+          if (cat.subcategories) {
+            allCategories.push(...cat.subcategories);
+          }
+        });
+        setCategories(allCategories);
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        toast.error('Failed to load categories');
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const updateHeroField = (field: keyof HeroSettings, newValue: HeroSettings[typeof field]) => {
     onChange({ ...hero, [field]: newValue });
@@ -59,6 +88,10 @@ export function HeroSettingsSection({ value, onChange, onSave, isSaving }: HeroS
   };
 
   const addCard = () => {
+    if (cards.length >= 4) {
+      toast.error('Maximum 4 hero cards allowed');
+      return;
+    }
     onChange({ ...hero, cards: [...cards, createEmptyCard()] });
   };
 
@@ -282,33 +315,55 @@ export function HeroSettingsSection({ value, onChange, onSave, isSaving }: HeroS
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">Category Slug *</label>
-                      <Input
+                      <label className="text-sm font-medium text-gray-700">Category *</label>
+                      <Select
                         value={item.slug ?? ''}
-                        onChange={(event) => updateCarouselItem(index, 'slug', event.target.value)}
-                        placeholder="hotels"
-                        required
-                      />
+                        onValueChange={(value) => updateCarouselItem(index, 'slug', value)}
+                        disabled={loadingCategories}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {loadingCategories ? (
+                            <div className="px-2 py-1.5 text-sm text-gray-500">Loading categories...</div>
+                          ) : categories.length === 0 ? (
+                            <div className="px-2 py-1.5 text-sm text-gray-500">No categories available</div>
+                          ) : (
+                            categories.map((category) => (
+                              <SelectItem key={category.id} value={category.slug}>
+                                {category.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
                       <p className="text-xs text-gray-500">
                         The category page this carousel item will link to
                       </p>
                     </div>
 
                     <div className="space-y-2 md:col-span-2">
-                      <label className="text-sm font-medium text-gray-700">Carousel Image *</label>
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-gray-700">Carousel Image *</label>
+                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                          Ideal size: 1500x552
+                        </span>
+                      </div>
                       
                       {(carouselImagePreviews[index] || item.image) && (
-                        <div className="relative w-full h-64 rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-300 mb-2">
+                        <div className="relative w-full aspect-[1500/552] rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-300 mb-2 shadow-sm">
                           <Image
                             src={carouselImagePreviews[index] || item.image || ''}
                             alt="Carousel preview"
                             fill
                             className="object-cover"
+                            sizes="(max-width: 768px) 100vw, 1500px"
                           />
                           <button
                             type="button"
                             onClick={() => removeCarouselImage(index)}
-                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors"
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors shadow-lg z-10"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -350,8 +405,18 @@ export function HeroSettingsSection({ value, onChange, onSave, isSaving }: HeroS
         </div>
 
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Hero Cards</h3>
-          <Button type="button" variant="outline" onClick={addCard}>
+          <div>
+            <h3 className="text-lg font-semibold">Hero Cards</h3>
+            <p className="text-xs text-gray-500 mt-1">
+              Maximum 4 cards allowed ({cards.length}/4)
+            </p>
+          </div>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={addCard}
+            disabled={cards.length >= 4}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Add Card
           </Button>
@@ -428,17 +493,18 @@ export function HeroSettingsSection({ value, onChange, onSave, isSaving }: HeroS
                   <label className="text-sm font-medium text-gray-700">Card Image</label>
                   
                   {(imagePreviews[index] || card.image) && (
-                    <div className="relative w-full h-48 rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-300">
+                    <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-300 shadow-sm">
                       <Image
                         src={imagePreviews[index] || card.image || ''}
                         alt="Card preview"
                         fill
                         className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 500px"
                       />
                       <button
                         type="button"
                         onClick={() => removeImage(index)}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors"
+                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors shadow-lg z-10"
                       >
                         <X className="w-4 h-4" />
                       </button>

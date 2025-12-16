@@ -8,7 +8,8 @@ import {
   Region as RegionType,
   Country as CountryType,
 } from '@/services/city.service';
-import { LocationSelection } from '@/store/cityStore';
+import { LocationSelection, useCityStore } from '@/store/cityStore';
+import { MapPin, Loader2 } from 'lucide-react';
 
 interface LocationSelectorProps {
   cities: CityType[];
@@ -39,7 +40,21 @@ export default function LocationSelector({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<CityType[]>([]);
+  const [locationDetecting, setLocationDetecting] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const cityRef = useRef<HTMLDivElement>(null);
+
+  const {
+    cities: citiesFromStore,
+    regions: regionsFromStore,
+    countries: countriesFromStore,
+    fetchCities: fetchCitiesFromStore,
+    fetchRegions: fetchRegionsFromStore,
+    fetchCountries: fetchCountriesFromStore,
+    setSelectedCity: setSelectedCityFromStore,
+    setSelectedLocation: setSelectedLocationFromStore,
+    setRequestingLocation,
+  } = useCityStore();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -158,6 +173,248 @@ export default function LocationSelector({
     return countries.filter((country) => country.name.toLowerCase().includes(query));
   }, [countries, searchQuery]);
 
+  interface GeolocationResponse {
+    latitude: number;
+    longitude: number;
+    city?: string;
+    locality?: string;
+    principalSubdivision?: string;
+    countryName?: string;
+    countryCode?: string;
+    localityInfo?: {
+      administrative?: Array<{
+        name: string;
+        adminLevel?: number;
+        order?: number;
+      }>;
+    };
+  }
+
+  const normalizeName = (name: string): string => {
+    return name.toLowerCase().trim().replace(/\s+/g, ' ');
+  };
+
+  const matchCity = async (cityName: string, citiesToSearch: CityType[] = cities): Promise<CityType | null> => {
+    if (!cityName) return null;
+    const normalized = normalizeName(cityName);
+
+    // Try exact match first
+    let match = citiesToSearch.find(
+      (city) => normalizeName(city.name) === normalized || normalizeName(city.slug) === normalized
+    );
+
+    // Try partial match
+    if (!match) {
+      match = citiesToSearch.find(
+        (city) =>
+          normalizeName(city.name).includes(normalized) || normalized.includes(normalizeName(city.name))
+      );
+    }
+
+    // Try unified search as fallback
+    if (!match) {
+      try {
+        const searchResult = await cityService.unifiedSearch(cityName);
+        if (searchResult.cities.length > 0) {
+          match = searchResult.cities[0];
+        }
+      } catch (err) {
+        console.warn('Unified search failed:', err);
+      }
+    }
+
+    return match || null;
+  };
+
+  const matchRegion = async (regionName: string, regionsToSearch: RegionType[] = regions): Promise<RegionType | null> => {
+    if (!regionName) return null;
+    const normalized = normalizeName(regionName);
+
+    // Try exact match first
+    let match = regionsToSearch.find(
+      (region) => normalizeName(region.name) === normalized || normalizeName(region.slug) === normalized
+    );
+
+    // Try partial match
+    if (!match) {
+      match = regionsToSearch.find(
+        (region) =>
+          normalizeName(region.name).includes(normalized) || normalized.includes(normalizeName(region.name))
+      );
+    }
+
+    // Try unified search as fallback
+    if (!match) {
+      try {
+        const searchResult = await cityService.unifiedSearch(regionName);
+        if (searchResult.regions.length > 0) {
+          match = searchResult.regions[0];
+        }
+      } catch (err) {
+        console.warn('Unified search failed:', err);
+      }
+    }
+
+    return match || null;
+  };
+
+  const matchCountry = (countryName: string, countriesToSearch: CountryType[] = countries): CountryType | null => {
+    if (!countryName) return null;
+    const normalized = normalizeName(countryName);
+
+    // Try exact match first
+    let match = countriesToSearch.find(
+      (country) => normalizeName(country.name) === normalized || normalizeName(country.slug) === normalized
+    );
+
+    // Try partial match
+    if (!match) {
+      match = countriesToSearch.find(
+        (country) =>
+          normalizeName(country.name).includes(normalized) || normalized.includes(normalizeName(country.name))
+      );
+    }
+
+    return match || null;
+  };
+
+  const reverseGeocode = async (latitude: number, longitude: number): Promise<GeolocationResponse> => {
+    const response = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch location data');
+    }
+
+    const data = await response.json();
+    return data;
+  };
+
+  const handleDetectLocation = async () => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser');
+      return;
+    }
+
+    setLocationDetecting(true);
+    setLocationError(null);
+    setRequestingLocation(true);
+
+    // Ensure we have cities, regions, and countries loaded before matching
+    if (citiesFromStore.length === 0) {
+      await fetchCitiesFromStore();
+    }
+    if (regionsFromStore.length === 0) {
+      await fetchRegionsFromStore();
+    }
+    if (countriesFromStore.length === 0) {
+      await fetchCountriesFromStore();
+    }
+
+    // Get the latest values from store after fetching
+    const latestCities = citiesFromStore.length > 0 ? citiesFromStore : cities;
+    const latestRegions = regionsFromStore.length > 0 ? regionsFromStore : regions;
+    const latestCountries = countriesFromStore.length > 0 ? countriesFromStore : countries;
+
+    try {
+      // Request location permission
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          reject,
+          {
+            enableHighAccuracy: false,
+            timeout: 15000,
+            maximumAge: 0,
+          }
+        );
+      });
+
+      const { latitude, longitude } = position.coords;
+
+      // Reverse geocode to get location details
+      const geoData = await reverseGeocode(latitude, longitude);
+
+      // Try to match city first
+      const cityName = geoData.city || geoData.locality;
+      if (cityName) {
+        const matchedCity = await matchCity(cityName, latestCities);
+        if (matchedCity) {
+          setSelectedCityFromStore(matchedCity);
+          setSelectedLocationFromStore({
+            type: 'city',
+            slug: matchedCity.slug,
+            name: matchedCity.name,
+            id: matchedCity.id,
+            regionId: matchedCity.regionId,
+          });
+          onCitySelect(matchedCity.id);
+          setShowDropdown(false);
+          setRequestingLocation(false);
+          setLocationDetecting(false);
+          return;
+        }
+      }
+
+      // Try to match region/state
+      const regionName = geoData.principalSubdivision;
+      if (regionName) {
+        const matchedRegion = await matchRegion(regionName, latestRegions);
+        if (matchedRegion) {
+          setSelectedLocationFromStore({
+            type: 'region',
+            slug: matchedRegion.slug,
+            name: matchedRegion.name,
+            id: matchedRegion.id,
+          });
+          onRegionSelect(matchedRegion);
+          setShowDropdown(false);
+          setRequestingLocation(false);
+          setLocationDetecting(false);
+          return;
+        }
+      }
+
+      // Try to match country
+      const countryName = geoData.countryName;
+      if (countryName) {
+        const matchedCountry = matchCountry(countryName, latestCountries);
+        if (matchedCountry) {
+          setSelectedLocationFromStore({
+            type: 'country',
+            slug: matchedCountry.slug,
+            name: matchedCountry.name,
+            id: matchedCountry.id,
+          });
+          onCountrySelect(matchedCountry);
+          setShowDropdown(false);
+          setRequestingLocation(false);
+          setLocationDetecting(false);
+          return;
+        }
+      }
+
+      // If no match found, set error
+      setLocationError('Could not find your location in our database. Please select manually.');
+      setRequestingLocation(false);
+    } catch (err: any) {
+      console.error('Location error:', err);
+      if (err.code === 1) {
+        setLocationError('Location permission denied. Please allow location access or select manually.');
+      } else if (err.code === 2) {
+        setLocationError('Location unavailable. Please try again or select manually.');
+      } else if (err.code === 3) {
+        setLocationError('Location request timed out. Please try again or select manually.');
+      } else {
+        setLocationError(err.message || 'Failed to get your location. Please select manually.');
+      }
+      setRequestingLocation(false);
+    } finally {
+      setLocationDetecting(false);
+    }
+  };
+
   return (
     <div className="w-full relative" ref={cityRef}>
       <div className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none z-10">
@@ -221,7 +478,7 @@ export default function LocationSelector({
             </div>
           </div>
 
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-gray-200 space-y-3">
             <input
               type="text"
               value={searchQuery}
@@ -235,6 +492,28 @@ export default function LocationSelector({
               }
               className="w-full px-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
+            <button
+              onClick={handleDetectLocation}
+              disabled={locationDetecting}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {locationDetecting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Detecting location...
+                </>
+              ) : (
+                <>
+                  <MapPin className="w-4 h-4" />
+                  Detect my location
+                </>
+              )}
+            </button>
+            {locationError && (
+              <div className="rounded-md bg-red-50 p-2 text-xs text-red-800">
+                {locationError}
+              </div>
+            )}
           </div>
 
           <div className="max-h-60 overflow-y-auto pb-10">
