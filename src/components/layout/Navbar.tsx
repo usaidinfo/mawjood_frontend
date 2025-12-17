@@ -85,7 +85,6 @@ export default function Navbar() {
             <div className="hidden lg:flex items-center gap-6">
               {/* Language */}
               <div className="flex items-center gap-1 text-gray-600 hover:text-primary text-sm font-medium cursor-pointer relative z-10">
-                <Globe className="w-4 h-4" />
                 <div className="min-w-[80px]">
                    <GTranslate className="!inline-block" id="gtranslate-desktop" />
                 </div>
@@ -107,7 +106,7 @@ export default function Navbar() {
               {(!isAuthenticated || isBusinessOwner) && (
                 <button
                   onClick={handleAddBusiness}
-                  className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm"
+                  className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
                 >
                   <Briefcase className="w-4 h-4" />
                   <span>Free Listing</span>
@@ -270,27 +269,15 @@ export default function Navbar() {
                       <button onClick={handleLogout} className="block w-full text-left px-3 py-2 text-base font-medium text-red-600 hover:bg-red-50">Logout</button>
                     </div>
                   ) : showAuthUI ? (
-                    <div className="space-y-3 px-1">
-                      <button
-                        onClick={() => {
-                          setShowAuthModal(true);
-                          closeMobileMenu();
-                        }}
-                        className="w-full flex items-center justify-center gap-2 border border-gray-300 text-gray-700 px-4 py-2.5 rounded-md font-medium hover:bg-gray-50"
-                      >
-                        <LogIn className="w-4 h-4" />
-                        Login
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowAuthModal(true);
-                          closeMobileMenu();
-                        }}
-                        className="w-full bg-gray-900 text-white px-4 py-2.5 rounded-md font-medium hover:bg-gray-800"
-                      >
-                        Sign Up
-                      </button>
-                    </div>
+                    <div className="flex items-center gap-4 pl-4 border-l border-gray-200 h-8">
+                    <button
+                      onClick={() => setShowAuthModal(true)}
+                      className="flex items-center gap-1.5 text-gray-600 hover:text-primary text-sm font-medium transition-colors"
+                    >
+                      <LogIn className="w-4 h-4" />
+                      <span>Login / Sign Up</span>
+                    </button>
+                  </div>
                   ) : null}
                 </div>
               </div>

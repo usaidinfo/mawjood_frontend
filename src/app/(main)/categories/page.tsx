@@ -6,27 +6,21 @@ import { useCityStore } from '@/store/cityStore';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function CategoriesPage() {
   const { t } = useTranslation('common');
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const limit = 20;
   const { selectedLocation, selectedCity, cities, fetchCities } = useCityStore();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await categoryService.fetchCategories(currentPage, limit);
+        // Fetch all categories (use a high limit to get all)
+        const response = await categoryService.fetchCategories(1, 1000);
         setCategories(response.data.categories);
-        setTotalPages(response.data.pagination.totalPages);
-        setTotal(response.data.pagination.total);
       } catch (error) {
         console.error('Failed to fetch categories:', error);
       } finally {
@@ -35,7 +29,7 @@ export default function CategoriesPage() {
     };
 
     fetchData();
-  }, [currentPage]);
+  }, []);
 
   useEffect(() => {
     if (!cities.length) {
@@ -87,8 +81,8 @@ export default function CategoriesPage() {
           </div>
         </div>
 
-        {/* Compact Categories Grid - 4 columns, icon + text side by side */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {/* Categories Grid - 5 columns, icon + text side by side */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-6">
           {filteredCategories.map((category) => (
             <Link
               key={category.id}
@@ -126,58 +120,6 @@ export default function CategoriesPage() {
         {filteredCategories.length === 0 && !loading && (
           <div className="text-center py-12">
             <p className="text-gray-500">No categories found</p>
-          </div>
-        )}
-
-        {/* Compact Pagination - only show if more than 20 categories and not searching */}
-        {totalPages > 1 && !searchQuery && total > 20 && (
-          <div className="flex justify-center items-center gap-2 mt-6">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1.5 border rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm"
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" /> Prev
-            </button>
-            
-            <div className="flex gap-1">
-              {[...Array(totalPages)].map((_, i) => {
-                const pageNum = i + 1;
-                if (
-                  pageNum === 1 ||
-                  pageNum === totalPages ||
-                  (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
-                ) {
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`px-3 py-1.5 rounded-md text-sm ${
-                        currentPage === pageNum
-                          ? 'bg-primary text-white'
-                          : 'border hover:bg-gray-100'
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                } else if (
-                  pageNum === currentPage - 2 ||
-                  pageNum === currentPage + 2
-                ) {
-                  return <span key={pageNum} className="px-1">...</span>;
-                }
-                return null;
-              })}
-            </div>
-
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1.5 border rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm"
-            >
-              Next <ChevronRight className="w-4 h-4 ml-1" />
-            </button>
           </div>
         )}
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Clock, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { paymentService } from '@/services/payment.service';
 const POLL_INTERVAL = 2500; // 2.5 seconds (2-3 seconds as recommended)
 const POLL_TIMEOUT = 30000; // 30 seconds timeout
 
-export default function PaymentPendingPage() {
+function PaymentPendingContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -228,6 +228,18 @@ export default function PaymentPendingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentPendingPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-[#1c4233]" />
+      </div>
+    }>
+      <PaymentPendingContent />
+    </Suspense>
   );
 }
 

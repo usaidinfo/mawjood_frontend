@@ -6,55 +6,53 @@ import Image from 'next/image';
 import { advertisementService, Advertisement } from '@/services/advertisement.service';
 import { useCityStore } from '@/store/cityStore';
 
-export default function HeroStripAd() {
+export default function HeeroStripAd() {
   const { selectedLocation, selectedCity } = useCityStore();
 
-  // Fetch hero strip ad
   const { data: ad, isLoading } = useQuery<Advertisement | null>({
     queryKey: ['advertisements', 'HERO_STRIP', selectedLocation?.id, selectedCity?.id],
     queryFn: async (): Promise<Advertisement | null> => {
       try {
         const locationId = selectedLocation?.id || selectedCity?.id;
         const locationType = selectedLocation?.type || 'city';
-        
-        const advertisement = await advertisementService.getDisplayAdvertisement({
+
+        return await advertisementService.getDisplayAdvertisement({
           locationId,
           locationType: locationType as 'city' | 'region' | 'country',
-          adType: 'HERO_STRIP' as const,
+          adType: 'HERO_STRIP',
         });
-        return advertisement;
       } catch (error) {
-        console.error('Error fetching hero strip advertisement:', error);
+        console.error('Hero strip ad fetch failed', error);
         return null;
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
-  if (!ad) {
-    return null;
-  }
+  if (!ad || isLoading) return null;
 
   return (
-    <div className="w-full bg-white border-b border-gray-200">
+    <div className="w-full mb-4">
       <div className="max-w-full mx-auto">
         <Link
           href={ad.targetUrl || '#'}
           target={ad.openInNewTab !== false ? '_blank' : '_self'}
           rel={ad.openInNewTab !== false ? 'noopener noreferrer' : undefined}
-          className="block w-full h-16 md:h-12 relative overflow-hidden hover:opacity-90 transition-opacity"
+          className="relative block w-full h-40 md:h-48 overflow-hidden rounded-lg group transition-all"
         >
           <Image
             src={ad.imageUrl}
             alt={ad.title || 'Advertisement'}
             fill
-            className="object-cover"
+            className="object-contain transition-transform duration-300 group-hover:scale-[1.02]"
             priority
           />
+
+          {/* Soft hover polish */}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
         </Link>
       </div>
     </div>
   );
 }
-

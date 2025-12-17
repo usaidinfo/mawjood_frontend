@@ -13,7 +13,7 @@ export default function CRVerificationSection() {
     message?: string;
   }>({ status: null });
 
-  const handleVerify = async () => {
+  const handleVerify = async () => {  
     const crNumber = values.crNumber?.trim();
 
     if (!crNumber) {
@@ -21,8 +21,9 @@ export default function CRVerificationSection() {
       return;
     }
 
-    if (!/^\d{10}$/.test(crNumber)) {
-      toast.error('CR number must be exactly 10 digits');
+    // Validate CR National Number format (as per Wathq guidance - can be any numeric value like 700 for testing)
+    if (!/^\d+$/.test(crNumber) || crNumber.trim() === '') {
+      toast.error('CR National Number must be a valid numeric value');
       return;
     }
 
@@ -99,7 +100,7 @@ export default function CRVerificationSection() {
         {/* CR Number Input */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Commercial Registration (CR) Number
+            Commercial Registration National Number
           </label>
           <div className="flex gap-3">
             <input
@@ -107,19 +108,18 @@ export default function CRVerificationSection() {
               name="crNumber"
               value={values.crNumber || ''}
               onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                const value = e.target.value.replace(/\D/g, '');
                 setFieldValue('crNumber', value);
                 setVerificationResult({ status: null });
               }}
               onBlur={handleBlur}
-              placeholder="Enter 10-digit CR number"
-              maxLength={10}
+              placeholder="Enter CR National Number (e.g., 700 for testing)"
               className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1c4233] focus:border-transparent"
             />
             <button
               type="button"
               onClick={handleVerify}
-              disabled={isVerifying || !values.crNumber || values.crNumber.length !== 10}
+              disabled={isVerifying || !values.crNumber || !/^\d+$/.test(values.crNumber)}
               className="px-6 py-3 bg-[#1c4233] text-white rounded-lg font-medium hover:bg-[#152f26] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2 min-w-[120px] justify-center"
             >
               {isVerifying ? (
@@ -139,7 +139,7 @@ export default function CRVerificationSection() {
             <p className="mt-1 text-sm text-red-600">{errors.crNumber as string}</p>
           )}
           <p className="mt-1 text-sm text-gray-500">
-            Enter your 10-digit Commercial Registration number to verify your business
+            Enter your Commercial Registration National Number to verify your business (e.g., 700 for testing)
           </p>
         </div>
 

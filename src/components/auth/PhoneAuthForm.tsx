@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import SaudiFlagIcon from './SaudiFlagIcon';
 
 interface PhoneAuthFormProps {
   phone: string;
@@ -32,7 +33,8 @@ export default function PhoneAuthForm({
       <div>
         <label className="block text-sm font-medium mb-2">Phone Number</label>
         <div className="flex gap-2">
-          <div className="flex justify-center gap-1.5 px-2 py-2 border border-gray-300 rounded-md bg-gray-50 min-w-[70px]">
+          <div className="flex items-center justify-center gap-1.5 px-2 py-2 border border-gray-300 rounded-md bg-gray-50 min-w-[85px]">
+            <SaudiFlagIcon className="w-5 h-3.5 flex-shrink-0" />
             <span className="text-sm font-medium">+966</span>
           </div>
           <Input

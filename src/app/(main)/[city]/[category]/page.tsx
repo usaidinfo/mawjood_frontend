@@ -519,7 +519,7 @@ export default function CityCategoryPage() {
 
   if (category.subcategories && category.subcategories.length > 0) {
     return (
-      <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <nav className="flex mb-6 text-sm">
             <Link href="/" className="text-gray-500 hover:text-primary">
@@ -529,28 +529,77 @@ export default function CityCategoryPage() {
             <span className="text-gray-800">{category.name}</span>
           </nav>
 
-          <h1 className="text-3xl font-bold mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold mb-2 text-gray-900">
             Popular {category.name} in {locationName}
           </h1>
+          <p className="text-gray-600 mb-8">
+            Explore our curated selection of {category.name.toLowerCase()} services
+          </p>
 
-          <div className="bg-white rounded-2xl shadow-sm divide-y">
-            {category.subcategories.map((sub) => (
-              <Link
-                key={sub.id}
-                href={`/${locationSlug}/${sub.slug}`}
-                className="flex items-center justify-between p-6 hover:bg-gray-50 group"
-              >
-                <h3 className="text-lg font-medium group-hover:text-primary">{sub.name}</h3>
-                <svg
-                  className="w-6 h-6 text-gray-400 group-hover:text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 md:gap-6">
+            {category.subcategories.map((sub) => {
+              const getSubtitle = () => {
+                if (sub.description) return sub.description;
+                return `${sub.name} Services`;
+              };
+
+              return (
+                <Link
+                  key={sub.id}
+                  href={`/${locationSlug}/${sub.slug}`}
+                  className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-gray-100"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            ))}
+                  <div className="flex flex-col items-center text-center">
+                    {/* Circular Icon Container */}
+                    <div className="relative mb-4 w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-inner">
+                      {sub.icon ? (
+                        <Image
+                          src={sub.icon}
+                          alt={sub.name}
+                          width={48}
+                          height={48}
+                          className="w-12 h-12 md:w-14 md:h-14 object-contain"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-blue-200 flex items-center justify-center">
+                          <span className="text-2xl md:text-3xl">📁</span>
+                        </div>
+                      )}
+                      {/* Hover overlay effect */}
+                      <div className="absolute inset-0 rounded-full bg-blue-200 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="text-base md:text-lg font-bold text-gray-900 mb-1 group-hover:text-primary transition-colors duration-300 line-clamp-2">
+                      {sub.name}
+                    </h3>
+
+                    {/* Subtitle */}
+                    <p className="text-xs md:text-sm text-gray-500 line-clamp-2 leading-tight">
+                      {getSubtitle()}
+                    </p>
+
+                    {/* Arrow indicator */}
+                    <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <svg
+                        className="w-5 h-5 text-primary"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -613,8 +662,6 @@ export default function CityCategoryPage() {
           </Link>
           <span className="mx-1.5">&gt;</span>
           <span className="text-gray-800">{category.name}</span>
-          <span className="mx-1.5">&gt;</span>
-          <span>{totalResults} {totalResults === 1 ? 'Listing' : 'Listings'}</span>
         </nav>
 
         <h1 className="text-3xl font-bold mb-8">

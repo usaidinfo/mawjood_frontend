@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Mail, Phone } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -308,64 +307,64 @@ export default function UnifiedAuthModal({ isOpen, onClose }: UnifiedAuthModalPr
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Auth Method Selection */}
-          {!otpSent && (
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={authMethod === 'phone' ? 'default' : 'outline'}
-                className="flex-1"
-                onClick={() => {
-                  setAuthMethod('phone');
-                  setError('');
-                }}
-              >
-                <Phone className="w-4 h-4 mr-2" />
-                Phone
-              </Button>
-              <Button
-                type="button"
-                variant={authMethod === 'email' ? 'default' : 'outline'}
-                className="flex-1"
-                onClick={() => {
-                  setAuthMethod('email');
-                  setError('');
-                }}
-              >
-                <Mail className="w-4 h-4 mr-2" />
-                Email
-              </Button>
-            </div>
-          )}
-
-          {/* Phone Input */}
+          {/* Phone Input - shown by default */}
           {authMethod === 'phone' && !otpSent && (
-            <PhoneAuthForm
-              phone={phone}
-              setPhone={setPhone}
-              firstName={firstName}
-              setFirstName={setFirstName}
-              lastName={lastName}
-              setLastName={setLastName}
-              showNameFields={showNameFields}
-              loading={loading}
-              onSendOTP={handleSendOTP}
-            />
+            <>
+              <PhoneAuthForm
+                phone={phone}
+                setPhone={setPhone}
+                firstName={firstName}
+                setFirstName={setFirstName}
+                lastName={lastName}
+                setLastName={setLastName}
+                showNameFields={showNameFields}
+                loading={loading}
+                onSendOTP={handleSendOTP}
+              />
+              {/* Login with email link */}
+              <div className="">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMethod('email');
+                    setError('');
+                  }}
+                  className="text-xs text-blue-600 hover:text-blue-800 underline"
+                >
+                  Login with email
+                </button>
+              </div>
+            </>
           )}
 
           {/* Email Input */}
           {authMethod === 'email' && !otpSent && (
-            <EmailAuthForm
-              email={email}
-              setEmail={setEmail}
-              firstName={firstName}
-              setFirstName={setFirstName}
-              lastName={lastName}
-              setLastName={setLastName}
-              showNameFields={showNameFields}
-              loading={loading}
-              onSendOTP={handleSendOTP}
-            />
+            <>
+              <EmailAuthForm
+                email={email}
+                setEmail={setEmail}
+                firstName={firstName}
+                setFirstName={setFirstName}
+                lastName={lastName}
+                setLastName={setLastName}
+                showNameFields={showNameFields}
+                loading={loading}
+                onSendOTP={handleSendOTP}
+              />
+              {/* Login with phone link */}
+              <div className="">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMethod('phone');
+                    setError('');
+                  }}
+                  className="text-xs text-blue-600 hover:text-blue-800 underline"
+                >
+                  Login with phone
+                </button>
+              </div>
+            </>
           )}
 
           {/* OTP Verification */}

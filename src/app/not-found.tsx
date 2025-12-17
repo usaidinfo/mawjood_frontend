@@ -1,6 +1,13 @@
 import Link from 'next/link';
 import { Metadata } from 'next';
-import { Home, Search, ArrowLeft } from 'lucide-react';
+import { Home, Search } from 'lucide-react';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
+import { I18nProvider } from '@/providers/I18nProvider';
+import QueryProvider from '@/providers/QueryProvider';
+import AuthProvider from '@/providers/AuthProvider';
+import { Toaster } from '@/components/ui/sonner';
+import EnquiryChatButton from '@/components/layout/EnquiryChatButton';
 
 export const metadata: Metadata = {
   title: '404 - Page Not Found | Mawjood',
@@ -13,7 +20,10 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <QueryProvider>
+        <AuthProvider>
+          <Navbar />
+          <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl w-full text-center">
         {/* 404 Number */}
         <div className="mb-8">
@@ -86,6 +96,11 @@ export default function NotFound() {
           <div className="w-3 h-3 bg-primary/30 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
         </div>
       </div>
-    </div>
+          </div>
+          <Footer />
+          <EnquiryChatButton />
+          <Toaster />
+        </AuthProvider>
+      </QueryProvider>
   );
 }

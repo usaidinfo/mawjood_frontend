@@ -11,6 +11,7 @@ import SearchBar from '@/components/home/hero/Searchbar';
 import LocationSelector from '@/components/home/hero/Locationselector';
 import HeroCategoryCards from '@/components/home/hero/Herocategorycards';
 import HeroCarousel from '@/components/home/hero/HeroCarousel';
+import HeroStripAd from './HeroStripAd';
 
 interface HeroCard {
   id: string;
@@ -249,7 +250,10 @@ export default function HeroSection() {
 
   return (
     <section className="relative bg-gradient-to-r from-green-50 to-green-200 flex flex-col py-8 px-4 sm:px-6 lg:px-8">
+      <HeroStripAd />
+
       <div className="max-w-7xl mx-auto flex-1 flex flex-col justify-center w-full">
+
         {/* Hero Title */}
         {siteSettingsLoading ? (
           <div className="mb-6 flex flex-col items-center gap-4 animate-pulse">

@@ -4,7 +4,7 @@
 import DashboardNavbar from '@/components/dashboard/layout/Navbar';
 import DashboardSidebar from '@/components/dashboard/layout/Sidebar';
 import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import QueryProvider from '@/providers/QueryProvider';
 import { Toaster } from '@/components/ui/sonner'; 
@@ -12,11 +12,23 @@ import { Toaster } from '@/components/ui/sonner';
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { isAuthenticated, user } = useAuth();
     const router = useRouter();
+    const pathname = usePathname();
     const [checking, setChecking] = useState(true);
     const [sidebarOpen, setSidebarOpen] = useState(false);
   
+    // Check if current path is a payment page (should be accessible without auth)
+    const isPaymentPage = pathname?.includes('/dashboard/payments/success') ||
+      pathname?.includes('/dashboard/payments/failed') ||
+      pathname?.includes('/dashboard/payments/pending');
+  
     useEffect(() => {
       const timer = setTimeout(() => {
+        // Skip auth check for payment pages
+        if (isPaymentPage) {
+          setChecking(false);
+          return;
+        }
+        
         if (!isAuthenticated) {
           router.push('/');
         } else {
@@ -25,7 +37,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }, 100);
   
       return () => clearTimeout(timer);
-    }, [isAuthenticated, user, router]);
+    }, [isAuthenticated, user, router, isPaymentPage]);
+
+  // For payment pages, don't require authentication or show dashboard UI
+  if (isPaymentPage) {
+    return (
+      <QueryProvider>
+        <div className="min-h-screen bg-gray-50">
+          <main>{children}</main>
+        </div>
+        <Toaster />
+      </QueryProvider>
+    );
+  }
 
   if (checking || !user) {
     return (

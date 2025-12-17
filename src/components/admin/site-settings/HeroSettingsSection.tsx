@@ -490,53 +490,68 @@ export function HeroSettingsSection({ value, onChange, onSave, isSaving }: HeroS
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-medium text-gray-700">Card Image</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700">Card Image</label>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      Ideal size: 1050-1100px × 1600px
+                    </span>
+                  </div>
                   
-                  {(imagePreviews[index] || card.image) && (
-                    <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-300 shadow-sm">
-                      <Image
-                        src={imagePreviews[index] || card.image || ''}
-                        alt="Card preview"
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 500px"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors shadow-lg z-10"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Image Preview - Left Side */}
+                    {(imagePreviews[index] || card.image) ? (
+                      <div className="relative w-full aspect-[1100/1600] rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-300 shadow-sm">
+                        <Image
+                          src={imagePreviews[index] || card.image || ''}
+                          alt="Card preview"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, 550px"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors shadow-lg z-10"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="relative w-full aspect-[1100/1600] rounded-lg bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
+                        <p className="text-sm text-gray-400 text-center">No image preview</p>
+                      </div>
+                    )}
 
-                  <label
-                    htmlFor={`card-image-${index}`}
-                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#1c4233] transition-colors bg-gray-50"
-                  >
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      {uploadingCardImages[index] ? (
-                        <Loader2 className="w-8 h-8 text-gray-400 mb-2 animate-spin" />
-                      ) : (
-                        <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                      )}
-                      <p className="text-sm text-gray-600">
-                        <span className="font-semibold">
-                          {uploadingCardImages[index] ? 'Uploading...' : 'Click to upload'}
-                        </span> card image
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 15MB</p>
+                    {/* Upload Area - Right Side */}
+                    <div>
+                      <label
+                        htmlFor={`card-image-${index}`}
+                        className="flex flex-col items-center justify-center w-full h-full min-h-[200px] border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#1c4233] transition-colors bg-gray-50"
+                      >
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          {uploadingCardImages[index] ? (
+                            <Loader2 className="w-8 h-8 text-gray-400 mb-2 animate-spin" />
+                          ) : (
+                            <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                          )}
+                          <p className="text-sm text-gray-600">
+                            <span className="font-semibold">
+                              {uploadingCardImages[index] ? 'Uploading...' : 'Click to upload'}
+                            </span> card image
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 15MB</p>
+                        </div>
+                        <input
+                          id={`card-image-${index}`}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageChange(index, e)}
+                          className="hidden"
+                          disabled={uploadingCardImages[index]}
+                        />
+                      </label>
                     </div>
-                    <input
-                      id={`card-image-${index}`}
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleImageChange(index, e)}
-                      className="hidden"
-                      disabled={uploadingCardImages[index]}
-                    />
-                  </label>
+                  </div>
                 </div>
                 </div>
               </AccordionContent>

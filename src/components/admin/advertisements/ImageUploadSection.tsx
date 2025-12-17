@@ -29,7 +29,7 @@ export default function ImageUploadSection({
       return 'aspect-[300/350] max-w-[300px] mx-auto';
     }
     if (adType === 'HERO_STRIP') {
-      return 'aspect-[1920/48]';
+      return 'aspect-[1278/184]';
     }
     return 'aspect-[1278/184]';
   };
@@ -58,7 +58,7 @@ export default function ImageUploadSection({
       return <li><span className="font-semibold">Horizontal Banner:</span> 1278 × 184 pixels (wide banner)</li>;
     }
     if (adType === 'HERO_STRIP') {
-      return <li><span className="font-semibold">Hero Strip:</span> 1920 × 48 pixels (desktop) or 1920 × 64 pixels (mobile) - full width, small height</li>;
+      return <li><span className="font-semibold">Hero Strip:</span> 1278 × 184 pixels (wide banner - same as homepage banner)</li>;
     }
     return null;
   };
