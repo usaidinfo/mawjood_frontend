@@ -1,10 +1,9 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { businessService } from '@/services/business.service';
 import { useCityStore } from '@/store/cityStore';
-import { Category, categoryService } from '@/services/category.service';
 import BusinessCard from '@/components/business/BusinessCard';
 import BusinessListCard from '@/components/business/BusinessListCard';
 import { LayoutGrid, List, ChevronDown } from 'lucide-react';
@@ -29,16 +28,6 @@ const SORT_OPTIONS = [
   { value: 'name_asc', label: 'Alphabetical (A-Z)' },
   { value: 'name_desc', label: 'Alphabetical (Z-A)' },
 ];
-
-const sortCategoriesAlphabetically = (items: Category[]): Category[] =>
-  [...items]
-    .map((item) => ({
-      ...item,
-      subcategories: item.subcategories
-        ? sortCategoriesAlphabetically(item.subcategories)
-        : [],
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 
 export default function BusinessesPage() {
   const { selectedCity, selectedLocation } = useCityStore();
@@ -71,17 +60,6 @@ export default function BusinessesPage() {
     setSearchTerm('');
     updateFilters({ search: '' });
   };
-
-  // Fetch categories
-  const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
-    queryKey: ['categories'],
-    queryFn: () => categoryService.fetchCategories(),
-  });
-
-  const sortedCategories = useMemo(() => {
-    if (!categoriesData?.data?.categories) return [];
-    return sortCategoriesAlphabetically(categoriesData.data.categories);
-  }, [categoriesData?.data?.categories]);
 
   // Fetch businesses
   const locationFilterId = selectedLocation?.id ?? selectedCity?.id;
@@ -175,25 +153,18 @@ export default function BusinessesPage() {
 
             <div className="flex flex-wrap gap-3 items-start">
               <div className="w-full sm:w-64">
-                {categoriesLoading ? (
-                  <div className="h-12 rounded-lg bg-gray-100 animate-pulse" />
-                ) : (
-                  <>
-                    <CategoryDropdown
-                      categories={sortedCategories}
-                      value={filters.categoryId}
-                      onChange={(categoryId) => updateFilters({ categoryId })}
-                    />
-                    {filters.categoryId && (
-                      <button
-                        type="button"
-                        onClick={() => updateFilters({ categoryId: '' })}
-                        className="mt-2 text-xs text-primary hover:text-primary/80 transition-colors"
-                      >
-                        Clear category
-                      </button>
-                    )}
-                  </>
+                <CategoryDropdown
+                  value={filters.categoryId}
+                  onChange={(categoryId) => updateFilters({ categoryId })}
+                />
+                {filters.categoryId && (
+                  <button
+                    type="button"
+                    onClick={() => updateFilters({ categoryId: '' })}
+                    className="mt-2 text-xs text-primary hover:text-primary/80 transition-colors"
+                  >
+                    Clear category
+                  </button>
                 )}
               </div>
 

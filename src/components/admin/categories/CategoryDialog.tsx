@@ -16,7 +16,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
-import CategoryDropdown from '@/components/dashboard/add-listing/CategoryDropdown';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface CategoryDialogProps {
   open: boolean;
@@ -279,20 +285,23 @@ export default function CategoryDialog({
               <label htmlFor="parentId" className="block text-sm font-medium text-gray-700 mb-1.5">
                 Parent Category
               </label>
-              <div className="[&>div>button]:h-10 [&>div>button]:py-2">
-                <CategoryDropdown
-                  categories={[
-                    { id: '', name: 'None (Top Level)', slug: '' },
-                    ...parentCategories.map((cat) => ({
-                      id: cat.id,
-                      name: cat.name,
-                      slug: cat.slug,
-                    })),
-                  ]}
-                  value={formData.parentId || ''}
-                  onChange={(value) => setFormData({ ...formData, parentId: value || '' })}
-                />
-              </div>
+              <Select
+                value={formData.parentId || ''}
+                onValueChange={(value) => setFormData({ ...formData, parentId: value || '' })}
+                disabled={isLoading}
+              >
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="Select parent category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None (Top Level)</SelectItem>
+                  {parentCategories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
