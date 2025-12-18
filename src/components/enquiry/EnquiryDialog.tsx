@@ -21,6 +21,7 @@ interface EnquiryDialogProps {
 export function EnquiryDialog({ open, onOpenChange, businessId, businessName }: EnquiryDialogProps) {
   const { user } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [formData, setFormData] = useState<CreateEnquiryData & { message: string }>({
     businessId,
     name: user ? `${user.firstName} ${user.lastName}` : '',
@@ -37,10 +38,18 @@ export function EnquiryDialog({ open, onOpenChange, businessId, businessName }: 
       return;
     }
 
-    if (!formData.name || !formData.phone || !formData.email) {
-      toast.error('Please fill in all required fields');
+    // Validate required fields
+    const newErrors: { [key: string]: string } = {};
+    if (!formData.name?.trim()) newErrors.name = 'Name is required';
+    if (!formData.phone?.trim()) newErrors.phone = 'Phone number is required';
+    if (!formData.email?.trim()) newErrors.email = 'Email is required';
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+    
+    setErrors({});
 
     setIsSubmitting(true);
     try {
@@ -61,6 +70,7 @@ export function EnquiryDialog({ open, onOpenChange, businessId, businessName }: 
         email: user?.email || '',
         message: '',
       });
+      setErrors({});
       onOpenChange(false);
     } catch (error: any) {
       toast.error(error.message || 'Failed to submit enquiry');
@@ -88,10 +98,14 @@ export function EnquiryDialog({ open, onOpenChange, businessId, businessName }: 
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
+              onChange={(e) => {
+                setFormData({ ...formData, name: e.target.value });
+                if (errors.name) setErrors({ ...errors, name: '' });
+              }}
               placeholder="Your full name"
+              className={errors.name ? 'border-red-500 focus-visible:ring-red-500' : ''}
             />
+            {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
           </div>
 
           <div>
@@ -103,10 +117,14 @@ export function EnquiryDialog({ open, onOpenChange, businessId, businessName }: 
               id="phone"
               type="tel"
               value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              required
+              onChange={(e) => {
+                setFormData({ ...formData, phone: e.target.value });
+                if (errors.phone) setErrors({ ...errors, phone: '' });
+              }}
               placeholder="+966 5XX XXX XXX"
+              className={errors.phone ? 'border-red-500 focus-visible:ring-red-500' : ''}
             />
+            {errors.phone && <p className="text-sm text-red-500 mt-1">{errors.phone}</p>}
           </div>
 
           <div>
@@ -118,10 +136,14 @@ export function EnquiryDialog({ open, onOpenChange, businessId, businessName }: 
               id="email"
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
+              onChange={(e) => {
+                setFormData({ ...formData, email: e.target.value });
+                if (errors.email) setErrors({ ...errors, email: '' });
+              }}
               placeholder="your.email@example.com"
+              className={errors.email ? 'border-red-500 focus-visible:ring-red-500' : ''}
             />
+            {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
           </div>
 
           <div>

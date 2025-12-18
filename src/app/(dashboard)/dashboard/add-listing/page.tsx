@@ -241,7 +241,6 @@ export default function AddListingPage() {
   );
 }
 
-// Helper component to inject categories into BasicInfoSection
 function CategoryInjector({ categories }: { categories: any[] }) {
   const { setFieldValue } = useFormikContext<any>();
 

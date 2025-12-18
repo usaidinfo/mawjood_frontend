@@ -12,9 +12,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Bell, Briefcase, Globe, Megaphone, Phone, User, Menu, LogIn } from 'lucide-react';
 
 const NAV_LINKS = [
-  { href: '/about', key: 'about' },
-  { href: '/blog', key: 'blog' },
-  { href: '/businesses', key: 'businesses' },
   { href: '/contact', key: 'contact' },
 ] as const;
 
@@ -139,7 +136,7 @@ export default function Navbar() {
                     </PopoverTrigger>
                     <PopoverContent className="w-56 p-0" align="end">
                         <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                          <p className="text-sm font-semibold text-gray-900">{user.firstName} {user.lastName}</p>
+                          <p className="text-sm font-semibold text-gray-900 truncate">{user.firstName} {user.lastName}</p>
                           <p className="text-xs text-gray-500 mt-0.5 truncate">{user.email}</p>
                         </div>
 

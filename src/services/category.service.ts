@@ -55,10 +55,11 @@ export const categoryService = {
   /**
    * Fetch all categories
    */
-  async fetchCategories(page: number = 1, limit: number = 20): Promise<CategoryResponse> {
+  async fetchCategories(page: number = 1, limit: number = 20, search?: string): Promise<CategoryResponse> {
     try {
+      const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
       const response = await axiosInstance.get<CategoryResponse>(
-        `${API_ENDPOINTS.CATEGORIES.GET_ALL}?page=${page}&limit=${limit}`
+        `${API_ENDPOINTS.CATEGORIES.GET_ALL}?page=${page}&limit=${limit}${searchParam}`
       );
       return response.data;
     } catch (error) {

@@ -177,13 +177,13 @@ export default function FeaturedServices() {
     {sections.map((section) => (
       <div key={section.id}>
         {/* Section Title */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-8">
+        <div className="flex flex-col flex-row items-center justify-between gap-3 mb-8">
           <div>
-            <h3 className="text-2xl font-bold text-gray-800 tracking-tight">
+            <h3 className="md:text-2xl text-xl font-bold text-gray-800 tracking-tight">
               {section.title}
             </h3>
             {section.subtitle && (
-              <p className="text-sm text-gray-500 mt-1 max-w-xl">
+              <p className="md:text-sm text-xs text-gray-500 mt-1 max-w-xl">
                 {section.subtitle}
               </p>
             )}

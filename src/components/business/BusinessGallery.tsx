@@ -45,7 +45,7 @@ export default function BusinessGallery({ business }: Props) {
     business.logo
       ? { url: business.logo, alt: business.logoAlt || `${business.name} logo` }
       : null,
-    ...galleryImages
+    ...galleryImages,
   ].filter(Boolean) as { url: string; alt: string }[];
 
   const displayImages = allImages.slice(0, 5);
@@ -58,6 +58,11 @@ export default function BusinessGallery({ business }: Props) {
     if (e.key === 'Escape') setShowLightbox(false);
     if (e.key === 'ArrowRight') nextImage();
     if (e.key === 'ArrowLeft') prevImage();
+  };
+
+  const openLightbox = (index: number) => {
+    setCurrentIndex(index);
+    setShowLightbox(true);
   };
 
   if (allImages.length === 0) {
@@ -80,11 +85,8 @@ export default function BusinessGallery({ business }: Props) {
             src={displayImages[0].url}
             alt={displayImages[0].alt}
             fill
-            className="object-cover cursor-pointer"
-            onClick={() => {
-              setCurrentIndex(0);
-              setShowLightbox(true);
-            }}
+            className="object-cover cursor-pointer hover:opacity-95 transition-opacity"
+            onClick={() => openLightbox(0)}
           />
         </div>
       )}
@@ -92,16 +94,13 @@ export default function BusinessGallery({ business }: Props) {
       {count === 2 && (
         <div className="grid grid-cols-2 gap-1 h-[400px]">
           {displayImages.map((img, idx) => (
-            <div key={idx} className="relative cursor-pointer">
+            <div key={idx} className="relative cursor-pointer hover:opacity-95 transition-opacity">
               <Image
                 src={img.url}
                 alt={img.alt}
                 fill
                 className="object-cover"
-                onClick={() => {
-                  setCurrentIndex(idx);
-                  setShowLightbox(true);
-                }}
+                onClick={() => openLightbox(idx)}
               />
             </div>
           ))}
@@ -110,30 +109,24 @@ export default function BusinessGallery({ business }: Props) {
 
       {count === 3 && (
         <div className="grid grid-cols-3 gap-1 h-[400px]">
-          <div className="col-span-2 relative cursor-pointer">
+          <div className="col-span-2 relative cursor-pointer hover:opacity-95 transition-opacity">
             <Image
               src={displayImages[0].url}
               alt={displayImages[0].alt}
               fill
               className="object-cover"
-              onClick={() => {
-                setCurrentIndex(0);
-                setShowLightbox(true);
-              }}
+              onClick={() => openLightbox(0)}
             />
           </div>
           <div className="grid grid-rows-2 gap-1">
             {displayImages.slice(1).map((img, idx) => (
-              <div key={idx} className="relative cursor-pointer">
+              <div key={idx} className="relative cursor-pointer hover:opacity-95 transition-opacity">
                 <Image
                   src={img.url}
                   alt={img.alt}
                   fill
                   className="object-cover"
-                  onClick={() => {
-                    setCurrentIndex(idx + 1);
-                    setShowLightbox(true);
-                  }}
+                  onClick={() => openLightbox(idx + 1)}
                 />
               </div>
             ))}
@@ -141,33 +134,64 @@ export default function BusinessGallery({ business }: Props) {
         </div>
       )}
 
+      {/* MODIFIED: 4 Image Layout */}
+      {/* Left: Big | Right Top: 2 Small (50/50) | Right Bottom: 1 Wide (100) */}
       {count === 4 && (
-        <div className="grid grid-cols-2 grid-rows-2 gap-1 h-[400px]">
-          {displayImages.map((img, idx) => (
-            <div key={idx} className="relative cursor-pointer">
+        <div className="grid grid-cols-2 gap-1 h-[400px]">
+          {/* 1. First Image (Big Left) */}
+          <div className="relative cursor-pointer hover:opacity-95 transition-opacity">
+            <Image
+              src={displayImages[0].url}
+              alt={displayImages[0].alt}
+              fill
+              className="object-cover"
+              onClick={() => openLightbox(0)}
+            />
+          </div>
+
+          {/* Right Column */}
+          <div className="grid grid-rows-2 gap-1">
+            {/* Top Row: Image 2 & 3 (50% - 50%) */}
+            <div className="grid grid-cols-2 gap-1">
+              <div className="relative cursor-pointer hover:opacity-95 transition-opacity">
+                <Image
+                  src={displayImages[1].url}
+                  alt={displayImages[1].alt}
+                  fill
+                  className="object-cover"
+                  onClick={() => openLightbox(1)}
+                />
+              </div>
+              <div className="relative cursor-pointer hover:opacity-95 transition-opacity">
+                <Image
+                  src={displayImages[2].url}
+                  alt={displayImages[2].alt}
+                  fill
+                  className="object-cover"
+                  onClick={() => openLightbox(2)}
+                />
+              </div>
+            </div>
+
+            {/* Bottom Row: Image 4 (100%) */}
+            <div className="relative cursor-pointer hover:opacity-95 transition-opacity">
               <Image
-                src={img.url}
-                alt={img.alt}
+                src={displayImages[3].url}
+                alt={displayImages[3].alt}
                 fill
                 className="object-cover"
-                onClick={() => {
-                  setCurrentIndex(idx);
-                  setShowLightbox(true);
-                }}
+                onClick={() => openLightbox(3)}
               />
             </div>
-          ))}
+          </div>
         </div>
       )}
 
       {count >= 5 && (
         <div className="grid grid-cols-4 gap-1 h-[400px]">
           <div
-            className="col-span-2 row-span-2 relative cursor-pointer"
-            onClick={() => {
-              setCurrentIndex(0);
-              setShowLightbox(true);
-            }}
+            className="col-span-2 row-span-2 relative cursor-pointer hover:opacity-95 transition-opacity"
+            onClick={() => openLightbox(0)}
           >
             <Image
               src={displayImages[0].url}
@@ -181,11 +205,8 @@ export default function BusinessGallery({ business }: Props) {
           {displayImages.slice(1, 5).map((img, idx) => (
             <div
               key={idx}
-              className="relative cursor-pointer"
-              onClick={() => {
-                setCurrentIndex(idx + 1);
-                setShowLightbox(true);
-              }}
+              className="relative cursor-pointer hover:opacity-95 transition-opacity"
+              onClick={() => openLightbox(idx + 1)}
             >
               <Image src={img.url} alt={img.alt} fill className="object-cover" />
 
@@ -199,7 +220,7 @@ export default function BusinessGallery({ business }: Props) {
         </div>
       )}
 
-      {/* ---------------- LIGHTBOX (UNCHANGED) ---------------- */}
+      {/* ---------------- LIGHTBOX ---------------- */}
       {showLightbox && (
         <div
           className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center"
@@ -230,26 +251,26 @@ export default function BusinessGallery({ business }: Props) {
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 text-white rounded-full p-3"
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 text-white rounded-full p-3 hover:bg-white/30 transition"
               >
                 <ChevronLeft className="w-6 h-6" />
               </button>
               <button
                 onClick={nextImage}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 text-white rounded-full p-3"
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 text-white rounded-full p-3 hover:bg-white/30 transition"
               >
                 <ChevronRight className="w-6 h-6" />
               </button>
             </>
           )}
 
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 px-4 py-2 bg-black/50 rounded-lg overflow-x-auto">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 px-4 py-2 bg-black/50 rounded-lg overflow-x-auto max-w-[90vw]">
             {allImages.map((image, idx) => (
               <button
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
-                className={`relative w-16 h-16 rounded overflow-hidden ${
-                  idx === currentIndex ? 'ring-2 ring-white scale-110' : 'opacity-60'
+                className={`relative w-16 h-16 flex-shrink-0 rounded overflow-hidden transition-transform ${
+                  idx === currentIndex ? 'ring-2 ring-white scale-110' : 'opacity-60 hover:opacity-100'
                 }`}
               >
                 <Image src={image.url} alt={image.alt} fill className="object-cover" />

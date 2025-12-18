@@ -247,9 +247,7 @@ export default function BlogDetailPage() {
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 text-center mb-8">
           {blog.title}
         </h1>
-        <p className="text-center text-gray-500 text-sm mb-6">
-          {format(new Date(blog.createdAt), 'dd MMM yyyy')}
-        </p>
+
 
         {blog.categories && blog.categories.length > 0 && (
           <div className="flex flex-wrap justify-center gap-3 mb-8">
@@ -267,7 +265,7 @@ export default function BlogDetailPage() {
 
         {/* Header Image */}
         {featuredImage && (
-          <div className="relative w-full h-96 mb-12 rounded-lg overflow-hidden">
+          <div className="relative w-full h-96 mb-6 rounded-lg overflow-hidden">
             <Image
               src={featuredImage}
               alt={blog.title}
@@ -279,6 +277,9 @@ export default function BlogDetailPage() {
           </div>
         )}
 
+<p className="text-right text-sm mb-6">
+          Published Date: {format(new Date(blog.createdAt), 'dd MMM yyyy')}
+        </p>
         {/* Content */}
         <div
           className="blog-content"

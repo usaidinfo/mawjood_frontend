@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, Search, ChevronRight } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { categoryService, Category } from '@/services/category.service';
+
 interface DropdownCategory {
   id: string;
   name: string;
@@ -8,7 +11,6 @@ interface DropdownCategory {
 }
 
 interface CategoryDropdownProps {
-  categories: DropdownCategory[];
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
@@ -16,7 +18,6 @@ interface CategoryDropdownProps {
 }
 
 export default function CategoryDropdown({
-  categories,
   value,
   onChange,
   onBlur,
@@ -24,8 +25,48 @@ export default function CategoryDropdown({
 }: CategoryDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounce search query
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300); // 300ms debounce
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [searchQuery]);
+
+  // Fetch all categories initially (when dropdown opens or component mounts)
+  const { data: initialCategoriesData } = useQuery({
+    queryKey: ['categories', 'all'],
+    queryFn: () => categoryService.fetchCategories(1, 1000),
+    enabled: isOpen && !debouncedSearchQuery, // Only fetch when dropdown is open and no search query
+    staleTime: 300000, // 5 minutes
+  });
+
+  // Fetch categories from API when searching (using debounced query)
+  const { data: searchData, isLoading: isSearching } = useQuery({
+    queryKey: ['categories', 'search', debouncedSearchQuery],
+    queryFn: () => categoryService.fetchCategories(1, 1000, debouncedSearchQuery),
+    enabled: isOpen && debouncedSearchQuery.length > 0, // Only fetch when dropdown is open and there's a debounced search query
+    staleTime: 30000, // 30 seconds
+  });
+
+  // Use search results if searching, otherwise use initial categories
+  const categories = debouncedSearchQuery && searchData?.data.categories 
+    ? (searchData.data.categories as DropdownCategory[])
+    : (initialCategoriesData?.data.categories as DropdownCategory[] || []);
 
   // Find selected category (could be a subcategory)
   const findSelectedCategory = (cats: DropdownCategory[], id: string): DropdownCategory | undefined => {
@@ -41,51 +82,26 @@ export default function CategoryDropdown({
 
   const selectedCategory = findSelectedCategory(categories, value);
 
-  // Filter categories based on search query
-  const filterCategories = (cats: DropdownCategory[], query: string): DropdownCategory[] => {
-    if (!query) return cats;
-    
-    return cats.filter((category) => {
-      const matchesName = category.name.toLowerCase().includes(query.toLowerCase());
-      const hasMatchingSubcategories = category.subcategories && category.subcategories.length > 0
-        ? filterCategories(category.subcategories, query).length > 0
-        : false;
-      return matchesName || hasMatchingSubcategories;
-    }).map((category) => {
-      if (category.subcategories && category.subcategories.length > 0) {
-        return {
-          ...category,
-          subcategories: filterCategories(category.subcategories, query),
-        };
-      }
-      return category;
-    });
-  };
-
-  const filteredCategories = searchQuery ? filterCategories(categories, searchQuery) : categories;
-
-  // Auto-expand categories that match search query
+  // When using API search, auto-expand all categories since they're already filtered
   useEffect(() => {
-    if (searchQuery) {
+    if (debouncedSearchQuery && searchData?.data.categories) {
       const newExpanded = new Set<string>();
-      const expandMatchingParents = (cats: DropdownCategory[]) => {
+      const expandAllParents = (cats: DropdownCategory[]) => {
         cats.forEach((cat) => {
           if (cat.subcategories && cat.subcategories.length > 0) {
-            const hasMatchingSubcategories = filterCategories(cat.subcategories, searchQuery).length > 0;
-            if (hasMatchingSubcategories) {
-              newExpanded.add(cat.id);
-            }
-            expandMatchingParents(cat.subcategories);
+            newExpanded.add(cat.id);
+            expandAllParents(cat.subcategories);
           }
         });
       };
-      expandMatchingParents(categories);
+      const catsToExpand = searchData.data.categories as DropdownCategory[];
+      expandAllParents(catsToExpand);
       setExpandedCategories(newExpanded);
-    } else {
+    } else if (!debouncedSearchQuery) {
       // Reset expanded state when search is cleared
       setExpandedCategories(new Set());
     }
-  }, [searchQuery, categories]);
+  }, [debouncedSearchQuery, searchData]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -201,10 +217,12 @@ export default function CategoryDropdown({
 
           {/* Categories List */}
           <div className="max-h-48 overflow-y-auto">
-            {filteredCategories.length === 0 ? (
+            {isSearching || (searchQuery && !debouncedSearchQuery) || (!debouncedSearchQuery && !initialCategoriesData) ? (
+              <div className="px-4 py-3 text-sm text-gray-500 text-center">Loading...</div>
+            ) : categories.length === 0 ? (
               <div className="px-4 py-3 text-sm text-gray-500 text-center">No categories found</div>
             ) : (
-              filteredCategories.map((category) => renderCategory(category))
+              categories.map((category) => renderCategory(category))
             )}
           </div>
         </div>

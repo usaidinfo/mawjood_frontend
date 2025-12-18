@@ -177,7 +177,7 @@ export default function DashboardNavbar({ onMenuClick }: DashboardNavbarProps) {
                 className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 p-1 sm:p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
                 onClick={() => setShowNotifications(false)}
               >
-                <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 bg-primary rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                   {user?.avatar ? (
                     <Image
                       src={user.avatar}
@@ -192,21 +192,15 @@ export default function DashboardNavbar({ onMenuClick }: DashboardNavbarProps) {
                     </span>
                   )}
                 </div>
-                <div className="text-left hidden lg:block">
-                  <p className="text-sm font-medium text-gray-900">
-                    {user?.firstName} {user?.lastName}
-                  </p>
-                  <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
-                </div>
                 <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 hidden sm:block flex-shrink-0" />
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-56 p-0" align="end">
               <div className="px-4 py-3 border-b border-gray-200">
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-gray-900 truncate">
                   {user?.firstName} {user?.lastName}
                 </p>
-                <p className="text-xs text-gray-500">{user?.email}</p>
+                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
               </div>
 
               <Link

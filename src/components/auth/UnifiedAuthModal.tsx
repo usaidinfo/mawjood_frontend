@@ -76,15 +76,8 @@ export default function UnifiedAuthModal({ isOpen, onClose }: UnifiedAuthModalPr
         
         const response = await authService.socialLogin({ provider: 'google', token });
         
-        if (response.data.needsPhoneUpdate) {
-          setError('Please provide your phone number to complete registration.');
-          setPhone('');
-          setAuthMethod('phone');
-          setShowNameFields(true);
-          setLoading(false);
-          return;
-        }
-        
+        // User is already registered and logged in, even if phone needs updating
+        // They can update phone later from their profile
         await login(response.data.user, response.data.token, response.data.refreshToken);
         onClose();
       } catch (err: any) {
@@ -101,6 +94,7 @@ export default function UnifiedAuthModal({ isOpen, onClose }: UnifiedAuthModalPr
         setLoading(true);
         setError('');
         const response = await authService.socialLogin({ provider: 'facebook', token });
+        // User is already registered and logged in, even if phone needs updating
         await login(response.data.user, response.data.token, response.data.refreshToken);
         onClose();
       } catch (err: any) {
@@ -241,14 +235,8 @@ export default function UnifiedAuthModal({ isOpen, onClose }: UnifiedAuthModalPr
           return;
         }
 
-        if (isNewUser && (!firstName.trim() || !lastName.trim())) {
-          setError('First name and last name are required for new users');
-          setLoading(false);
-          return;
-        }
-
-        // For new users, we should have already sent OTP with name in handleSendOTP
-        // So we don't need to resend here
+        // For new users, names are already collected and sent with OTP in handleSendOTP
+        // No need to validate or send names again here
 
         const response = await authService.verifyPhoneOTP({
           phone: formattedPhone,
@@ -264,14 +252,8 @@ export default function UnifiedAuthModal({ isOpen, onClose }: UnifiedAuthModalPr
           return;
         }
 
-        if (isNewUser && (!firstName.trim() || !lastName.trim())) {
-          setError('First name and last name are required for new users');
-          setLoading(false);
-          return;
-        }
-
-        // For new users, we should have already sent OTP with name in handleSendOTP
-        // So we don't need to resend here
+        // For new users, names are already collected and sent with OTP in handleSendOTP
+        // No need to validate or send names again here
 
         const response = await authService.verifyEmailOTP({
           email: email.trim(),
@@ -286,7 +268,7 @@ export default function UnifiedAuthModal({ isOpen, onClose }: UnifiedAuthModalPr
     } finally {
       setLoading(false);
     }
-  }, [authMethod, phone, email, formattedPhone, otp, firstName, lastName, isNewUser, hasSentOTPWithName, login, onClose]);
+  }, [authMethod, phone, email, formattedPhone, otp, login, onClose]);
 
   const handleBackFromOTP = useCallback(() => {
     setOtpSent(false);
@@ -322,14 +304,14 @@ export default function UnifiedAuthModal({ isOpen, onClose }: UnifiedAuthModalPr
                 onSendOTP={handleSendOTP}
               />
               {/* Login with email link */}
-              <div className="">
+              <div className="text-center py-0">
                 <button
                   type="button"
                   onClick={() => {
                     setAuthMethod('email');
                     setError('');
                   }}
-                  className="text-xs text-blue-600 hover:text-blue-800 underline"
+                  className="text-xs text-primary hover:text-primary/90 underline"
                 >
                   Login with email
                 </button>
@@ -352,14 +334,14 @@ export default function UnifiedAuthModal({ isOpen, onClose }: UnifiedAuthModalPr
                 onSendOTP={handleSendOTP}
               />
               {/* Login with phone link */}
-              <div className="">
+              <div className="text-center py-0">
                 <button
                   type="button"
                   onClick={() => {
                     setAuthMethod('phone');
                     setError('');
                   }}
-                  className="text-xs text-blue-600 hover:text-blue-800 underline"
+                  className="text-xs text-primary hover:text-primary/90 underline"
                 >
                   Login with phone
                 </button>
@@ -377,7 +359,7 @@ export default function UnifiedAuthModal({ isOpen, onClose }: UnifiedAuthModalPr
               lastName={lastName}
               setLastName={setLastName}
               isNewUser={isNewUser}
-              showNameFields={showNameFields}
+              showNameFields={false}
               authMethod={authMethod}
               loading={loading}
               onVerify={handleVerifyOTP}

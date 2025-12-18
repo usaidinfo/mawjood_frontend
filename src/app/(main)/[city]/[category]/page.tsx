@@ -13,6 +13,9 @@ import BusinessListCard from '@/components/business/BusinessListCard';
 import BusinessCard from '@/components/business/BusinessCard';
 import { LayoutGrid, List } from 'lucide-react';
 import SidebarAd from '@/components/common/SidebarAd';
+import FeaturedListings from '@/components/home/FeaturedListings';
+import Blogs from '@/components/home/Blogs';
+import TrendingSearches from '@/components/home/TrendingSearches';
 
 type FiltersState = {
   search: string;
@@ -530,13 +533,13 @@ export default function CityCategoryPage() {
           </nav>
 
           <h1 className="text-3xl md:text-4xl font-bold mb-2 text-gray-900">
-            Popular {category.name} in {locationName}
+            {category.name} Categories
           </h1>
           <p className="text-gray-600 mb-8">
-            Explore our curated selection of {category.name.toLowerCase()} services
+            Browse all {category.name.toLowerCase()} subcategories and find exactly what you're looking for
           </p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 mb-16">
             {category.subcategories.map((sub) => {
               const getSubtitle = () => {
                 if (sub.description) return sub.description;
@@ -600,6 +603,13 @@ export default function CityCategoryPage() {
                 </Link>
               );
             })}
+          </div>
+
+          {/* Additional Components after subcategories */}
+          <div className="space-y-0">
+            <TrendingSearches />
+            <FeaturedListings />
+            <Blogs />
           </div>
         </div>
       </div>

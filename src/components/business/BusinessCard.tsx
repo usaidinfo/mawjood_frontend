@@ -7,7 +7,7 @@ import { useCityStore } from '@/store/cityStore';
 import { useState } from 'react';
 import { EnquiryDialog } from '@/components/enquiry/EnquiryDialog';
 import { useAuthStore } from '@/store/authStore';
-import { toast } from 'sonner';
+import UnifiedAuthModal from '@/components/auth/UnifiedAuthModal';
 
 interface BusinessCardProps {
   business: Business;
@@ -24,6 +24,7 @@ export default function BusinessCard({
   const { selectedCity, selectedLocation } = useCityStore();
   const { isAuthenticated } = useAuthStore();
   const [enquiryDialogOpen, setEnquiryDialogOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   
   const descriptionText = business.description
     ? business.description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
@@ -36,7 +37,7 @@ export default function BusinessCard({
     e.preventDefault();
     e.stopPropagation();
     if (!isAuthenticated) {
-      toast.error('Please login to send an enquiry to this business');
+      setShowAuthModal(true);
       return;
     }
     setEnquiryDialogOpen(true);
@@ -187,6 +188,11 @@ export default function BusinessCard({
         onOpenChange={setEnquiryDialogOpen}
         businessId={business.id}
         businessName={business.name}
+      />
+
+      <UnifiedAuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
       />
     </div>
   );

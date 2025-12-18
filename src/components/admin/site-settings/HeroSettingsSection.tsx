@@ -2,18 +2,19 @@
 
 import { HeroCardSettings, HeroSettings, HeroCarouselItem } from '@/services/settings.service';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Upload, X, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Upload, X, Loader2, Search, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axiosInstance from '@/lib/axios';
 import { API_ENDPOINTS } from '@/config/api.config';
 import { toast } from 'sonner';
 import { categoryService, Category } from '@/services/category.service';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 
 interface HeroSettingsSectionProps {
   value: HeroSettings;
@@ -36,6 +37,95 @@ const createEmptyCarouselItem = (): HeroCarouselItem => ({
   slug: '',
   title: '',
 });
+
+interface SearchableCategorySelectProps {
+  value: string;
+  onChange: (value: string) => void;
+  categories: Category[];
+  loading: boolean;
+  placeholder?: string;
+}
+
+function SearchableCategorySelect({ value, onChange, categories, loading, placeholder = 'Select a category' }: SearchableCategorySelectProps) {
+  const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const selectedCategory = useMemo(() => {
+    return categories.find(cat => cat.slug === value);
+  }, [categories, value]);
+
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery.trim()) return categories;
+    const query = searchQuery.toLowerCase();
+    return categories.filter(cat => 
+      cat.name.toLowerCase().includes(query) || 
+      cat.slug.toLowerCase().includes(query)
+    );
+  }, [categories, searchQuery]);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between"
+        >
+          {selectedCategory ? selectedCategory.name : placeholder}
+          <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[400px] p-0" align="start">
+        <div className="p-2">
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search categories..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+        </div>
+        <div className="max-h-[300px] overflow-y-auto">
+          {loading ? (
+            <div className="p-4 text-center text-sm text-gray-500">Loading categories...</div>
+          ) : filteredCategories.length === 0 ? (
+            <div className="p-4 text-center text-sm text-gray-500">
+              {searchQuery ? 'No categories found' : 'No categories available'}
+            </div>
+          ) : (
+            <div className="p-1">
+              {filteredCategories.map((category) => (
+                <div
+                  key={category.id}
+                  className={cn(
+                    "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground",
+                    value === category.slug && "bg-accent"
+                  )}
+                  onClick={() => {
+                    onChange(category.slug);
+                    setOpen(false);
+                    setSearchQuery('');
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === category.slug ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {category.name}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export function HeroSettingsSection({ value, onChange, onSave, isSaving }: HeroSettingsSectionProps) {
   const hero: HeroSettings = value ?? { title: '', subtitle: '', cards: [], carousel: [] };
@@ -316,28 +406,13 @@ export function HeroSettingsSection({ value, onChange, onSave, isSaving }: HeroS
 
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-700">Category *</label>
-                      <Select
+                      <SearchableCategorySelect
                         value={item.slug ?? ''}
-                        onValueChange={(value) => updateCarouselItem(index, 'slug', value)}
-                        disabled={loadingCategories}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {loadingCategories ? (
-                            <div className="px-2 py-1.5 text-sm text-gray-500">Loading categories...</div>
-                          ) : categories.length === 0 ? (
-                            <div className="px-2 py-1.5 text-sm text-gray-500">No categories available</div>
-                          ) : (
-                            categories.map((category) => (
-                              <SelectItem key={category.id} value={category.slug}>
-                                {category.name}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
+                        onChange={(value: string) => updateCarouselItem(index, 'slug', value)}
+                        categories={categories}
+                        loading={loadingCategories}
+                        placeholder="Select a category"
+                      />
                       <p className="text-xs text-gray-500">
                         The category page this carousel item will link to
                       </p>
@@ -481,12 +556,17 @@ export function HeroSettingsSection({ value, onChange, onSave, isSaving }: HeroS
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Category Slug</label>
-                  <Input
+                  <label className="text-sm font-medium text-gray-700">Category *</label>
+                  <SearchableCategorySelect
                     value={card.slug ?? ''}
-                    onChange={(event) => updateCardField(index, 'slug', event.target.value)}
-                    placeholder="real-estate"
+                    onChange={(value: string) => updateCardField(index, 'slug', value)}
+                    categories={categories}
+                    loading={loadingCategories}
+                    placeholder="Select a category"
                   />
+                  <p className="text-xs text-gray-500">
+                    The category page this card will link to
+                  </p>
                 </div>
 
                 <div className="space-y-2 md:col-span-2">

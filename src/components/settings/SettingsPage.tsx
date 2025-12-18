@@ -9,9 +9,7 @@ import {
   Mail,
   Phone,
   Camera,
-  Key,
   Bell,
-  Shield,
   Globe,
   Save,
   CheckCircle2,
@@ -295,10 +293,10 @@ function EnquiriesTabContent() {
   );
 }
 
-export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 'profile' | 'security' | 'notifications' | 'enquiries' | 'preferences' }) {
+export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 'profile' | 'notifications' | 'enquiries' | 'preferences' }) {
   const { user, setUser } = useAuthStore();
   const queryClient = useQueryClient();
-  const [selectedTab, setSelectedTab] = useState<'profile' | 'security' | 'notifications' | 'enquiries' | 'preferences'>(initialTab);
+  const [selectedTab, setSelectedTab] = useState<'profile' | 'notifications' | 'enquiries' | 'preferences'>(initialTab);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Update tab when initialTab changes
@@ -308,9 +306,8 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['user-profile'],
@@ -324,14 +321,22 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
     if (profile) {
       setFirstName(profile.firstName);
       setLastName(profile.lastName);
+      setEmail(profile.email);
+      setPhone(profile.phone);
     }
   }, [profile]);
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: { firstName: string; lastName: string; avatar?: File }) => {
+    mutationFn: async (data: { firstName: string; lastName: string; email?: string; phone?: string; avatar?: File }) => {
       const formData = new FormData();
       formData.append('firstName', data.firstName);
       formData.append('lastName', data.lastName);
+      if (data.email !== undefined) {
+        formData.append('email', data.email);
+      }
+      if (data.phone !== undefined) {
+        formData.append('phone', data.phone);
+      }
       if (data.avatar) {
         formData.append('avatar', data.avatar);
       }
@@ -348,24 +353,8 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
       setUser(data.data);
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });
     },
-    onError: () => {
-      toast.error('Failed to update profile');
-    },
-  });
-
-  const changePasswordMutation = useMutation({
-    mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
-      const response = await axiosInstance.post('api/users/change-password', data);
-      return response.data;
-    },
-    onSuccess: () => {
-      toast.success('Password changed successfully');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to change password');
+      toast.error(error.response?.data?.message || 'Failed to update profile');
     },
   });
 
@@ -441,29 +430,30 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
       return;
     }
 
-    updateProfileMutation.mutate({
+    const updateData: { firstName: string; lastName: string; email?: string; phone?: string } = {
       firstName,
       lastName,
-    });
-  };
+    };
 
-  const handleChangePassword = () => {
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      toast.error('All fields are required');
-      return;
+    // Only include email if it's changed and not verified
+    if (!profile?.emailVerified && email !== profile?.email) {
+      if (!email) {
+        toast.error('Email is required');
+        return;
+      }
+      updateData.email = email;
     }
 
-    if (newPassword !== confirmPassword) {
-      toast.error('New passwords do not match');
-      return;
+    // Only include phone if it's changed and not verified
+    if (!profile?.phoneVerified && phone !== profile?.phone) {
+      if (!phone) {
+        toast.error('Phone number is required');
+        return;
+      }
+      updateData.phone = phone;
     }
 
-    if (newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return;
-    }
-
-    changePasswordMutation.mutate({ currentPassword, newPassword });
+    updateProfileMutation.mutate(updateData);
   };
 
   if (isLoading) {
@@ -476,7 +466,6 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
-    { id: 'security', label: 'Security', icon: Shield },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'enquiries', label: 'My Enquiries', icon: MessageSquare },
   ];
@@ -594,9 +583,15 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
                   <div className="relative w-full">
                     <input
                       type="email"
-                      value={profile?.email || ''}
-                      disabled
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={profile?.emailVerified || false}
+                      className={`w-full px-4 py-2 border border-gray-300 rounded-lg ${
+                        profile?.emailVerified
+                          ? 'bg-gray-50 cursor-not-allowed'
+                          : 'focus:ring-2 focus:ring-primary focus:border-transparent'
+                      }`}
+                      placeholder="Enter email address"
                     />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:block">
                       {profile?.emailVerified ? (
@@ -612,6 +607,11 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
                       )}
                     </div>
                   </div>
+                  {!profile?.emailVerified && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      You can update your email address. Verification will be reset after update.
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -622,9 +622,15 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
                   <div className="relative w-full">
                     <input
                       type="tel"
-                      value={profile?.phone || ''}
-                      disabled
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      disabled={profile?.phoneVerified || false}
+                      className={`w-full px-4 py-2 border border-gray-300 rounded-lg ${
+                        profile?.phoneVerified
+                          ? 'bg-gray-50 cursor-not-allowed'
+                          : 'focus:ring-2 focus:ring-primary focus:border-transparent'
+                      }`}
+                      placeholder="Enter phone number"
                     />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:block">
                       {profile?.phoneVerified ? (
@@ -640,6 +646,11 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
                       )}
                     </div>
                   </div>
+                  {!profile?.phoneVerified && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      You can update your phone number. Verification will be reset after update.
+                    </p>
+                  )}
                 </div>
 
                 <button
@@ -653,72 +664,6 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
                     <Save className="w-4 h-4" />
                   )}
                   Save Changes
-                </button>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      )}
-
-      {selectedTab === 'security' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg border border-gray-200 p-6 w-full">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Key className="w-5 h-5" />
-                Change Password
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Current Password
-                  </label>
-                  <input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Enter current password"
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      New Password
-                    </label>
-                    <input
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="Enter new password"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Confirm New Password
-                    </label>
-                    <input
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="Confirm new password"
-                    />
-                  </div>
-                </div>
-                <button
-                  onClick={handleChangePassword}
-                  disabled={changePasswordMutation.isPending}
-                  className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
-                >
-                  {changePasswordMutation.isPending ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                  ) : (
-                    <Save className="w-4 h-4" />
-                  )}
-                  Update Password
                 </button>
               </div>
             </div>

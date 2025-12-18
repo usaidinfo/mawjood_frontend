@@ -270,7 +270,7 @@ export default function BusinessDetailPage() {
 
           {/* Right Column: Sidebar */}
           <div className="lg:col-span-1">
-            <div className="sticky top-[200px]">
+            <div className="sticky top-[150px]">
               <QuickInfoSection business={business} />
             </div>
           </div>

@@ -82,22 +82,22 @@ export default function AdvertisementBanner() {
   const firstAd = adsArray.length > 0 ? adsArray[0] : null;
 
   return (
-    <section className="py-8 px-4 sm:px-6 lg:px-8">
+    <section className="py-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {displayBanners.length > 0 && (
           <Link
             href={displayBanners[0].targetUrl || '#'}
             target={firstAd?.openInNewTab !== false ? '_blank' : '_self'}
             rel={firstAd?.openInNewTab !== false ? 'noopener noreferrer' : undefined}
-            className="group block relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 h-40 md:h-48 w-full"
+            className="group block relative rounded-2xl overflow-hidden transition-all duration-300 h-18 md:h-48 w-full"
           >
             <Image
               src={displayBanners[0].imageUrl}
               alt={displayBanners[0].title || 'Advertisement'}
               fill
-              className="object-contain group-hover:scale-105 transition-transform duration-300"
+              className="object-contain  transition-transform duration-300"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0  transition-opacity duration-300" />
           </Link>
         )}
       </div>

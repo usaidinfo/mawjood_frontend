@@ -249,7 +249,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative bg-gradient-to-r from-green-50 to-green-200 flex flex-col py-8 px-4 sm:px-6 lg:px-8">
+    <section className="relative bg-gradient-to-r from-green-50 to-green-200 flex flex-col py-4 px-4 sm:px-6 lg:px-8">
       <HeroStripAd />
 
       <div className="max-w-7xl mx-auto flex-1 flex flex-col justify-center w-full">
@@ -276,12 +276,14 @@ export default function HeroSection() {
         )}
 
         {/* Search Bar */}
-        <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl p-2 mb-12 border border-gray-100">
+        <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl p-2 mb-12 border border-gray-100">
           <div className="flex flex-col md:flex-row gap-2 w-full">
-            <SearchBar
-              onSearch={handleSearch}
-              selectedCityId={selectedCity?.id}
-            />
+            <div className="flex-1 max-w-md">
+              <SearchBar
+                onSearch={handleSearch}
+                selectedCityId={selectedCity?.id}
+              />
+            </div>
 
             <div className="md:w-80 w-full">
               <LocationSelector
@@ -299,7 +301,7 @@ export default function HeroSection() {
 
             <button
               onClick={() => handleSearch()}
-              className="bg-primary text-white px-6 py-3 rounded-2xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2 font-semibold text-base shadow-lg hover:shadow-xl transform hover:scale-105 md:w-30 w-full h-[52px]"
+              className="bg-primary text-white px-6 py-3 rounded-2xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2  cursor-pointer font-semibold text-base shadow-lg hover:shadow-xl transform hover:scale-105 md:w-22 w-full h-[52px] flex-shrink-0"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

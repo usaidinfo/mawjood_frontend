@@ -1,19 +1,12 @@
 import { useFormikContext } from 'formik';
 import { Info } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Category, categoryService } from '@/services/category.service';
 import CategoryDropdown from './CategoryDropdown';
 import RichTextEditor from './RichTextEditor';
 
 export default function BasicInfoSection() {
   const { values, errors, touched, handleChange, handleBlur, setFieldValue } = useFormikContext<any>();
   const [autoSlug, setAutoSlug] = useState(true);
-
-  const { data: categoriesData } = useQuery({
-    queryKey: ['categories'],
-    queryFn: () => categoryService.fetchCategories(1, 100),
-  });
   
   useEffect(() => {
     if (autoSlug && values.name) {
@@ -100,7 +93,6 @@ export default function BasicInfoSection() {
       Category <span className="text-red-500">*</span>
     </label>
     <CategoryDropdown
-      categories={categoriesData?.data.categories as Category[] || []}
       value={values.categoryId}
       onChange={(value) => setFieldValue('categoryId', value)}
       onBlur={() => handleBlur('categoryId')}

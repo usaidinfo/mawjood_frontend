@@ -480,43 +480,49 @@ export function FeaturedSectionsSettingsSection({
                           Item Image
                         </label>
                         
-                        {(imagePreviews[`${sectionIndex}-${itemIndex}`] || item.image) && (
-                          <div className="relative w-full h-48 rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-300">
-                            <Image
-                              src={imagePreviews[`${sectionIndex}-${itemIndex}`] || item.image || ''}
-                              alt="Item preview"
-                              fill
-                              className="object-cover"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeItemImage(sectionIndex, itemIndex)}
-                              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        )}
+                        <div className="flex gap-3">
+                          {/* Image Preview - Half Width */}
+                          {(imagePreviews[`${sectionIndex}-${itemIndex}`] || item.image) && (
+                            <div className="relative w-1/2 h-48 rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-300 flex-shrink-0">
+                              <Image
+                                src={imagePreviews[`${sectionIndex}-${itemIndex}`] || item.image || ''}
+                                alt="Item preview"
+                                fill
+                                className="object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeItemImage(sectionIndex, itemIndex)}
+                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
 
-                        <label
-                          htmlFor={`item-image-${sectionIndex}-${itemIndex}`}
-                          className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#1c4233] transition-colors bg-gray-50"
-                        >
-                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                            <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                            <p className="text-sm text-gray-600">
-                              <span className="font-semibold">Click to upload</span> item image
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 15MB</p>
-                          </div>
-                          <input
-                            id={`item-image-${sectionIndex}-${itemIndex}`}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleImageChange(sectionIndex, itemIndex, e)}
-                            className="hidden"
-                          />
-                        </label>
+                          {/* Image Upload - Half Width (or full width if no preview) */}
+                          <label
+                            htmlFor={`item-image-${sectionIndex}-${itemIndex}`}
+                            className={`flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#1c4233] transition-colors bg-gray-50 flex-1 ${
+                              (imagePreviews[`${sectionIndex}-${itemIndex}`] || item.image) ? 'h-48' : 'w-full h-32'
+                            }`}
+                          >
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                              <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                              <p className="text-sm text-gray-600">
+                                <span className="font-semibold">Click to upload</span> item image
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 15MB</p>
+                            </div>
+                            <input
+                              id={`item-image-${sectionIndex}-${itemIndex}`}
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleImageChange(sectionIndex, itemIndex, e)}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
                       </div>
 
                       <div className="space-y-2">

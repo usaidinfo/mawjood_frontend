@@ -9,7 +9,7 @@ export default function ProfilePage() {
   const { user, isAuthenticated } = useAuthStore();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [initialTab, setInitialTab] = useState<'profile' | 'security' | 'notifications' | 'enquiries' | 'preferences'>('profile');
+  const [initialTab, setInitialTab] = useState<'profile' | 'notifications' | 'enquiries' | 'preferences'>('profile');
 
   useEffect(() => {
     if (!isAuthenticated) {

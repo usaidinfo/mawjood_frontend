@@ -33,24 +33,24 @@ export default function HeeroStripAd() {
   if (!ad || isLoading) return null;
 
   return (
-    <div className="w-full mb-4">
+    <div className="w-full mb-2">
       <div className="max-w-full mx-auto">
         <Link
           href={ad.targetUrl || '#'}
           target={ad.openInNewTab !== false ? '_blank' : '_self'}
           rel={ad.openInNewTab !== false ? 'noopener noreferrer' : undefined}
-          className="relative block w-full h-40 md:h-48 overflow-hidden rounded-lg group transition-all"
+          className="relative block w-full h-18 md:h-48 overflow-hidden rounded-lg group transition-all"
         >
           <Image
             src={ad.imageUrl}
             alt={ad.title || 'Advertisement'}
             fill
-            className="object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+            className="object-contain transition-transform duration-300"
             priority
           />
 
           {/* Soft hover polish */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+          <div className="absolute inset-0 bg-black/0 transition-colors" />
         </Link>
       </div>
     </div>

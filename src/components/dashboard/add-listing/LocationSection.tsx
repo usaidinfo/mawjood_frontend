@@ -416,24 +416,6 @@ export default function LocationSection() {
           />
         </div>
 
-
-        {/* CR Number (Optional) */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            CR Number (Commercial Registration)
-          </label>
-          <input
-            type="text"
-            name="crNumber"
-            value={values.crNumber || ''}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="1234567890"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1c4233] focus:border-transparent"
-          />
-          <p className="mt-1 text-sm text-gray-500">Optional - helps verify your business</p>
-        </div>
-
         {/* Coordinates Toggle */}
         <div>
           <button
