@@ -121,10 +121,14 @@ export default function CategoriesPage() {
   };
 
   const handleEditSubcategory = (subcategory: Category) => {
-    setSubDialogOpen(false);
+    // Set the state first before closing/opening dialogs
     setSelectedCategory(subcategory);
     setDialogParentId(subcategory.parentId || null);
-    setDialogOpen(true);
+    // Use setTimeout to ensure state is set before opening dialog
+    setTimeout(() => {
+      setSubDialogOpen(false);
+      setDialogOpen(true);
+    }, 0);
   };
 
   const handleDeleteSubcategory = (subcategoryId: string) => {
@@ -213,8 +217,8 @@ export default function CategoriesPage() {
         open={subDialogOpen}
         onOpenChange={(open) => {
           setSubDialogOpen(open);
-          if (!open) {
-            // Refetch categories when dialog closes to show updated subcategories
+          if (!open && !dialogOpen) {
+            // Only refetch if we're not opening the main dialog (to avoid double refetch)
             const fetchCategories = async () => {
               try {
                 setLoading(true);

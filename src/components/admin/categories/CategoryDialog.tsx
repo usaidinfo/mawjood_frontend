@@ -75,7 +75,7 @@ export default function CategoryDialog({
     } else {
       resetForm();
     }
-  }, [category, isEditMode, open]);
+  }, [category, isEditMode, open, defaultParentId]);
 
   const resetForm = () => {
     setFormData({
@@ -286,15 +286,15 @@ export default function CategoryDialog({
                 Parent Category
               </label>
               <Select
-                value={formData.parentId || ''}
-                onValueChange={(value) => setFormData({ ...formData, parentId: value || '' })}
+                value={formData.parentId || 'none'}
+                onValueChange={(value) => setFormData({ ...formData, parentId: value === 'none' ? '' : value })}
                 disabled={isLoading}
               >
                 <SelectTrigger className="h-10">
                   <SelectValue placeholder="Select parent category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None (Top Level)</SelectItem>
+                  <SelectItem value="none">None (Top Level)</SelectItem>
                   {parentCategories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}
