@@ -16,19 +16,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const [checking, setChecking] = useState(true);
     const [sidebarOpen, setSidebarOpen] = useState(false);
   
-    // Check if current path is a payment page (should be accessible without auth)
-    const isPaymentPage = pathname?.includes('/dashboard/payments/success') ||
-      pathname?.includes('/dashboard/payments/failed') ||
-      pathname?.includes('/dashboard/payments/pending');
-  
     useEffect(() => {
       const timer = setTimeout(() => {
-        // Skip auth check for payment pages
-        if (isPaymentPage) {
-          setChecking(false);
-          return;
-        }
-        
         if (!isAuthenticated) {
           router.push('/');
         } else {
@@ -37,19 +26,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }, 100);
   
       return () => clearTimeout(timer);
-    }, [isAuthenticated, user, router, isPaymentPage]);
-
-  // For payment pages, don't require authentication or show dashboard UI
-  if (isPaymentPage) {
-    return (
-      <QueryProvider>
-        <div className="min-h-screen bg-gray-50">
-          <main>{children}</main>
-        </div>
-        <Toaster />
-      </QueryProvider>
-    );
-  }
+    }, [isAuthenticated, user, router]);
 
   if (checking || !user) {
     return (

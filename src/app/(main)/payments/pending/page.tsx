@@ -56,11 +56,11 @@ function PaymentPendingContent() {
       // If payment status changed, redirect accordingly
       if (response.data.status === 'COMPLETED') {
         stopPolling();
-        router.push(`/dashboard/payments/success?paymentId=${paymentId}&tranRef=${tranRef || response.data.transactionId || ''}`);
+        router.push(`/payments/success?paymentId=${paymentId}&tranRef=${tranRef || response.data.transactionId || ''}`);
         return;
       } else if (response.data.status === 'FAILED') {
         stopPolling();
-        router.push(`/dashboard/payments/failed?paymentId=${paymentId}&tranRef=${tranRef || response.data.transactionId || ''}`);
+        router.push(`/payments/failed?paymentId=${paymentId}&tranRef=${tranRef || response.data.transactionId || ''}`);
         return;
       }
       
