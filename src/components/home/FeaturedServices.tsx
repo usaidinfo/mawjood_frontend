@@ -189,14 +189,25 @@ export default function FeaturedServices() {
             )}
           </div>
           {section.parentCategorySlug && (
-            <Link
-              href={`/${locationSlug}/${section.parentCategorySlug}`}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#1c4233] bg-white border border-[#1c4233] rounded-lg hover:bg-[#1c4233] hover:text-white transition-colors duration-200"
-            >
-              View More
-              <ChevronRight className="w-4 h-4" />
-            </Link>
-          )}
+  <Link
+    href={`/${locationSlug}/${section.parentCategorySlug}`}
+    className="
+      inline-flex items-center justify-center shrink-0 
+      gap-1 md:gap-2 
+      px-3 py-1.5 md:px-4 md:py-2 
+      text-xs md:text-sm font-medium 
+      text-[#1c4233] bg-white border border-[#1c4233] 
+      rounded-lg md:rounded-lg
+      hover:bg-[#1c4233] hover:text-white 
+      active:scale-95
+      transition-all duration-200 
+      whitespace-nowrap
+    "
+  >
+    <span>View More</span>
+    <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
+  </Link>
+)}
         </div>
 
         <div

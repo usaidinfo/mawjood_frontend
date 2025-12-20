@@ -95,7 +95,7 @@ export default function AdvertisementBanner() {
               src={displayBanners[0].imageUrl}
               alt={displayBanners[0].title || 'Advertisement'}
               fill
-              className="object-contain  transition-transform duration-300"
+              className="object-contain transition-transform duration-300 group-hover:scale-101"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0  transition-opacity duration-300" />
           </Link>

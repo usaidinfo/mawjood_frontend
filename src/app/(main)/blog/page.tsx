@@ -94,7 +94,7 @@ export function BlogsListing({ initialCategorySlug = null, categoryInfo = null }
   const hasActiveFilters = Boolean(selectedCategory || debouncedSearch);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-16">
+    <div className="min-h-screen bg-gray-50 py-2">
       <AdvertisementBanner />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-12 space-y-4">

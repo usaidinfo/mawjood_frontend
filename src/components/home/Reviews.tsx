@@ -180,10 +180,10 @@ export default function Reviews() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-3">
+          <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-2">
             Our Reviews
           </h2>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+          <p className="text-gray-600 text-base md:text-lg">
             Our clients love our services and give great & positive reviews
           </p>
         </div>

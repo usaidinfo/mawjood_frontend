@@ -177,7 +177,7 @@ export default function DashboardNavbar({ onMenuClick }: DashboardNavbarProps) {
                 className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 p-1 sm:p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
                 onClick={() => setShowNotifications(false)}
               >
-                <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                <div className="bg-primary w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                   {user?.avatar ? (
                     <Image
                       src={user.avatar}

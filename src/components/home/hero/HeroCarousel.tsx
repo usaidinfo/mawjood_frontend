@@ -28,14 +28,14 @@ export default function HeroCarousel({ items, locationSlug, loading }: HeroCarou
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % items.length);
-    }, 5000); // Change slide every 5 seconds
+    }, 5000); 
 
     return () => clearInterval(interval);
   }, [isAutoPlaying, items.length]);
 
   if (loading) {
     return (
-      <div className="w-full h-64 md:h-80 rounded-2xl bg-gray-200 animate-pulse" />
+      <div className="w-full h-44 md:h-60 rounded-2xl bg-gray-200 animate-pulse" />
     );
   }
 
@@ -46,7 +46,6 @@ export default function HeroCarousel({ items, locationSlug, loading }: HeroCarou
   const goToSlide = (index: number) => {
     setCurrentIndex(index);
     setIsAutoPlaying(false);
-    // Resume auto-play after 10 seconds
     setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
@@ -62,11 +61,12 @@ export default function HeroCarousel({ items, locationSlug, loading }: HeroCarou
     setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
-  const currentItem = items[currentIndex];
-
   return (
-    <div className="relative w-full h-50 md:h-60 rounded-2xl overflow-hidden shadow-xl group">
-      {/* Carousel Items with transitions */}
+    // CHANGE 1: h-44 for mobile (smaller), md:h-60 (your original desktop height)
+    // Added bg-gray-100 so if mobile image doesn't fill width, it looks clean
+    <div className="relative w-full h-44 md:h-60 rounded-2xl overflow-hidden shadow-xl group bg-gray-50">
+      
+      {/* Carousel Items */}
       <div className="relative w-full h-full">
         {items.map((item, index) => (
           <Link
@@ -76,12 +76,13 @@ export default function HeroCarousel({ items, locationSlug, loading }: HeroCarou
               index === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
             }`}
           >
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-full flex items-center justify-center">
               <Image
                 src={item.image}
                 alt={item.title || `Carousel item ${index + 1}`}
                 fill
-                className="object-cover"
+                // CHANGE 2: object-contain on mobile (shows full image), object-cover on desktop (fills box)
+                className="object-contain md:object-cover" 
                 priority={index === 0}
               />
             </div>
@@ -89,7 +90,7 @@ export default function HeroCarousel({ items, locationSlug, loading }: HeroCarou
         ))}
       </div>
 
-      {/* Navigation Arrows - Always visible */}
+      {/* Navigation Arrows */}
       {items.length > 1 && (
         <>
           <button
@@ -97,8 +98,7 @@ export default function HeroCarousel({ items, locationSlug, loading }: HeroCarou
               e.preventDefault();
               goToPrevious();
             }}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-transparent hover:bg-white text-gray-800 rounded-full p-1 shadow-lg transition-all"
-            aria-label="Previous slide"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-white/30 hover:bg-white text-gray-800 rounded-full p-1 shadow-lg transition-all backdrop-blur-sm"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -107,8 +107,7 @@ export default function HeroCarousel({ items, locationSlug, loading }: HeroCarou
               e.preventDefault();
               goToNext();
             }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-transparent hover:bg-white text-gray-800 rounded-full p-1 shadow-lg transition-all"
-            aria-label="Next slide"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-white/30 hover:bg-white text-gray-800 rounded-full p-1 shadow-lg transition-all backdrop-blur-sm"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
@@ -125,12 +124,11 @@ export default function HeroCarousel({ items, locationSlug, loading }: HeroCarou
                 e.preventDefault();
                 goToSlide(index);
               }}
-              className={`h-2 rounded-full transition-all ${
+              className={`h-1.5 rounded-full transition-all shadow-sm ${
                 index === currentIndex
-                  ? 'w-6 bg-primary'
-                  : 'w-2 bg-white/70 hover:bg-white'
+                  ? 'w-5 bg-primary'
+                  : 'w-1.5 bg-gray-300 hover:bg-white'
               }`}
-              aria-label={`Go to slide ${index + 1}`}
             />
           ))}
         </div>
@@ -138,4 +136,3 @@ export default function HeroCarousel({ items, locationSlug, loading }: HeroCarou
     </div>
   );
 }
-

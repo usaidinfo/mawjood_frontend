@@ -68,11 +68,19 @@ const handleError = (error: unknown): never => {
 };
 
 export const paymentService = {
-  async getMyPayments(): Promise<Payment[]> {
+  async getMyPayments(params?: {
+    page?: number;
+    limit?: number;
+    businessId?: string;
+  }): Promise<PaginatedResponse<Payment>['data']> {
     try {
-      const response = await axiosInstance.get<ApiResponse<Payment[]>>(
-        API_ENDPOINTS.PAYMENTS.GET_MY_PAYMENTS
-      );
+      const queryParams = new URLSearchParams();
+      if (params?.page) queryParams.append('page', params.page.toString());
+      if (params?.limit) queryParams.append('limit', params.limit.toString());
+      if (params?.businessId) queryParams.append('businessId', params.businessId);
+
+      const url = `${API_ENDPOINTS.PAYMENTS.GET_MY_PAYMENTS}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const response = await axiosInstance.get<PaginatedResponse<Payment>>(url);
       return response.data.data;
     } catch (error) {
       console.error('Error fetching my payments:', error);

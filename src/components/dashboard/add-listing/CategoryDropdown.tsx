@@ -47,11 +47,11 @@ export default function CategoryDropdown({
     };
   }, [searchQuery]);
 
-  // Fetch all categories initially (when dropdown opens or component mounts)
+  // Fetch all categories initially (when dropdown opens, component mounts, or when there's a selected value)
   const { data: initialCategoriesData } = useQuery({
     queryKey: ['categories', 'all'],
     queryFn: () => categoryService.fetchCategories(1, 1000),
-    enabled: isOpen && !debouncedSearchQuery, // Only fetch when dropdown is open and no search query
+    enabled: (isOpen && !debouncedSearchQuery) || !!value, // Fetch when dropdown opens OR when there's a selected value (for display)
     staleTime: 300000, // 5 minutes
   });
 

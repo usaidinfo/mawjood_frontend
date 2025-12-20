@@ -522,7 +522,7 @@ export default function CityCategoryPage() {
 
   if (category.subcategories && category.subcategories.length > 0) {
     return (
-      <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <nav className="flex mb-6 text-sm">
             <Link href="/" className="text-gray-500 hover:text-primary">
@@ -607,8 +607,8 @@ export default function CityCategoryPage() {
 
           {/* Additional Components after subcategories */}
           <div className="space-y-0">
-            <TrendingSearches />
             <FeaturedListings />
+            <TrendingSearches />
             <Blogs />
           </div>
         </div>

@@ -45,7 +45,7 @@ export default function HeeroStripAd() {
             src={ad.imageUrl}
             alt={ad.title || 'Advertisement'}
             fill
-            className="object-contain transition-transform duration-300"
+            className="object-contain transition-transform duration-300 group-hover:scale-101"
             priority
           />
 

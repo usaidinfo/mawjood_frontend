@@ -4,15 +4,18 @@ import { useQuery } from '@tanstack/react-query';
 import { businessService } from '@/services/business.service';
 import { subscriptionService } from '@/services/subscription.service';
 import { paymentService } from '@/services/payment.service';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { Receipt, CreditCard, Calendar, Building2, Loader2, AlertCircle, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCurrency } from '@/hooks/useCurrency';
 import { parseDecimal } from '@/services/subscription.service';
 
+type TabType = 'subscriptions' | 'payments';
+
 export default function TransactionsPage() {
   const { currency } = useCurrency();
+  const [activeTab, setActiveTab] = useState<TabType>('subscriptions');
   const [selectedBusinessId, setSelectedBusinessId] = useState<string>('');
   const [subscriptionsPage, setSubscriptionsPage] = useState(1);
   const [paymentsPage, setPaymentsPage] = useState(1);
@@ -35,19 +38,14 @@ export default function TransactionsPage() {
     enabled: !!businesses && businesses.length > 0,
   });
 
-  // Fetch payments with pagination (only if a business is selected)
+  // Fetch payments with pagination (all user payments, optionally filtered by business)
   const { data: paymentsData, isLoading: paymentsLoading } = useQuery({
     queryKey: ['payments', selectedBusinessId, paymentsPage],
-    queryFn: async () => {
-      if (!selectedBusinessId) {
-        // If no business selected, return empty result
-        return { payments: [], pagination: { total: 0, page: 1, limit: pageSize, pages: 0 } };
-      }
-      return paymentService.getBusinessPayments(selectedBusinessId, {
-        page: paymentsPage,
-        limit: pageSize,
-      });
-    },
+    queryFn: () => paymentService.getMyPayments({
+      page: paymentsPage,
+      limit: pageSize,
+      businessId: selectedBusinessId || undefined,
+    }),
     enabled: !!businesses && businesses.length > 0,
   });
 
@@ -117,6 +115,36 @@ export default function TransactionsPage() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="bg-white rounded-lg border border-gray-200">
+        <div className="border-b border-gray-200">
+          <nav className="flex -mb-px">
+            <button
+              onClick={() => setActiveTab('subscriptions')}
+              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'subscriptions'
+                  ? 'border-[#1c4233] text-[#1c4233]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <CreditCard className="w-4 h-4 inline mr-2" />
+              Subscriptions
+            </button>
+            <button
+              onClick={() => setActiveTab('payments')}
+              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'payments'
+                  ? 'border-[#1c4233] text-[#1c4233]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Receipt className="w-4 h-4 inline mr-2" />
+              Payments
+            </button>
+          </nav>
+        </div>
+      </div>
+
       {/* Business Filter */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -140,7 +168,8 @@ export default function TransactionsPage() {
         </select>
       </div>
 
-      {/* Subscriptions Section */}
+      {/* Subscriptions Tab Content */}
+      {activeTab === 'subscriptions' && (
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center gap-2 mb-4">
           <CreditCard className="w-5 h-5 text-[#1c4233]" />
@@ -178,19 +207,22 @@ export default function TransactionsPage() {
                         <Building2 className="w-4 h-4" />
                         <span>{subscription.business?.name || 'Unknown Business'}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        <div className="flex flex-col">
-                          <span>
-                            Start: {format(new Date(subscription.startedAt), 'MMM dd, yyyy')} at{' '}
-                            {format(new Date(subscription.startedAt), 'hh:mm a')}
-                          </span>
-                          <span>
-                            End: {format(new Date(subscription.endsAt), 'MMM dd, yyyy')} at{' '}
-                            {format(new Date(subscription.endsAt), 'hh:mm a')}
-                          </span>
+                      {/* Only show dates for active subscriptions (not failed/pending/cancelled) */}
+                      {subscription.status === 'ACTIVE' && (
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          <div className="flex flex-col">
+                            <span>
+                              Start: {format(new Date(subscription.startedAt), 'MMM dd, yyyy')} at{' '}
+                              {format(new Date(subscription.startedAt), 'hh:mm a')}
+                            </span>
+                            <span>
+                              End: {format(new Date(subscription.endsAt), 'MMM dd, yyyy')} at{' '}
+                              {format(new Date(subscription.endsAt), 'hh:mm a')}
+                            </span>
+                          </div>
                         </div>
-                      </div>
+                      )}
                       {subscription.totalAmount && (
                         <div className="flex items-center gap-2">
                           <Receipt className="w-4 h-4" />
@@ -236,15 +268,14 @@ export default function TransactionsPage() {
           </>
         )}
       </div>
+      )}
 
-      {/* Payments Section */}
+      {/* Payments Tab Content */}
+      {activeTab === 'payments' && (
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center gap-2 mb-4">
           <Receipt className="w-5 h-5 text-[#1c4233]" />
           <h2 className="text-xl font-semibold text-gray-900">Payments</h2>
-          {!selectedBusinessId && (
-            <p className="text-sm text-gray-500 ml-2">Select a business to view payments</p>
-          )}
           {paymentsPagination && (
             <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#1c4233] text-white">
               {paymentsPagination.total}
@@ -252,12 +283,7 @@ export default function TransactionsPage() {
           )}
         </div>
 
-        {!selectedBusinessId ? (
-          <div className="text-center py-8 text-gray-500">
-            <Receipt className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-            <p>Please select a business to view payments</p>
-          </div>
-        ) : payments.length === 0 ? (
+        {payments.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <Receipt className="w-12 h-12 mx-auto mb-2 text-gray-400" />
             <p>No payments found</p>
@@ -268,6 +294,7 @@ export default function TransactionsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Business</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Payment Method</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Amount</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Status</th>
@@ -280,6 +307,11 @@ export default function TransactionsPage() {
                   <tr key={payment.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="py-3 px-4">
                       <div className="font-medium text-gray-900">
+                        {payment.business?.name || 'N/A'}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="text-gray-900">
                         {payment.paymentMethod || 'N/A'}
                       </div>
                     </td>
@@ -333,6 +365,7 @@ export default function TransactionsPage() {
           </>
         )}
       </div>
+      )}
     </div>
   );
 }
