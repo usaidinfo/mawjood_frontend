@@ -177,7 +177,9 @@ export default function HeroSection() {
     }
 
     // General search - redirect to businesses page
-    router.push('/businesses');
+    // Get location slug for businesses URL
+    const locationSlug = selectedLocation?.slug || selectedCity?.slug || 'riyadh';
+    router.push(`/businesses/in/${locationSlug}`);
   };
 
   // Handle city selection

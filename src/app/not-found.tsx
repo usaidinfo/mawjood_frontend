@@ -53,7 +53,7 @@ export default function NotFound() {
             Go to Homepage
           </Link>
           <Link
-            href="/businesses"
+            href="/businesses/in/riyadh"
             className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-primary font-semibold px-8 py-3 rounded-lg border-2 border-primary transition-colors"
           >
             <Search className="w-5 h-5" />

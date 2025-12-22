@@ -62,9 +62,7 @@ export default function HeroCarousel({ items, locationSlug, loading }: HeroCarou
   };
 
   return (
-    // CHANGE 1: h-44 for mobile (smaller), md:h-60 (your original desktop height)
-    // Added bg-gray-100 so if mobile image doesn't fill width, it looks clean
-    <div className="relative w-full h-44 md:h-60 rounded-2xl overflow-hidden shadow-xl group bg-gray-50">
+    <div className="relative w-full h-40 md:h-60 rounded-2xl overflow-hidden md:shadow-xl group bg-transparent">
       
       {/* Carousel Items */}
       <div className="relative w-full h-full">

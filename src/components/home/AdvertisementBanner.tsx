@@ -91,6 +91,9 @@ export default function AdvertisementBanner() {
             rel={firstAd?.openInNewTab !== false ? 'noopener noreferrer' : undefined}
             className="group block relative rounded-2xl overflow-hidden transition-all duration-300 h-18 md:h-48 w-full"
           >
+            <span className="absolute top-2 left-2 z-20 px-2 py-0.5 text-[10px] font-medium tracking-wide text-white bg-black/40 backdrop-blur-sm rounded border border-white/10 shadow-sm">
+              Ad
+            </span>
             <Image
               src={displayBanners[0].imageUrl}
               alt={displayBanners[0].title || 'Advertisement'}

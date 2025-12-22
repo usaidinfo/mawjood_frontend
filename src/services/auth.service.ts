@@ -10,8 +10,8 @@ import { AxiosError } from 'axios';
 // Types
 export interface User {
   id: string;
-  email: string;
-  phone: string;
+  email: string | null;
+  phone: string | null;
   firstName: string;
   lastName: string;
   role: 'BUSINESS_OWNER' | 'ADMIN';

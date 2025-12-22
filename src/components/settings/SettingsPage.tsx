@@ -30,8 +30,8 @@ import { Label } from '@/components/ui/label';
 
 interface UserProfile {
   id: string;
-  email: string;
-  phone: string;
+  email: string | null;
+  phone: string | null;
   firstName: string;
   lastName: string;
   role: string;
@@ -85,44 +85,47 @@ function EnquiriesTabContent() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <MessageSquare className="w-5 h-5" />
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
             My Enquiries
           </h2>
         </div>
 
         {/* Filters */}
-        <div className="mb-6">
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => handleStatusChange('all')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                !filters.status
-                  ? 'bg-primary text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              All
-            </button>
-            {Object.values(EnquiryStatus).map((status) => {
-              const Icon = statusIcons[status];
-              return (
-                <button
-                  key={status}
-                  onClick={() => handleStatusChange(status)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                    filters.status === status
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {status.replace('_', ' ')}
-                </button>
-              );
-            })}
+        <div className="mb-4 sm:mb-6">
+          <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+            <div className="flex gap-2 min-w-max sm:min-w-0 sm:flex-wrap">
+              <button
+                onClick={() => handleStatusChange('all')}
+                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                  !filters.status
+                    ? 'bg-primary text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                All
+              </button>
+              {Object.values(EnquiryStatus).map((status) => {
+                const Icon = statusIcons[status];
+                return (
+                  <button
+                    key={status}
+                    onClick={() => handleStatusChange(status)}
+                    className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-2 whitespace-nowrap ${
+                      filters.status === status
+                        ? 'bg-primary text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    <Icon className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span className="hidden sm:inline">{status.replace('_', ' ')}</span>
+                    <span className="sm:hidden">{status.replace('_', ' ').split(' ')[0]}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -146,24 +149,25 @@ function EnquiriesTabContent() {
                         : 'bg-white border-gray-200'
                     } hover:shadow-sm transition-shadow`}
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-gray-900">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0 w-full sm:w-auto">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                          <h3 className="font-semibold text-gray-900 text-sm sm:text-base">
                             {enquiry.business?.name || 'Business'}
                           </h3>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${statusColors[enquiry.status]}`}>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 flex-shrink-0 ${statusColors[enquiry.status]}`}>
                             <StatusIcon className="w-3 h-3" />
-                            {enquiry.status.replace('_', ' ')}
+                            <span className="hidden sm:inline">{enquiry.status.replace('_', ' ')}</span>
+                            <span className="sm:hidden">{enquiry.status.replace('_', ' ').split(' ')[0]}</span>
                           </span>
                           {hasResponse && (
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 flex-shrink-0">
                               Response Received
                             </span>
                           )}
                         </div>
                         <p className="text-sm text-gray-700 mb-2 line-clamp-2">{enquiry.message}</p>
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
                           <span>{format(new Date(enquiry.createdAt), 'MMM dd, yyyy')}</span>
                           {hasResponse && enquiry.responseDate && (
                             <span className="text-green-600 font-medium">
@@ -174,7 +178,7 @@ function EnquiriesTabContent() {
                       </div>
                       <button
                         onClick={() => handleViewEnquiry(enquiry)}
-                        className="px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                        className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors flex-shrink-0"
                       >
                         View Details
                       </button>
@@ -186,8 +190,8 @@ function EnquiriesTabContent() {
 
             {/* Pagination */}
             {pagination && pagination.pages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
-                <div className="text-sm text-gray-600">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 mt-6 pt-4 border-t border-gray-200">
+                <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
                   Showing {(filters.page - 1) * filters.limit + 1} to{' '}
                   {Math.min(filters.page * filters.limit, pagination.total)} of {pagination.total} enquiries
                 </div>
@@ -195,17 +199,17 @@ function EnquiriesTabContent() {
                   <button
                     onClick={() => setFilters({ ...filters, page: Math.max(1, filters.page - 1) })}
                     disabled={filters.page === 1 || isLoading}
-                    className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Previous
                   </button>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-xs sm:text-sm text-gray-600">
                     Page {filters.page} of {pagination.pages}
                   </span>
                   <button
                     onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
                     disabled={filters.page >= pagination.pages || isLoading}
-                    className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next
                   </button>
@@ -238,7 +242,7 @@ function EnquiriesTabContent() {
               <div>
                 <Label className="text-sm font-medium text-gray-700 pr-2">Business :</Label>
                 <Link
-                  href={`/business/${selectedEnquiry.business?.slug}`}
+                  href={`/businesses/${selectedEnquiry.business?.slug}`}
                   className="text-primary hover:underline font-medium"
                 >
                   {selectedEnquiry.business?.name}
@@ -321,8 +325,8 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
     if (profile) {
       setFirstName(profile.firstName);
       setLastName(profile.lastName);
-      setEmail(profile.email);
-      setPhone(profile.phone);
+      setEmail(profile.email || '');
+      setPhone(profile.phone || '');
     }
   }, [profile]);
 
@@ -436,21 +440,15 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
     };
 
     // Only include email if it's changed and not verified
-    if (!profile?.emailVerified && email !== profile?.email) {
-      if (!email) {
-        toast.error('Email is required');
-        return;
-      }
-      updateData.email = email;
+    if (!profile?.emailVerified && email !== (profile?.email || '')) {
+      // Allow empty string to set email to null
+      updateData.email = email.trim() || undefined;
     }
 
     // Only include phone if it's changed and not verified
-    if (!profile?.phoneVerified && phone !== profile?.phone) {
-      if (!phone) {
-        toast.error('Phone number is required');
-        return;
-      }
-      updateData.phone = phone;
+    if (!profile?.phoneVerified && phone !== (profile?.phone || '')) {
+      // Allow empty string to set phone to null
+      updateData.phone = phone.trim() || undefined;
     }
 
     updateProfileMutation.mutate(updateData);
@@ -477,37 +475,39 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
         <p className="text-gray-600">Manage your account settings</p>
       </div>
 
-      <div className="flex gap-2 border-b border-gray-200 mb-8">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setSelectedTab(tab.id as any);
-                if (tab.id === 'notifications') {
-                  setNotificationsPage(1);
-                }
-              }}
-              className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors border-b-2 ${
-                selectedTab === tab.id
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          );
-        })}
+      <div className="overflow-x-auto mb-8 -mx-4 sm:mx-0 px-4 sm:px-0">
+        <div className="flex gap-2 border-b border-gray-200 min-w-max sm:min-w-0">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setSelectedTab(tab.id as any);
+                  if (tab.id === 'notifications') {
+                    setNotificationsPage(1);
+                  }
+                }}
+                className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${
+                  selectedTab === tab.id
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                <span className="text-sm sm:text-base">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {selectedTab === 'profile' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg border border-gray-200 p-6 h-full">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Profile Picture</h2>
-              <div className="flex flex-col flex items-center justify-center h-full gap-3">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 h-full">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Profile Picture</h2>
+              <div className="flex flex-col items-center justify-center h-full gap-3">
                 <div className="relative">
                   {profile?.avatar ? (
                     <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200">
@@ -545,8 +545,8 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
           </div>
 
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg border border-gray-200 p-6 h-full">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h2>
+            <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 h-full">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Personal Information</h2>
               <div className="space-y-4 w-full">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -585,31 +585,40 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      disabled={profile?.emailVerified || false}
+                      disabled={profile?.emailVerified && profile?.email ? true : false}
                       className={`w-full px-4 py-2 border border-gray-300 rounded-lg ${
-                        profile?.emailVerified
+                        profile?.emailVerified && profile?.email
                           ? 'bg-gray-50 cursor-not-allowed'
                           : 'focus:ring-2 focus:ring-primary focus:border-transparent'
                       }`}
-                      placeholder="Enter email address"
+                      placeholder={profile?.email ? "Enter email address" : "Add email address (optional)"}
                     />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:block">
-                      {profile?.emailVerified ? (
-                        <div className="flex items-center gap-1 text-green-600 text-xs">
-                          <CheckCircle2 className="w-4 h-4" />
-                          Verified
-                        </div>
+                      {profile?.email ? (
+                        profile?.emailVerified ? (
+                          <div className="flex items-center gap-1 text-green-600 text-xs">
+                            <CheckCircle2 className="w-4 h-4" />
+                            Verified
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 text-yellow-600 text-xs">
+                            <XCircle className="w-4 h-4" />
+                            Unverified
+                          </div>
+                        )
                       ) : (
-                        <div className="flex items-center gap-1 text-yellow-600 text-xs">
+                        <div className="flex items-center gap-1 text-gray-400 text-xs">
                           <XCircle className="w-4 h-4" />
-                          Unverified
+                          Not set
                         </div>
                       )}
                     </div>
                   </div>
                   {!profile?.emailVerified && (
                     <p className="text-xs text-gray-500 mt-1">
-                      You can update your email address. Verification will be reset after update.
+                      {profile?.email 
+                        ? 'You can update your email address. Verification will be reset after update.'
+                        : 'Add an email address to receive notifications and updates.'}
                     </p>
                   )}
                 </div>
@@ -624,31 +633,40 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      disabled={profile?.phoneVerified || false}
+                      disabled={profile?.phoneVerified && profile?.phone ? true : false}
                       className={`w-full px-4 py-2 border border-gray-300 rounded-lg ${
-                        profile?.phoneVerified
+                        profile?.phoneVerified && profile?.phone
                           ? 'bg-gray-50 cursor-not-allowed'
                           : 'focus:ring-2 focus:ring-primary focus:border-transparent'
                       }`}
-                      placeholder="Enter phone number"
+                      placeholder={profile?.phone ? "Enter phone number" : "Add phone number (optional)"}
                     />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:block">
-                      {profile?.phoneVerified ? (
-                        <div className="flex items-center gap-1 text-green-600 text-xs">
-                          <CheckCircle2 className="w-4 h-4" />
-                          Verified
-                        </div>
+                      {profile?.phone ? (
+                        profile?.phoneVerified ? (
+                          <div className="flex items-center gap-1 text-green-600 text-xs">
+                            <CheckCircle2 className="w-4 h-4" />
+                            Verified
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 text-yellow-600 text-xs">
+                            <XCircle className="w-4 h-4" />
+                            Unverified
+                          </div>
+                        )
                       ) : (
-                        <div className="flex items-center gap-1 text-yellow-600 text-xs">
+                        <div className="flex items-center gap-1 text-gray-400 text-xs">
                           <XCircle className="w-4 h-4" />
-                          Unverified
+                          Not set
                         </div>
                       )}
                     </div>
                   </div>
                   {!profile?.phoneVerified && (
                     <p className="text-xs text-gray-500 mt-1">
-                      You can update your phone number. Verification will be reset after update.
+                      {profile?.phone 
+                        ? 'You can update your phone number. Verification will be reset after update.'
+                        : 'Add a phone number to receive SMS notifications and updates.'}
                     </p>
                   )}
                 </div>
@@ -674,10 +692,10 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
 
       {selectedTab === 'notifications' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Bell className="w-5 h-5" />
+          <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                 All Notifications
                 {notificationsData && notificationsData.unreadCount > 0 && (
                   <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full">
@@ -689,10 +707,11 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
                 <button
                   onClick={() => markAllAsReadMutation.mutate()}
                   disabled={markAllAsReadMutation.isPending}
-                  className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 font-medium"
+                  className="flex items-center gap-1 text-xs sm:text-sm text-primary hover:text-primary/80 font-medium"
                 >
-                  <CheckCheck className="w-4 h-4" />
-                  Mark all as read
+                  <CheckCheck className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Mark all as read</span>
+                  <span className="sm:hidden">Mark all read</span>
                 </button>
               )}
             </div>
@@ -767,8 +786,8 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
                   ))}
                 </div>
                 {notificationsData.pagination && notificationsData.pagination.totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
-                    <div className="text-sm text-gray-600">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 mt-6 pt-4 border-t border-gray-200">
+                    <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
                       Showing {(notificationsPage - 1) * notificationsLimit + 1} to{' '}
                       {Math.min(notificationsPage * notificationsLimit, notificationsData.pagination.total)} of{' '}
                       {notificationsData.pagination.total} notifications
@@ -777,17 +796,17 @@ export default function SettingsPage({ initialTab = 'profile' }: { initialTab?: 
                       <button
                         onClick={() => setNotificationsPage((prev) => Math.max(1, prev - 1))}
                         disabled={notificationsPage === 1 || notificationsLoading}
-                        className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Previous
                       </button>
-                      <span className="text-sm text-gray-600">
+                      <span className="text-xs sm:text-sm text-gray-600">
                         Page {notificationsPage} of {notificationsData.pagination.totalPages}
                       </span>
                       <button
                         onClick={() => setNotificationsPage((prev) => prev + 1)}
                         disabled={notificationsPage >= notificationsData.pagination.totalPages || notificationsLoading}
-                        className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next
                       </button>

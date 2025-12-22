@@ -322,7 +322,7 @@ export default function AboutPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/businesses"
+              href="/businesses/in/riyadh"
               className="inline-block bg-white hover:bg-gray-50 text-primary font-semibold px-8 py-4 rounded-lg border-2 border-primary transition-colors text-lg"
             >
               Explore Businesses

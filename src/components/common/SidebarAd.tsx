@@ -70,6 +70,9 @@ export default function SidebarAd({ queryKey = 'sidebar-ad', className = '', hei
           className="block w-full"
         >
           <div className={`relative w-full ${height}`}>
+            <span className="absolute top-2 left-2 z-20 px-2 py-0.5 text-[10px] font-medium tracking-wide text-white bg-black/40 backdrop-blur-sm rounded border border-white/10 shadow-sm">
+              Ad
+            </span>
             <Image
               src={imageUrl}
               alt={ad?.title || 'Advertisement'}

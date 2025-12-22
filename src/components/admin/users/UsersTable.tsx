@@ -111,8 +111,8 @@ export function UsersTable<TData, TValue>({
         ? selectedRows.map((row: any) => [
             row.id,
             `${row.firstName || ''} ${row.lastName || ''}`,
-            row.email,
-            row.phone || '',
+            row.email || 'N/A',
+            row.phone || 'N/A',
             row.role,
             row.status,
             new Date(row.createdAt).toLocaleDateString(),
@@ -120,8 +120,8 @@ export function UsersTable<TData, TValue>({
         : data.map((row: any) => [
             row.id,
             `${row.firstName || ''} ${row.lastName || ''}`,
-            row.email,
-            row.phone || '',
+            row.email || 'N/A',
+            row.phone || 'N/A',
             row.role,
             row.status,
             new Date(row.createdAt).toLocaleDateString(),

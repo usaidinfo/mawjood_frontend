@@ -41,6 +41,9 @@ export default function HeeroStripAd() {
           rel={ad.openInNewTab !== false ? 'noopener noreferrer' : undefined}
           className="relative block w-full h-18 md:h-48 overflow-hidden rounded-lg group transition-all"
         >
+          <span className="absolute top-2 left-18 z-20 px-2 py-0.5 text-[10px] font-medium tracking-wide text-white bg-black/40 backdrop-blur-sm rounded border border-white/10 shadow-sm">
+              Ad
+            </span>
           <Image
             src={ad.imageUrl}
             alt={ad.title || 'Advertisement'}

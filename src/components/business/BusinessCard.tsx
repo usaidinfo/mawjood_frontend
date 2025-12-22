@@ -112,6 +112,7 @@ export default function BusinessCard({
               {hasActiveSubscription && (
                 <span className="inline-flex items-center gap-1 rounded-full border border-primary-200 bg-primary-50 px-2 py-0.5 text-xs font-semibold text-green-700">
                   <Sparkles className="w-3.5 h-3.5" />
+                  Featured
                 </span>
               )}
           </h3>
@@ -175,7 +176,7 @@ export default function BusinessCard({
         <div className="pt-3 mt-3 border-t border-gray-200">
           <button
             onClick={handleEnquiryClick}
-            className="w-full flex items-center justify-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
+            className="w-full flex items-center justify-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium cursor-pointer"
           >
             <MessageSquare className="w-4 h-4" />
             Send Enquiry

@@ -87,18 +87,18 @@ export default function ReviewsSection({
   };
 
   return (
-    <section id="reviews" className="bg-white rounded-lg border border-gray-200 p-6">
+    <section id="reviews" className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Reviews</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div className="flex-1">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Reviews</h2>
           {totalReviews > 0 && (
-            <div className="flex items-center gap-2 mt-2">
-              <div className="flex items-center">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2 mt-2">
+              <div className="flex items-center gap-1 sm:gap-0">
                 {[...Array(5)].map((_, index) => (
                   <Star
                     key={index}
-                    className={`w-5 h-5 ${
+                    className={`w-4 h-4 sm:w-5 sm:h-5 ${
                       index < Math.floor(averageRating)
                         ? 'text-yellow-400 fill-yellow-400'
                         : 'text-gray-300'
@@ -106,12 +106,14 @@ export default function ReviewsSection({
                   />
                 ))}
               </div>
-              <span className="text-lg font-semibold text-gray-900">
-                {averageRating.toFixed(1)}
-              </span>
-              <span className="text-sm text-gray-500">
-                ({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})
-              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-base sm:text-lg font-semibold text-gray-900">
+                  {averageRating.toFixed(1)}
+                </span>
+                <span className="text-xs sm:text-sm text-gray-500">
+                  ({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})
+                </span>
+              </div>
             </div>
           )}
         </div>
@@ -125,7 +127,7 @@ export default function ReviewsSection({
               }
               setShowForm(true);
             }}
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium"
+            className="w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm sm:text-base"
           >
             Write a Review
           </button>
@@ -134,8 +136,8 @@ export default function ReviewsSection({
 
       {/* Review Form */}
       {showForm && (
-        <div className="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Write Your Review</h3>
+        <div className="mb-8 p-4 sm:p-6 bg-gray-50 rounded-lg border border-gray-200">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Write Your Review</h3>
           
           <form onSubmit={handleSubmitReview} className="space-y-4">
             {/* Star Rating */}
@@ -190,11 +192,11 @@ export default function ReviewsSection({
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 type="submit"
                 disabled={createReviewMutation.isPending}
-                className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               >
                 {createReviewMutation.isPending ? 'Submitting...' : 'Submit Review'}
               </button>
@@ -205,7 +207,7 @@ export default function ReviewsSection({
                   setRating(0);
                   setComment('');
                 }}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                className="w-full sm:w-auto px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm sm:text-base"
               >
                 Cancel
               </button>
@@ -227,11 +229,11 @@ export default function ReviewsSection({
               key={review.id}
               className="pb-6 border-b border-gray-100 last:border-0 last:pb-0"
             >
-              <div className="flex gap-4">
+              <div className="flex gap-3 sm:gap-4">
                 {/* Avatar */}
                 <div className="flex-shrink-0">
                   {review.user.avatar ? (
-                    <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                    <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden">
                       <Image
                         src={review.user.avatar}
                         alt={`${review.user.firstName} ${review.user.lastName}`}
@@ -240,8 +242,8 @@ export default function ReviewsSection({
                       />
                     </div>
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="w-6 h-6 text-primary" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                     </div>
                   )}
                 </div>

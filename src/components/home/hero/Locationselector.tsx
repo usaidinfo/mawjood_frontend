@@ -69,26 +69,26 @@ export default function LocationSelector({
   }, []);
 
   // Auto-trigger location detection on page load
-  useEffect(() => {
-    // Only trigger once if no location is selected, geolocation is available, and cities are loaded
-    if (
-      !hasTriggeredAutoLocation.current &&
-      !selectedCity && 
-      !selectedLocation && 
-      navigator.geolocation && 
-      typeof window !== 'undefined' &&
-      cities.length > 0 &&
-      !locationDetecting
-    ) {
-      hasTriggeredAutoLocation.current = true;
-      // Small delay to ensure page is fully loaded
-      const timer = setTimeout(() => {
-        handleDetectLocation();
-      }, 800);
-      return () => clearTimeout(timer);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cities.length, selectedCity, selectedLocation, locationDetecting]); // Run when cities are loaded or selection changes
+  // useEffect(() => {
+  //   // Only trigger once if no location is selected, geolocation is available, and cities are loaded
+  //   if (
+  //     !hasTriggeredAutoLocation.current &&
+  //     !selectedCity && 
+  //     !selectedLocation && 
+  //     navigator.geolocation && 
+  //     typeof window !== 'undefined' &&
+  //     cities.length > 0 &&
+  //     !locationDetecting
+  //   ) {
+  //     hasTriggeredAutoLocation.current = true;
+  //     // Small delay to ensure page is fully loaded
+  //     const timer = setTimeout(() => {
+  //       handleDetectLocation();
+  //     }, 800);
+  //     return () => clearTimeout(timer);
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [cities.length, selectedCity, selectedLocation, locationDetecting]); // Run when cities are loaded or selection changes
 
   // Fetch regions when dropdown opens
   useEffect(() => {

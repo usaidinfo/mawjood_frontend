@@ -183,7 +183,7 @@ export default function Navbar() {
                 <div className="flex items-center gap-4 pl-4 border-l border-gray-200 h-8">
                   <button
                     onClick={() => setShowAuthModal(true)}
-                    className="flex items-center gap-1.5 text-gray-600 hover:text-primary text-sm font-medium transition-colors"
+                    className="flex items-center gap-1.5 text-gray-600 hover:text-primary text-sm font-medium transition-colors cursor-pointer"
                   >
                     <LogIn className="w-4 h-4" />
                     <span>Login / Sign Up</span>

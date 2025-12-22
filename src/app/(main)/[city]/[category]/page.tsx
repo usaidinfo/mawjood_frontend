@@ -19,7 +19,6 @@ import TrendingSearches from '@/components/home/TrendingSearches';
 
 type FiltersState = {
   search: string;
-  rating: string;
   sortBy: string;
 };
 
@@ -84,15 +83,18 @@ export default function CityCategoryPage() {
   } | null>(null);
   const [filters, setFilters] = useState<FiltersState>({
     search: '',
-    rating: '',
     sortBy: 'popular',
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 
   const updateFilters = (updates: Partial<FiltersState>) => {
-    setFilters((prev) => ({ ...prev, ...updates }));
-    setCurrentPage(1);
+    setFilters((prev) => {
+      const newFilters = { ...prev, ...updates };
+      // Reset to page 1 when filters change
+      setCurrentPage(1);
+      return newFilters;
+    });
   };
 
   useEffect(() => {
@@ -101,7 +103,12 @@ export default function CityCategoryPage() {
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    updateFilters({ search: searchTerm.trim() });
+    const trimmedSearch = searchTerm.trim();
+    updateFilters({ search: trimmedSearch });
+    // Also update searchTerm to match
+    if (trimmedSearch !== searchTerm) {
+      setSearchTerm(trimmedSearch);
+    }
   };
 
   const handleClearSearch = () => {
@@ -343,7 +350,7 @@ export default function CityCategoryPage() {
   const effectiveLocationId = effectiveLocation?.id;
   const effectiveLocationType = effectiveLocation?.type;
   const canonicalPath = `/${locationSlug}/${categorySlug}`;
-  
+
   const getResolvedTargetUrl = (ad: Advertisement) => {
     if (!ad?.targetUrl || ad.targetUrl.trim().length === 0) return null;
     return ad.targetUrl.startsWith('http')
@@ -416,10 +423,12 @@ export default function CityCategoryPage() {
   useEffect(() => {
     if (!category) return;
     if (category.subcategories && category.subcategories.length > 0) return;
+    if (!effectiveLocationId || !effectiveLocationType) return;
 
     const fetchBusinesses = async () => {
       try {
         setBusinessLoading(true);
+        setError(null);
 
         const response = await businessService.searchBusinesses({
           categoryIds: [category.id],
@@ -427,8 +436,7 @@ export default function CityCategoryPage() {
           locationType: effectiveLocationType,
           page: currentPage,
           limit: 20,
-          search: filters.search.trim().length ? filters.search.trim() : undefined,
-          rating: filters.rating ? Number(filters.rating) : undefined,
+          search: filters.search.trim().length > 0 ? filters.search.trim() : undefined,
           sortBy: filters.sortBy,
         });
 
@@ -438,15 +446,17 @@ export default function CityCategoryPage() {
         setLocationContext(response.locationContext || null);
       } catch (err) {
         console.error('Failed to fetch businesses:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load businesses');
         setBusinesses([]);
         setTotalResults(0);
+        setTotalPages(1);
       } finally {
         setBusinessLoading(false);
       }
     };
 
     fetchBusinesses();
-  }, [category, currentPage, effectiveLocationId, effectiveLocationType, filters]);
+  }, [category, currentPage, effectiveLocationId, effectiveLocationType, filters.search, filters.sortBy]);
 
   // Fetch TOP advertisement (single banner, no carousel)
   useEffect(() => {
@@ -620,216 +630,267 @@ export default function CityCategoryPage() {
     <div className="min-h-screen bg-white">
       <div className="py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-      {/* Top Ad Banner (Single, no carousel) */}
-      {topAdLoading && (
-        <div className="mb-4">
-          <div className="h-48 bg-gray-200 rounded-2xl animate-pulse" />
-        </div>
-      )}
-      {!topAdLoading && topAdvertisement && (
-        <div className="mb-4">
-          <div className="relative overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
-            <div className="relative h-44 md:h-46 lg:h-46">
-              {(() => {
-                const ad = topAdvertisement;
-                const resolvedUrl = getResolvedTargetUrl(ad);
-                return (
-                  <>
-                    {resolvedUrl ? (
-                      <Link 
-                        href={resolvedUrl} 
-                        target={ad.openInNewTab !== false ? '_blank' : '_self'}
-                        rel={ad.openInNewTab !== false ? 'noopener noreferrer' : undefined}
-                        className="block w-full h-full"
-                      >
-                        <Image
-                          src={ad.imageUrl}
-                          alt={ad.title}
-                          fill
-                          className="object-contain"
-                          priority
-                        />
-                      </Link>
-                    ) : (
-                      <Image
-                        src={ad.imageUrl}
-                        alt={ad.title}
-                        fill
-                        className="object-contain"
-                        priority
-                      />
-                    )}
-                  </>
-                );
-              })()}
+          {/* Top Ad Banner (Single, no carousel) */}
+          {topAdLoading && (
+            <div className="mb-4">
+              <div className="h-48 bg-gray-200 rounded-2xl animate-pulse" />
             </div>
-          </div>
-        </div>
-      )}
-        <nav className="flex mb-3 text-sm">
-          <Link href="/" className="text-gray-500 hover:text-primary">
-            {locationName}
-          </Link>
-          <span className="mx-1.5">&gt;</span>
-          <span className="text-gray-800">{category.name}</span>
-        </nav>
+          )}
+          {!topAdLoading && topAdvertisement && (
+            <div className="mb-4">
+              <div className="relative overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
+                <div className="relative h-44 md:h-46 lg:h-46">
+                  {(() => {
+                    const ad = topAdvertisement;
+                    const resolvedUrl = getResolvedTargetUrl(ad);
+                    return (
+                      <>
+                        {resolvedUrl ? (
+                          <Link
+                            href={resolvedUrl}
+                            target={ad.openInNewTab !== false ? '_blank' : '_self'}
+                            rel={ad.openInNewTab !== false ? 'noopener noreferrer' : undefined}
+                            className="block w-full h-full"
+                          >
+                            <span className="absolute top-2 left-2 z-20 px-2 py-0.5 text-[10px] font-medium tracking-wide text-white bg-black/40 backdrop-blur-sm rounded border border-white/10 shadow-sm">
+                              Ad
+                            </span>
+                            <Image
+                              src={ad.imageUrl}
+                              alt={ad.title}
+                              fill
+                              className="object-contain"
+                              priority
+                            />
+                          </Link>
+                        ) : (
+                          <Image
+                            src={ad.imageUrl}
+                            alt={ad.title}
+                            fill
+                            className="object-contain"
+                            priority
+                          />
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+          )}
+          <nav className="flex mb-3 text-sm">
+            <Link href="/" className="text-gray-500 hover:text-primary">
+              {locationName}
+            </Link>
+            <span className="mx-1.5">&gt;</span>
+            <span className="text-gray-800">{category.name}</span>
+          </nav>
 
-        <h1 className="text-3xl font-bold mb-8">
-          Popular {category.name} in {locationName}
-        </h1>
+          <h1 className="text-3xl font-bold mb-8">
+            Popular {category.name} in {locationName}
+          </h1>
 
-        <div className="bg-white rounded-xl mb-6 space-y-4">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <form
-              onSubmit={handleSearchSubmit}
-              className="flex w-full md:max-w-md gap-2"
-            >
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder={`Search within ${category.name.toLowerCase()}`}
-                style={{ paddingTop: '0.875rem', paddingBottom: '0.875rem' }}
-                className="flex-1 px-4 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
+          <div className="bg-white rounded-xl mb-6 space-y-4">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <form
+                onSubmit={handleSearchSubmit}
+                className="flex w-full md:max-w-md gap-2"
+              >
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder={`Search within ${category.name.toLowerCase()}`}
+                  style={{ paddingTop: '0.875rem', paddingBottom: '0.875rem' }}
+                  className="flex-1 px-4 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+                {filters.search && (
+                  <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    className="px-3 py-2 text-sm text-gray-500 hover:text-primary transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                >
+                  Search
+                </button>
+              </form>
+
+              <div className="flex flex-wrap gap-3">
+                {/* <select
+                  value={filters.sortBy}
+                  onChange={(event) => updateFilters({ sortBy: event.target.value })}
+                  style={{ paddingTop: '0.875rem', paddingBottom: '0.875rem' }}
+                  className="px-4 border border-gray-300 rounded-lg text-sm bg-white text-gray-500 focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer"
+                >
+                  {SORT_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select> */}
+
+                <div className="hidden md:flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'list'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                  >
+                    <List className="w-4 h-4 inline mr-1" />
+                    List
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('grid')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'grid'
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                  >
+                    <LayoutGrid className="w-4 h-4 inline mr-1" />
+                    Grid
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm text-gray-600">
               {filters.search && (
-                <button
-                  type="button"
-                  onClick={handleClearSearch}
-                  className="px-3 py-2 text-sm text-gray-500 hover:text-primary transition-colors"
-                >
-                  Clear
-                </button>
-              )}
-              <button
-                type="submit"
-                className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-              >
-                Search
-              </button>
-            </form>
-
-            <div className="flex flex-wrap gap-3">
-              <select
-                value={filters.sortBy}
-                onChange={(event) => updateFilters({ sortBy: event.target.value })}
-                style={{ paddingTop: '0.875rem', paddingBottom: '0.875rem' }}
-                className="px-4 border border-gray-300 rounded-lg text-sm bg-white text-gray-500 focus:ring-2 focus:ring-primary focus:border-transparent"
-              >
-                {SORT_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-
-              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-                <button
-                  type="button"
-                  onClick={() => setViewMode('list')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    viewMode === 'list'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <List className="w-4 h-4 inline mr-1" />
-                  List
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('grid')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    viewMode === 'grid'
-                      ? 'bg-primary text-white shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <LayoutGrid className="w-4 h-4 inline mr-1" />
-                  Grid
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm text-gray-600">
-            {filters.search && (
-              <span className="text-xs text-gray-500">
-                Filtered by search term “{filters.search}”
-              </span>
-            )}
-          </div>
-        </div>
-
-        {businessLoading ? (
-          <div className="flex flex-col lg:flex-row gap-6">
-            <div className="flex-1 min-w-0">
-              <div className={viewMode === 'grid' 
-                ? 'grid gap-6 grid-cols-1 sm:grid-cols-2'
-                : 'space-y-6'
-              }>
-                {[...Array(viewMode === 'grid' ? 4 : 5)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-xl p-6 animate-pulse h-40" />
-                ))}
-              </div>
-            </div>
-            <div className="lg:w-80 flex-shrink-0">
-              <div className="bg-white rounded-xl p-6 animate-pulse h-96" />
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Main Content */}
-            <div className="flex-1 min-w-0">
-              {businesses.length > 0 ? (
-                <>
-                  {/* Location Context Message */}
-                  {locationContext?.fallbackApplied && locationContext.applied && (
-                    <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-sm text-blue-800">
-                        <span className="font-semibold">Note:</span> No businesses found in {locationContext.requested?.name || 'the selected location'}. 
-                        Showing results from <span className="font-semibold">{locationContext.applied.name}</span> ({locationContext.applied.type}).
-                      </p>
-                    </div>
-                  )}
-                  
-                  {viewMode === 'grid' ? (
-                    <div className="grid gap-5 grid-cols-1 sm:grid-cols-2">
-                      {businesses.map((business) => (
-                        <BusinessCard key={business.id} business={business} />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      {businesses.map((business) => (
-                        <div key={business.id} className="max-w-4xl">
-                          <BusinessListCard business={business} />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-16 bg-white rounded-xl">
-                  <h3 className="text-xl font-semibold mb-2">No businesses found</h3>
-                  <p className="text-gray-600">Check back later for new listings</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">
+                    Showing results for "{filters.search}"
+                  </span>
+                  <button
+                    onClick={handleClearSearch}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Clear
+                  </button>
                 </div>
               )}
-            </div>
-
-            {/* Sidebar Ad - Always shown with consistent width (300x350 for vertical/square format) */}
-            <div className="lg:w-80 flex-shrink-0">
-              <div className="sticky top-18">
-                <SidebarAd 
-                  queryKey="sidebar-ad-category" 
-                  height="h-[350px]" 
-                  adType="CATEGORY"
-                  categoryId={category?.id}
-                />
-              </div>
+              {totalResults > 0 && (
+                <span className="text-xs text-gray-500">
+                  {totalResults} {totalResults === 1 ? 'result' : 'results'} found
+                </span>
+              )}
             </div>
           </div>
-        )}
+
+          {businessLoading ? (
+            <div className="flex flex-col lg:flex-row gap-6">
+              <div className="flex-1 min-w-0">
+                <div className={viewMode === 'grid'
+                  ? 'grid gap-6 grid-cols-1 sm:grid-cols-2'
+                  : 'space-y-6'
+                }>
+                  {[...Array(viewMode === 'grid' ? 4 : 5)].map((_, i) => (
+                    <div key={i} className="bg-white rounded-xl p-6 animate-pulse h-40" />
+                  ))}
+                </div>
+              </div>
+              <div className="lg:w-80 flex-shrink-0">
+                <div className="bg-white rounded-xl p-6 animate-pulse h-96" />
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col lg:flex-row gap-6">
+              {/* Main Content */}
+              <div className="flex-1 min-w-0">
+                {businesses.length > 0 ? (
+                  <>
+                    {/* Location Context Message */}
+                    {locationContext?.fallbackApplied && locationContext.applied && (
+                      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                          <span className="font-semibold">Note:</span> No businesses found in {locationContext.requested?.name || 'the selected location'}.
+                          Showing results from <span className="font-semibold">{locationContext.applied.name}</span> ({locationContext.applied.type}).
+                        </p>
+                      </div>
+                    )}
+
+                    {viewMode === 'grid' ? (
+                      <div className="grid gap-5 grid-cols-1 sm:grid-cols-2">
+                        {businesses.map((business) => (
+                          <BusinessCard key={business.id} business={business} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {businesses.map((business) => (
+                          <div key={business.id} className="max-w-4xl">
+                            <BusinessListCard business={business} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-center gap-2 mt-8">
+                        <button
+                          onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                          disabled={currentPage === 1 || businessLoading}
+                          className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Previous
+                        </button>
+                        <span className="px-4 py-2 text-sm text-gray-600">
+                          Page {currentPage} of {totalPages}
+                        </span>
+                        <button
+                          onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                          disabled={currentPage >= totalPages || businessLoading}
+                          className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-16 bg-white rounded-xl">
+                    <h3 className="text-xl font-semibold mb-2">No businesses found</h3>
+                    <p className="text-gray-600 mb-4">
+                      {filters.search
+                        ? `No results found for "${filters.search}". Try a different search term.`
+                        : 'Check back later for new listings'}
+                    </p>
+                    {filters.search && (
+                      <button
+                        onClick={handleClearSearch}
+                        className="text-primary hover:underline text-sm"
+                      >
+                        Clear search
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Sidebar Ad - Always shown with consistent width (300x350 for vertical/square format) */}
+              <div className="lg:w-80 flex-shrink-0">
+                <div className="sticky top-18">
+                  <SidebarAd
+                    queryKey="sidebar-ad-category"
+                    height="h-[350px]"
+                    adType="CATEGORY"
+                    categoryId={category?.id}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

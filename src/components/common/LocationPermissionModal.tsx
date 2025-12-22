@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { useCityStore } from '@/store/cityStore';
 import { cityService, City, Region, Country } from '@/services/city.service';
-import { MapPin, Loader2 } from 'lucide-react';
+import { MapPin, Loader2, CheckCircle2 } from 'lucide-react';
 
 interface GeolocationResponse {
   latitude: number;
@@ -15,13 +15,6 @@ interface GeolocationResponse {
   principalSubdivision?: string;
   countryName?: string;
   countryCode?: string;
-  localityInfo?: {
-    administrative?: Array<{
-      name: string;
-      adminLevel?: number;
-      order?: number;
-    }>;
-  };
 }
 
 export default function LocationPermissionModal() {
@@ -43,110 +36,37 @@ export default function LocationPermissionModal() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'requesting' | 'fetching' | 'matching' | 'success' | 'error'>('idle');
-  const [hasChecked, setHasChecked] = useState(false);
-  const [permissionState, setPermissionState] = useState<PermissionState | null>(null);
 
-  // Debug: Log when component mounts
+  // Show modal when location is being requested
   useEffect(() => {
-    console.log('[LocationModal] Component mounted');
-    return () => {
-      console.log('[LocationModal] Component unmounted');
-    };
-  }, []);
-
-  // Check geolocation permission status and listen for changes
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const checkPermission = async () => {
-      try {
-        if (navigator.permissions) {
-          const result = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
-          setPermissionState(result.state);
-          
-          // Listen for permission changes (when user grants/denies)
-          result.onchange = () => {
-            const newState = result.state;
-            setPermissionState(newState);
-            console.log('[LocationModal] Permission state changed:', newState);
-            
-            // Close modal if permission was granted or denied
-            if (newState === 'granted' || newState === 'denied') {
-              setRequestingLocation(false);
-              if (newState === 'denied') {
-                setError('Location permission denied. Please allow location access or select manually.');
-                setStatus('error');
-              }
-            }
-          };
-        } else {
-          // Permission API not supported, assume prompt state
-          setPermissionState('prompt');
-        }
-      } catch (err) {
-        console.warn('[LocationModal] Could not check permission status:', err);
-        // If permission API is not supported, assume prompt state
-        setPermissionState('prompt');
+    if (isRequestingLocation && !selectedLocation) {
+      console.log('[LocationModal] Opening modal - requesting location');
+      setOpen(true);
+      setStatus('idle');
+      setError(null);
+    } else if (!isRequestingLocation && open) {
+      console.log('[LocationModal] Closing modal - request completed');
+      // Delay closing to show success message
+      if (status === 'success') {
+        setTimeout(() => setOpen(false), 1500);
+      } else {
+        setOpen(false);
       }
-    };
+    }
+  }, [isRequestingLocation, selectedLocation, open, status]);
 
-    checkPermission();
-  }, []);
-
-  // Fetch cities, regions, and countries on mount if not already loaded
+  // Fetch data on mount
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
     const initializeData = async () => {
-      if (cities.length === 0) {
-        await fetchCities();
-      }
-      if (regions.length === 0) {
-        await fetchRegions();
-      }
-      if (countries.length === 0) {
-        await fetchCountries();
-      }
+      if (cities.length === 0) await fetchCities();
+      if (regions.length === 0) await fetchRegions();
+      if (countries.length === 0) await fetchCountries();
     };
 
     initializeData();
   }, []);
-
-  // Show modal ONLY when browser is actually asking for permission
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    // Check for test mode in URL (for debugging)
-    const urlParams = new URLSearchParams(window.location.search);
-    const forceShow = urlParams.get('showLocationModal') === 'true';
-
-    // Show modal ONLY if:
-    // 1. Force show is enabled (for testing), OR
-    // 2. Location is being requested AND permission state is 'prompt' (browser is asking)
-    //    This means the browser permission dialog is showing or about to show
-    const shouldShow = forceShow || (isRequestingLocation && permissionState === 'prompt');
-
-    if (shouldShow && !open) {
-      console.log('[LocationModal] Opening modal - browser is asking for permission', {
-        isRequestingLocation,
-        permissionState,
-        forceShow,
-      });
-      setOpen(true);
-    } else if (!shouldShow && open && !forceShow) {
-      // Close modal if permission was already granted/denied
-      console.log('[LocationModal] Closing modal - permission already handled', {
-        permissionState,
-        isRequestingLocation,
-      });
-      setOpen(false);
-    }
-
-    // Mark as checked after first evaluation
-    if (!hasChecked) {
-      setHasChecked(true);
-    }
-  }, [isRequestingLocation, permissionState, hasChecked, open]);
 
   const normalizeName = (name: string): string => {
     return name.toLowerCase().trim().replace(/\s+/g, ' ');
@@ -156,20 +76,16 @@ export default function LocationPermissionModal() {
     if (!cityName) return null;
     const normalized = normalizeName(cityName);
 
-    // Try exact match first
     let match = cities.find(
       (city) => normalizeName(city.name) === normalized || normalizeName(city.slug) === normalized
     );
 
-    // Try partial match
     if (!match) {
       match = cities.find(
-        (city) =>
-          normalizeName(city.name).includes(normalized) || normalized.includes(normalizeName(city.name))
+        (city) => normalizeName(city.name).includes(normalized) || normalized.includes(normalizeName(city.name))
       );
     }
 
-    // Try unified search as fallback
     if (!match) {
       try {
         const searchResult = await cityService.unifiedSearch(cityName);
@@ -177,7 +93,7 @@ export default function LocationPermissionModal() {
           match = searchResult.cities[0];
         }
       } catch (err) {
-        console.warn('Unified search failed:', err);
+        console.warn('City search failed:', err);
       }
     }
 
@@ -188,20 +104,16 @@ export default function LocationPermissionModal() {
     if (!regionName) return null;
     const normalized = normalizeName(regionName);
 
-    // Try exact match first
     let match = regions.find(
       (region) => normalizeName(region.name) === normalized || normalizeName(region.slug) === normalized
     );
 
-    // Try partial match
     if (!match) {
       match = regions.find(
-        (region) =>
-          normalizeName(region.name).includes(normalized) || normalized.includes(normalizeName(region.name))
+        (region) => normalizeName(region.name).includes(normalized) || normalized.includes(normalizeName(region.name))
       );
     }
 
-    // Try unified search as fallback
     if (!match) {
       try {
         const searchResult = await cityService.unifiedSearch(regionName);
@@ -209,7 +121,7 @@ export default function LocationPermissionModal() {
           match = searchResult.regions[0];
         }
       } catch (err) {
-        console.warn('Unified search failed:', err);
+        console.warn('Region search failed:', err);
       }
     }
 
@@ -220,16 +132,13 @@ export default function LocationPermissionModal() {
     if (!countryName) return null;
     const normalized = normalizeName(countryName);
 
-    // Try exact match first
     let match = countries.find(
       (country) => normalizeName(country.name) === normalized || normalizeName(country.slug) === normalized
     );
 
-    // Try partial match
     if (!match) {
       match = countries.find(
-        (country) =>
-          normalizeName(country.name).includes(normalized) || normalized.includes(normalizeName(country.name))
+        (country) => normalizeName(country.name).includes(normalized) || normalized.includes(normalizeName(country.name))
       );
     }
 
@@ -245,8 +154,7 @@ export default function LocationPermissionModal() {
       throw new Error('Failed to fetch location data');
     }
 
-    const data = await response.json();
-    return data;
+    return await response.json();
   };
 
   const handleAllowLocation = async () => {
@@ -257,28 +165,18 @@ export default function LocationPermissionModal() {
       return;
     }
 
-    // Mark that we're requesting location
-    setRequestingLocation(true);
-
-    // Ensure we have cities, regions, and countries loaded before matching
-    if (cities.length === 0) {
-      console.log('[LocationModal] Fetching cities...');
-      await fetchCities();
-    }
-    if (regions.length === 0) {
-      console.log('[LocationModal] Fetching regions...');
-      await fetchRegions();
-    }
-    if (countries.length === 0) {
-      console.log('[LocationModal] Fetching countries...');
-      await fetchCountries();
-    }
-
     setLoading(true);
     setError(null);
     setStatus('requesting');
 
+    // Ensure data is loaded
+    if (cities.length === 0) await fetchCities();
+    if (regions.length === 0) await fetchRegions();
+    if (countries.length === 0) await fetchCountries();
+
     try {
+      console.log('[LocationModal] Requesting geolocation permission...');
+      
       // Request location permission
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(
@@ -292,12 +190,13 @@ export default function LocationPermissionModal() {
         );
       });
 
+      console.log('[LocationModal] Permission granted, fetching location data...');
       setStatus('fetching');
-      const { latitude, longitude } = position.coords;
 
-      // Reverse geocode to get location details
+      const { latitude, longitude } = position.coords;
       const geoData = await reverseGeocode(latitude, longitude);
 
+      console.log('[LocationModal] Location data received:', geoData);
       setStatus('matching');
 
       // Try to match city first
@@ -305,6 +204,7 @@ export default function LocationPermissionModal() {
       if (cityName) {
         const matchedCity = await matchCity(cityName);
         if (matchedCity) {
+          console.log('[LocationModal] Matched city:', matchedCity.name);
           setSelectedCity(matchedCity);
           setSelectedLocation({
             type: 'city',
@@ -315,16 +215,20 @@ export default function LocationPermissionModal() {
           });
           setStatus('success');
           setRequestingLocation(false);
-          setTimeout(() => setOpen(false), 1500);
+          setTimeout(() => {
+            setOpen(false);
+            setLoading(false);
+          }, 1500);
           return;
         }
       }
 
-      // Try to match region/state
+      // Try to match region
       const regionName = geoData.principalSubdivision;
       if (regionName) {
         const matchedRegion = await matchRegion(regionName);
         if (matchedRegion) {
+          console.log('[LocationModal] Matched region:', matchedRegion.name);
           setSelectedLocation({
             type: 'region',
             slug: matchedRegion.slug,
@@ -333,7 +237,10 @@ export default function LocationPermissionModal() {
           });
           setStatus('success');
           setRequestingLocation(false);
-          setTimeout(() => setOpen(false), 1500);
+          setTimeout(() => {
+            setOpen(false);
+            setLoading(false);
+          }, 1500);
           return;
         }
       }
@@ -343,6 +250,7 @@ export default function LocationPermissionModal() {
       if (countryName) {
         const matchedCountry = matchCountry(countryName);
         if (matchedCountry) {
+          console.log('[LocationModal] Matched country:', matchedCountry.name);
           setSelectedLocation({
             type: 'country',
             slug: matchedCountry.slug,
@@ -351,19 +259,24 @@ export default function LocationPermissionModal() {
           });
           setStatus('success');
           setRequestingLocation(false);
-          setTimeout(() => setOpen(false), 1500);
+          setTimeout(() => {
+            setOpen(false);
+            setLoading(false);
+          }, 1500);
           return;
         }
       }
 
-      // If no match found, set error
+      // No match found
       setError('Could not find your location in our database. Please select manually.');
       setStatus('error');
       setRequestingLocation(false);
+      setLoading(false);
     } catch (err: any) {
-      console.error('Location error:', err);
+      console.error('[LocationModal] Location error:', err);
+      
       if (err.code === 1) {
-        setError('Location permission denied. Please allow location access or select manually.');
+        setError('Location permission denied. Please select your location manually or enable location access in your browser settings.');
       } else if (err.code === 2) {
         setError('Location unavailable. Please try again or select manually.');
       } else if (err.code === 3) {
@@ -371,14 +284,15 @@ export default function LocationPermissionModal() {
       } else {
         setError(err.message || 'Failed to get your location. Please select manually.');
       }
+      
       setStatus('error');
       setRequestingLocation(false);
-    } finally {
       setLoading(false);
     }
   };
 
   const handleSkip = () => {
+    console.log('[LocationModal] User skipped location permission');
     setRequestingLocation(false);
     setOpen(false);
   };
@@ -392,7 +306,7 @@ export default function LocationPermissionModal() {
       case 'matching':
         return 'Finding your location in our database...';
       case 'success':
-        return 'Location set successfully!';
+        return 'Location detected successfully!';
       case 'error':
         return error || 'An error occurred';
       default:
@@ -400,35 +314,27 @@ export default function LocationPermissionModal() {
     }
   };
 
-  // Debug: Log when open state changes
-  useEffect(() => {
-    console.log('[LocationModal] Open state changed:', open);
-  }, [open]);
-
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => {
-      console.log('[LocationModal] Dialog onOpenChange called:', newOpen);
-      setOpen(newOpen);
-    }}>
-      <DialogContent showCloseButton={false} className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10">
-            <MapPin className="w-6 h-6 text-primary" />
+            {status === 'success' ? (
+              <CheckCircle2 className="w-6 h-6 text-green-600" />
+            ) : (
+              <MapPin className="w-6 h-6 text-primary" />
+            )}
           </div>
-          <DialogTitle className="text-center">Enable Location Services</DialogTitle>
+          <DialogTitle className="text-center">
+            {status === 'success' ? 'Location Set!' : 'Enable Location Services'}
+          </DialogTitle>
           <DialogDescription className="text-center">
             {getStatusMessage()}
           </DialogDescription>
         </DialogHeader>
 
-        {status === 'success' && (
-          <div className="flex items-center justify-center py-4">
-            <div className="text-green-600 text-sm font-medium">✓ Location set successfully!</div>
-          </div>
-        )}
-
         {error && status === 'error' && (
-          <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+          <div className="rounded-md bg-red-50 p-3 text-sm text-red-800 border border-red-200">
             {error}
           </div>
         )}
@@ -444,7 +350,10 @@ export default function LocationPermissionModal() {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
+                    {status === 'requesting' && 'Waiting for permission...'}
+                    {status === 'fetching' && 'Getting location...'}
+                    {status === 'matching' && 'Finding location...'}
+                    {!status || status === 'idle' && 'Processing...'}
                   </>
                 ) : (
                   <>
@@ -468,4 +377,3 @@ export default function LocationPermissionModal() {
     </Dialog>
   );
 }
-

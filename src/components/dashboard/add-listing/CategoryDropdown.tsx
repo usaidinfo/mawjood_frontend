@@ -187,7 +187,7 @@ export default function CategoryDropdown({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         onBlur={onBlur}
-        className={`w-full px-4 py-3 border rounded-lg flex items-center justify-between transition-colors ${
+        className={`w-full px-4 py-3 border rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
           error
             ? 'border-red-500'
             : 'border-gray-300 focus:ring-2 focus:ring-[#1c4233] focus:border-transparent'

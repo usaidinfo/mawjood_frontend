@@ -145,11 +145,21 @@ export default function WorkingHoursSection({ workingHours }: Props) {
                 }`}>
                   {dayLabels[day]}
                   {isToday && (
-                    <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
-                      isOpenNow 
-                        ? 'bg-green-500 text-white' 
-                        : 'bg-red-500 text-white'
-                    }`}>
+                    <span
+                      className={`
+                        ml-2
+                        text-xs
+                        px-2
+                        py-0.5
+                        rounded-full
+                        ${
+                          isOpenNow
+                            ? 'bg-green-500 text-white'
+                            : 'bg-red-500 text-white'
+                        }
+                        ${'hidden sm:inline-block sm:w-auto w-full text-center mt-2 sm:mt-0'}
+                      `}
+                    >
                       {isOpenNow ? 'Open Now' : 'Closed Now'}
                     </span>
                   )}

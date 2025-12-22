@@ -18,8 +18,8 @@ export type User = {
   id: string;
   firstName: string;
   lastName: string;
-  email: string;
-  phone: string;
+  email: string | null;
+  phone: string | null;
   role: 'BUSINESS_OWNER' | 'ADMIN';
   status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
   emailVerified: boolean;
@@ -77,7 +77,9 @@ export const createColumns = (
       return (
         <div className="flex items-center gap-2">
           <Mail className="w-4 h-4 text-gray-400" />
-          <span className="text-sm text-gray-700 dark:text-gray-300">{user.email}</span>
+          <span className="text-sm text-gray-700 dark:text-gray-300">
+            {user.email || <span className="text-gray-400 italic">Not provided</span>}
+          </span>
         </div>
       );
     },
@@ -90,7 +92,9 @@ export const createColumns = (
       return (
         <div className="flex items-center gap-2">
           <Phone className="w-4 h-4 text-gray-400" />
-          <span className="text-sm text-gray-700 dark:text-gray-300">{user.phone}</span>
+          <span className="text-sm text-gray-700 dark:text-gray-300">
+            {user.phone || <span className="text-gray-400 italic">Not provided</span>}
+          </span>
         </div>
       );
     },

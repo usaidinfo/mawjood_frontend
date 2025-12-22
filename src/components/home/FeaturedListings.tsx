@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -12,6 +12,29 @@ import { useFavorites } from '@/hooks/useFavorites';
 export default function FeaturedListings() {
     const { selectedCity, selectedLocation } = useCityStore();
     const { isFavorite, toggleFavorite, isLoading: favLoading } = useFavorites();
+    
+    // Track the current PAGE (Slide), not the item index
+    const [currentSlide, setCurrentSlide] = useState(0);
+    
+    // Responsive businesses per page
+    const [businessesPerPage, setBusinessesPerPage] = useState(1);
+    
+    // Update visible count based on screen size
+    useEffect(() => {
+        const updateBusinessesPerPage = () => {
+            if (window.innerWidth >= 1024) {
+                setBusinessesPerPage(4); // Desktop: 4 businesses
+            } else if (window.innerWidth >= 768) {
+                setBusinessesPerPage(2); // Tablet: 2 businesses
+            } else {
+                setBusinessesPerPage(1); // Mobile: 1 business
+            }
+        };
+        
+        updateBusinessesPerPage();
+        window.addEventListener('resize', updateBusinessesPerPage);
+        return () => window.removeEventListener('resize', updateBusinessesPerPage);
+    }, []);
 
     // Fetch featured businesses using React Query
     const { data, isLoading, error } = useQuery({
@@ -25,6 +48,39 @@ export default function FeaturedListings() {
 
     const businesses = data?.businesses ?? [];
     const fallbackContext = data?.locationContext;
+
+    // Calculate total pages based on array length and businesses per page
+    const totalPages = businesses.length > 0 ? Math.ceil(businesses.length / businessesPerPage) : 0;
+
+    // Move forward by one PAGE (looping back to 0)
+    const nextSlide = () => {
+        if (totalPages > 0) {
+            setCurrentSlide((prev) => (prev + 1) % totalPages);
+        }
+    };
+
+    // Move backward by one PAGE (looping to end)
+    const prevSlide = () => {
+        if (totalPages > 0) {
+            setCurrentSlide((prev) => (prev - 1 + totalPages) % totalPages);
+        }
+    };
+
+    // Get the businesses to display for the current slide
+    const getVisibleBusinesses = () => {
+        if (!businesses.length) return [];
+        
+        const visibleBusinesses = [];
+        // The starting index for the current page
+        const startIndex = currentSlide * businessesPerPage;
+
+        for (let i = 0; i < businessesPerPage; i++) {
+            // Use modulo to wrap around to the beginning if we run out of items
+            const index = (startIndex + i) % businesses.length;
+            visibleBusinesses.push(businesses[index]);
+        }
+        return visibleBusinesses;
+    };
 
     const getPriceLevel = (rating: number) => {
         if (rating >= 4.5) return '$$$';
@@ -53,7 +109,7 @@ export default function FeaturedListings() {
         return null;
     }
 
-    const renderBusinessCard = (business: Business) => {
+    const renderBusinessCard = (business: Business, index: number) => {
         // Check if business has active subscription (top placement)
         const hasActiveSubscription = business.promotedUntil && new Date(business.promotedUntil) > new Date();
         const descriptionText = business.description
@@ -61,8 +117,8 @@ export default function FeaturedListings() {
         : '';
         return (
         <div
-            key={business.id}
-            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 flex-shrink-0 w-72 snap-start"
+            key={`${business.id}-${index}`}
+            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 h-full"
         >
             <div className="relative h-48 group">
                 <Link href={`/businesses/${business.slug}`}>
@@ -197,7 +253,7 @@ export default function FeaturedListings() {
     };
 
     return (
-        <section className="py-12 bg-white">
+        <section className="py-8 bg-gray-100">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-12">
                     <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-2">
@@ -213,16 +269,62 @@ export default function FeaturedListings() {
                     )}
                 </div>
 
-                {/* Horizontal scrollable list for all breakpoints */}
-                <div className="mb-10">
-                    <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth">
-                        {businesses.map((business) => renderBusinessCard(business))}
+                {/* Carousel Container */}
+                <div className="relative mb-10">
+                    <div className="overflow-hidden">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                            {businesses.length > 0 ? (
+                                getVisibleBusinesses().map((business, idx) => renderBusinessCard(business, idx))
+                            ) : (
+                                <div className="col-span-full w-full text-center text-gray-500 py-10">
+                                    No businesses available at the moment.
+                                </div>
+                            )}
+                        </div>
                     </div>
+
+                    {/* Navigation Buttons */}
+                    {businesses.length > 0 && totalPages > 1 && (
+                        <>
+                            <button
+                                onClick={prevSlide}
+                                className="absolute left-0 sm:-left-4 md:-left-12 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-2 sm:p-3 shadow-lg transition-colors z-10 flex items-center justify-center border border-gray-100"
+                                aria-label="Previous businesses"
+                            >
+                                <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+                            </button>
+                            <button
+                                onClick={nextSlide}
+                                className="absolute right-0 sm:-right-4 md:-right-12 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-2 sm:p-3 shadow-lg transition-colors z-10 flex items-center justify-center border border-gray-100"
+                                aria-label="Next businesses"
+                            >
+                                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                            </button>
+                        </>
+                    )}
                 </div>
+
+                {/* Pagination Dots */}
+                {businesses.length > 0 && totalPages > 1 && (
+                    <div className="flex justify-center gap-2 mb-8">
+                        {[...Array(totalPages)].map((_, index) => (
+                            <button
+                                key={index}
+                                onClick={() => setCurrentSlide(index)}
+                                className={`h-2 rounded-full transition-all duration-300 ${
+                                    index === currentSlide
+                                        ? 'bg-primary w-8'
+                                        : 'bg-gray-300 hover:bg-gray-400 w-2'
+                                }`}
+                                aria-label={`Go to page ${index + 1}`}
+                            />
+                        ))}
+                    </div>
+                )}
 
                 <div className="text-center mt-12">
                     <Link
-                        href="/businesses"
+                        href={`/businesses/in/${selectedLocation?.slug || selectedCity?.slug || 'riyadh'}`}
                         className="inline-block bg-primary hover:bg-primary/90 text-white font-semibold px-8 py-3 rounded-lg transition-colors"
                     >
                         View All Listings

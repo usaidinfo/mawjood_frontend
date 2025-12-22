@@ -22,10 +22,10 @@ export const createColumns = (
     header: 'Name',
     cell: ({ row }) => (
       <div className="max-w-[200px]">
-        <span className="font-medium text-gray-900 dark:text-gray-100">
+        <span className="font-medium text-gray-900 dark:text-gray-100 truncate block" title={row.original.name}>
           {row.original.name}
         </span>
-        <div className="text-xs text-gray-500 mt-0.5">
+        <div className="text-xs text-gray-500 mt-0.5 truncate" title={row.original.email}>
           {row.original.email}
         </div>
       </div>
