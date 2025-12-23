@@ -116,24 +116,24 @@ export function BlogsTable<TData, TValue>({
     if (onBulkExport) {
       onBulkExport(selectedRows);
     } else {
-      const headers = ['ID', 'Title', 'Slug', 'Author', 'Category', 'Status', 'Created At'];
+      const headers = ['Title', 'Slug', 'Author', 'Category', 'Status', 'Published Date', 'Created At'];
       const rows = selectedRows.length > 0 
         ? selectedRows.map((row: any) => [
-            row.id,
             row.title,
             row.slug,
             `${row.author?.firstName || ''} ${row.author?.lastName || ''}`,
-            row.category?.name || '',
-            row.status,
+            row.categories?.map((cat: any) => cat.name).join(', ') || 'Uncategorized',
+            (row as any).status || (row.published ? 'PUBLISHED' : 'DRAFT'),
+            row.publishedAt ? new Date(row.publishedAt).toLocaleDateString() : 'Not Published',
             new Date(row.createdAt).toLocaleDateString(),
           ])
         : data.map((row: any) => [
-            row.id,
             row.title,
             row.slug,
             `${row.author?.firstName || ''} ${row.author?.lastName || ''}`,
-            row.category?.name || '',
-            row.status,
+            row.categories?.map((cat: any) => cat.name).join(', ') || 'Uncategorized',
+            (row as any).status || (row.published ? 'PUBLISHED' : 'DRAFT'),
+            row.publishedAt ? new Date(row.publishedAt).toLocaleDateString() : 'Not Published',
             new Date(row.createdAt).toLocaleDateString(),
           ]);
 

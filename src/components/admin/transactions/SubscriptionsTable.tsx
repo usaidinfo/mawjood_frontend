@@ -83,10 +83,9 @@ export function SubscriptionsTable<TData, TValue>({
     if (onBulkExport) {
       onBulkExport(selectedRows);
     } else {
-      const headers = ['ID', 'Business', 'Plan', 'Status', 'Start Date', 'End Date'];
+      const headers = ['Business', 'Plan', 'Status', 'Start Date', 'End Date'];
       const rows = selectedRows.length > 0 
         ? selectedRows.map((row: any) => [
-            row.id,
             row.business?.name || '',
             row.plan?.name || '',
             row.status,
@@ -94,7 +93,6 @@ export function SubscriptionsTable<TData, TValue>({
             row.endDate ? new Date(row.endDate).toLocaleDateString() : '',
           ])
         : data.map((row: any) => [
-            row.id,
             row.business?.name || '',
             row.plan?.name || '',
             row.status,

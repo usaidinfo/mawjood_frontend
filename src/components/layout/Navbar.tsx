@@ -9,7 +9,7 @@ import UnifiedAuthModal from '@/components/auth/UnifiedAuthModal';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import GTranslate from '@/components/GTranslate';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Bell, Briefcase, Globe, Megaphone, Phone, User, Menu, LogIn } from 'lucide-react';
+import { Bell, Briefcase, Globe, Megaphone, Phone, User, Menu, LogIn, X } from 'lucide-react';
 
 const NAV_LINKS = [
   { href: '/contact', key: 'contact' },
@@ -115,7 +115,7 @@ export default function Navbar() {
                 <div className="flex items-center gap-4 pl-2 border-l border-gray-200 h-8">
                   <Popover open={showUserMenu} onOpenChange={setShowUserMenu}>
                     <PopoverTrigger asChild>
-                      <button className="flex items-center gap-2 hover:bg-gray-50 p-1 rounded-full transition-colors">
+                      <button className="flex items-center gap-2 hover:bg-gray-50 p-1 rounded-full transition-colors cursor-pointer">
                         <div className="w-8 h-8 bg-primary/10 text-primary rounded-full flex items-center justify-center text-xs font-semibold overflow-hidden border border-primary/20">
                           {user.avatar ? (
                             <Image
@@ -171,7 +171,7 @@ export default function Navbar() {
                         <div className="border-t border-gray-100 p-1">
                           <button
                             onClick={handleLogout}
-                            className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors font-medium"
+                            className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors font-medium cursor-pointer"
                           >
                             Logout
                           </button>
@@ -196,10 +196,14 @@ export default function Navbar() {
             <div className="flex lg:hidden items-center">
                <button
                 onClick={() => setIsMenuOpen(prev => !prev)}
-                className="text-gray-600 hover:text-primary p-2"
-                aria-label="Toggle menu"
+                className="text-gray-600 hover:text-primary p-2 transition-colors"
+                aria-label={isMenuOpen ? "Close menu" : "Open menu"}
               >
-                <Menu className="w-6 h-6" />
+                {isMenuOpen ? (
+                  <X className="w-6 h-6" />
+                ) : (
+                  <Menu className="w-6 h-6" />
+                )}
               </button>
             </div>
           </div>

@@ -156,10 +156,9 @@ export function BusinessesTable<TData, TValue>({
       onBulkExport(selectedRows);
     } else {
       // Default CSV export
-      const headers = ['ID', 'Name', 'Owner', 'Category', 'City', 'Status', 'Created At'];
+      const headers = ['Name', 'Owner', 'Category', 'City', 'Status', 'Created At'];
       const rows = selectedRows.length > 0 
         ? selectedRows.map((row: any) => [
-            row.id,
             row.name,
             `${row.user?.firstName || ''} ${row.user?.lastName || ''}`,
             row.category?.name || '',
@@ -168,7 +167,6 @@ export function BusinessesTable<TData, TValue>({
             new Date(row.createdAt).toLocaleDateString(),
           ])
         : data.map((row: any) => [
-            row.id,
             row.name,
             `${row.user?.firstName || ''} ${row.user?.lastName || ''}`,
             row.category?.name || '',

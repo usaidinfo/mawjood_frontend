@@ -97,10 +97,9 @@ export function AdvertisementsTable<TData, TValue>({
   const selectedCount = selectedRows.length;
 
   const handleExportCSV = () => {
-    const headers = ['ID', 'Title', 'Type', 'Status', 'Location', 'Category', 'Target URL', 'Created At'];
+    const headers = ['Title', 'Type', 'Status', 'Location', 'Category', 'Target URL', 'Created At'];
     const rows = selectedRows.length > 0 
       ? selectedRows.map((row: any) => [
-          row.id,
           row.title,
           row.adType,
           row.isActive ? 'Active' : 'Inactive',
@@ -110,7 +109,6 @@ export function AdvertisementsTable<TData, TValue>({
           new Date(row.createdAt).toLocaleDateString(),
         ])
       : data.map((row: any) => [
-          row.id,
           row.title,
           row.adType,
           row.isActive ? 'Active' : 'Inactive',

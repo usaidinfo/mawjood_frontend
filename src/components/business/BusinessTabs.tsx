@@ -72,7 +72,7 @@ export default function BusinessTabs() {
             <button
               key={tab.id}
               onClick={() => scrollToSection(tab.id)}
-              className={`px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-medium transition-all whitespace-nowrap text-sm md:text-base ${
+              className={`px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-medium transition-all whitespace-nowrap text-sm md:text-base cursor-pointer ${
                 activeTab === tab.id
                   ? 'bg-white text-black shadow-md'
                   : 'text-white hover:bg-white/20'

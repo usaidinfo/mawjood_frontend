@@ -64,7 +64,7 @@ export default function BusinessCard({
             toggleFavorite(business.id);
           }}
           disabled={isLoading}
-          className="absolute top-3 right-3 w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+          className="absolute top-3 right-3 w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors cursor-pointer"
           aria-label="Add to favorites"
         >
           {isLoading ? (

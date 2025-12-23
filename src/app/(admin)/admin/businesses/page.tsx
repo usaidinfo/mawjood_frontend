@@ -410,20 +410,18 @@ export default function BusinessesPage() {
     const dataToExport = selectedRows.length > 0 ? selectedRows : businesses;
     
     const headers = [
-      'ID',
       'Name',
       'Slug',
       'Owner Name',
       'Owner Email',
       'Category',
       'City',
-      'Region',
+      'State',
       'Status',
       'Created At',
     ];
 
     const rows = dataToExport.map((business) => [
-      business.id,
       business.name,
       business.slug,
       `${business.user?.firstName || ''} ${business.user?.lastName || ''}`,

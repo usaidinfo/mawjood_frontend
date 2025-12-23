@@ -83,7 +83,7 @@ export default function OTPVerificationForm({
           type="button"
           onClick={onVerify}
           disabled={loading || !otp.trim()}
-          className="flex-1"
+          className="flex-1 cursor-pointer"
         >
           {loading ? 'Verifying...' : 'Verify OTP'}
         </Button>

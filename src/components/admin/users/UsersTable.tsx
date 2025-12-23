@@ -106,10 +106,9 @@ export function UsersTable<TData, TValue>({
     if (onBulkExport) {
       onBulkExport(selectedRows);
     } else {
-      const headers = ['ID', 'Name', 'Email', 'Phone', 'Role', 'Status', 'Created At'];
+      const headers = ['Name', 'Email', 'Phone', 'Role', 'Status', 'Created At'];
       const rows = selectedRows.length > 0 
         ? selectedRows.map((row: any) => [
-            row.id,
             `${row.firstName || ''} ${row.lastName || ''}`,
             row.email || 'N/A',
             row.phone || 'N/A',
@@ -118,7 +117,6 @@ export function UsersTable<TData, TValue>({
             new Date(row.createdAt).toLocaleDateString(),
           ])
         : data.map((row: any) => [
-            row.id,
             `${row.firstName || ''} ${row.lastName || ''}`,
             row.email || 'N/A',
             row.phone || 'N/A',

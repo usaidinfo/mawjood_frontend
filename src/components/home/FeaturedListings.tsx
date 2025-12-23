@@ -118,7 +118,7 @@ export default function FeaturedListings() {
         return (
         <div
             key={`${business.id}-${index}`}
-            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 h-full"
+            className="bg-white rounded-lg overflow-hidden h-full border border-gray-200"
         >
             <div className="relative h-48 group">
                 <Link href={`/businesses/${business.slug}`}>
@@ -253,7 +253,7 @@ export default function FeaturedListings() {
     };
 
     return (
-        <section className="py-8 bg-gray-100">
+        <section className="py-8 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-12">
                     <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-2">

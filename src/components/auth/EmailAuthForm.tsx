@@ -66,7 +66,7 @@ export default function EmailAuthForm({
         type="button"
         onClick={onSendOTP}
         disabled={loading || !email.trim()}
-        className="w-full"
+        className="w-full cursor-pointer"
       >
         {loading ? 'Sending...' : 'Send OTP'}
       </Button>

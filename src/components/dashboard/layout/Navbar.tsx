@@ -97,7 +97,7 @@ export default function DashboardNavbar({ onMenuClick }: DashboardNavbarProps) {
           <Popover open={showNotifications} onOpenChange={setShowNotifications}>
             <PopoverTrigger asChild>
               <button
-                className="relative p-1.5 sm:p-2 text-primary hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+                className="relative p-1.5 sm:p-2 text-primary hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 cursor-pointer"
                 onClick={() => setShowProfileMenu(false)}
               >
                 <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -228,7 +228,7 @@ export default function DashboardNavbar({ onMenuClick }: DashboardNavbarProps) {
                   setShowProfileMenu(false);
                   logout();
                 }}
-                className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-red-600 w-full"
+                className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-red-600 w-full cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="text-sm">Logout</span>

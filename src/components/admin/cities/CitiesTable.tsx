@@ -162,17 +162,15 @@ export function CitiesTable<TData, TValue>({
     if (onBulkExport) {
       onBulkExport(selectedRows);
     } else {
-      const headers = ['ID', 'Name', 'Slug', 'State', 'Created At'];
+      const headers = ['Name', 'Slug', 'State', 'Created At'];
       const rows = selectedRows.length > 0 
         ? selectedRows.map((row: any) => [
-            row.id,
             row.name,
             row.slug,
             row.region?.name || '',
             new Date(row.createdAt).toLocaleDateString(),
           ])
         : data.map((row: any) => [
-            row.id,
             row.name,
             row.slug,
             row.region?.name || '',
@@ -250,7 +248,7 @@ export function CitiesTable<TData, TValue>({
                 <div className="max-h-48 overflow-y-auto">
                   <button
                     type="button"
-                    className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 ${
+                    className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 cursor-pointer ${
                       selectedCountry === 'all' ? 'bg-gray-100 font-medium' : ''
                     }`}
                     onClick={() => {
@@ -265,7 +263,7 @@ export function CitiesTable<TData, TValue>({
                     <button
                       key={country.id}
                       type="button"
-                      className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 ${
+                      className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 cursor-pointer ${
                         selectedCountry === country.id ? 'bg-gray-100 font-medium' : ''
                       }`}
                       onClick={() => {
@@ -290,7 +288,7 @@ export function CitiesTable<TData, TValue>({
           <button
             type="button"
             onClick={() => setRegionDropdownOpen((prev) => !prev)}
-            className="w-full md:w-[200px] rounded-lg border border-gray-300 bg-white px-3 py-2 flex items-center justify-between text-sm font-medium hover:bg-gray-50"
+            className="w-full md:w-[200px] rounded-lg border border-gray-300 bg-white px-3 py-2 flex items-center justify-between text-sm font-medium hover:bg-gray-50 cursor-pointer"
           >
             <span>
               {selectedRegion === 'all'
@@ -315,7 +313,7 @@ export function CitiesTable<TData, TValue>({
               <div className="max-h-48 overflow-y-auto">
                 <button
                   type="button"
-                  className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 ${
+                  className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 cursor-pointer ${
                     selectedRegion === 'all' ? 'bg-gray-100 font-medium' : ''
                   }`}
                   onClick={() => {
@@ -330,7 +328,7 @@ export function CitiesTable<TData, TValue>({
                   <button
                     key={region.id}
                     type="button"
-                    className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 ${
+                    className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 cursor-pointer ${
                       selectedRegion === region.id ? 'bg-gray-100 font-medium' : ''
                     }`}
                     onClick={() => {

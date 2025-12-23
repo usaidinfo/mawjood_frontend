@@ -98,6 +98,33 @@ export const createColumns = (
     ),
   },
   {
+    accessorKey: 'categories',
+    header: 'Category',
+    cell: ({ row }) => {
+      const categories = row.original.categories || [];
+      if (categories.length === 0) {
+        return <span className="text-sm text-gray-500 dark:text-gray-400">Uncategorized</span>;
+      }
+      return (
+        <div className="flex flex-wrap gap-1">
+          {categories.slice(0, 2).map((cat: any) => (
+            <span
+              key={cat.id}
+              className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2 py-1 rounded"
+            >
+              {cat.name}
+            </span>
+          ))}
+          {categories.length > 2 && (
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              +{categories.length - 2} more
+            </span>
+          )}
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => {
@@ -117,6 +144,19 @@ export const createColumns = (
       }
 
       return <Badge variant={variant}>{label}</Badge>;
+    },
+  },
+  {
+    accessorKey: 'publishedAt',
+    header: 'Published Date',
+    cell: ({ row }) => {
+      const blog = row.original;
+      const publishedAt = (blog as any).publishedAt || (blog.published ? blog.createdAt : null);
+      return (
+        <span className="text-sm text-gray-600">
+          {publishedAt ? format(new Date(publishedAt), 'MMM dd, yyyy') : 'Not Published'}
+        </span>
+      );
     },
   },
   {
