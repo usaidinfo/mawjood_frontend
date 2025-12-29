@@ -1,0 +1,7 @@
+# Mawjood - Saudi Arabia's Local Business Directory
+
+Mawjood is Saudi Arabia's No. 1 local search engine, helping users find businesses including Restaurants, Hotels, Salons, Real Estate, Travel, Healthcare, Education, B2B Businesses and more.
+
+Website: https://mawjoodfrontend.vercel.app
+Description: Local business directory and search engine for Saudi Arabia
+

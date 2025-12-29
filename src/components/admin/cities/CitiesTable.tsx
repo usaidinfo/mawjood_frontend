@@ -162,20 +162,21 @@ export function CitiesTable<TData, TValue>({
     if (onBulkExport) {
       onBulkExport(selectedRows);
     } else {
-      const headers = ['Name', 'Slug', 'State', 'Created At'];
-      const rows = selectedRows.length > 0 
-        ? selectedRows.map((row: any) => [
-            row.name,
-            row.slug,
-            row.region?.name || '',
-            new Date(row.createdAt).toLocaleDateString(),
-          ])
-        : data.map((row: any) => [
-            row.name,
-            row.slug,
-            row.region?.name || '',
-            new Date(row.createdAt).toLocaleDateString(),
-          ]);
+      const headers = ['Name', 'Slug', 'State', 'Country', 'Created At'];
+      const rowsToExport = selectedRows.length > 0 ? selectedRows : data;
+      const rows = rowsToExport.map((row: any) => {
+        const region = regions.find((r) => r.id === row.regionId) as any;
+        const country = region && region.countryId && countries.length > 0 
+          ? countries.find((c) => c.id === region.countryId)
+          : null;
+        return [
+          row.name,
+          row.slug,
+          row.region?.name || '',
+          country?.name || '',
+          new Date(row.createdAt).toLocaleDateString(),
+        ];
+      });
 
       const csvContent = [
         headers.join(','),

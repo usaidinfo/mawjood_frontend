@@ -1,19 +1,5 @@
 'use client';
 
-import { 
-  Smartphone, 
-  Zap, 
-  Tv, 
-  Droplet, 
-  Flame, 
-  Shield,
-  Plane,
-  Bus,
-  Train,
-  Hotel,
-  Car,
-  Clock 
-} from 'lucide-react';
 
 export default function ServicesAndUtilities() {
   
@@ -53,12 +39,12 @@ export default function ServicesAndUtilities() {
 
               {/* Right Icons Grid - Kept original alignment for top section as requested changes were for Travel */}
               <div className="flex-1 flex flex-wrap gap-4 md:gap-8 justify-start">
-                <ServiceIcon icon={<Smartphone className="text-cyan-500" />} label="Mobile" />
-                <ServiceIcon icon={<Zap className="text-yellow-500 fill-yellow-500" />} label="Electricity" />
-                <ServiceIcon icon={<Tv className="text-gray-600" />} label="DTH" />
-                <ServiceIcon icon={<Droplet className="text-blue-500 fill-blue-500" />} label="Water" />
-                <ServiceIcon icon={<Flame className="text-red-500 fill-red-500" />} label="Gas" />
-                <ServiceIcon icon={<Shield className="text-indigo-600 fill-indigo-100" />} label="Insurance" />
+                <ServiceIcon label="Mobile" />
+                <ServiceIcon label="Electricity" />
+                <ServiceIcon label="DTH" />
+                <ServiceIcon label="Water" />
+                <ServiceIcon label="Gas" />
+                <ServiceIcon label="Insurance" />
               </div>
             </div>
 
@@ -80,26 +66,11 @@ export default function ServicesAndUtilities() {
 
               {/* Right Icons Grid - Aligned to Start (Left) and Removed Subtitles */}
               <div className="flex-1 flex flex-wrap gap-4 md:gap-8 justify-start">
-                <ServiceIcon 
-                  icon={<Plane className="text-blue-500 fill-blue-100" />} 
-                  label="Flight" 
-                />
-                <ServiceIcon 
-                  icon={<Bus className="text-red-500 fill-red-100" />} 
-                  label="Bus" 
-                />
-                <ServiceIcon 
-                  icon={<Train className="text-orange-600 fill-orange-100" />} 
-                  label="Train" 
-                />
-                <ServiceIcon 
-                  icon={<Hotel className="text-pink-600 fill-pink-100" />} 
-                  label="Hotel" 
-                />
-                <ServiceIcon 
-                  icon={<Car className="text-blue-600 fill-blue-100" />} 
-                  label="Car Rentals" 
-                />
+                <ServiceIcon label="Flight" />
+                <ServiceIcon label="Bus" />
+                <ServiceIcon label="Train" />
+                <ServiceIcon label="Hotel" />
+                <ServiceIcon label="Car Rentals" />
               </div>
             </div>
 
@@ -112,18 +83,13 @@ export default function ServicesAndUtilities() {
 
 // Reusable Icon Component
 function ServiceIcon({ 
-  icon, 
   label
 }: { 
-  icon: React.ReactNode; 
   label: string; 
 }) {
   return (
     <div className="flex flex-col items-center w-[85px]">
       <div className="w-[70px] h-[70px] rounded-[18px] border border-gray-200 flex items-center justify-center bg-white hover:border-primary transition-colors shadow-sm mb-3">
-        <div className="[&>svg]:w-8 [&>svg]:h-8">
-          {icon}
-        </div>
       </div>
       <span className="text-[15px] text-gray-800 font-medium text-center leading-tight">
         {label}

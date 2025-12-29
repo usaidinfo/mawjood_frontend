@@ -60,53 +60,77 @@ export default function BusinessesByLocationPage() {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [locationLoaded, setLocationLoaded] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
-  // Fetch location data on mount
+  // Fetch location data on mount - always fetch to ensure data is available
   useEffect(() => {
     const loadLocationData = async () => {
-      if (!cities.length) await fetchCities();
-      if (!regions.length) await fetchRegions();
-      if (!countries.length) await fetchCountries();
-      
-      // Find location by slug - check in order: city, region, country
-      const city = cities.find(c => c.slug === locationSlug);
-      const region = regions.find(r => r.slug === locationSlug);
-      const country = countries.find(c => c.slug === locationSlug);
-      
-      // Clear previous selections first
-      setSelectedCity(null);
-      setSelectedLocation(null);
-      
-      if (city) {
-        setSelectedCity(city);
-        setSelectedLocation({
-          type: 'city',
-          slug: city.slug,
-          name: city.name,
-          id: city.id,
-          regionId: city.regionId,
-        });
-      } else if (region) {
-        setSelectedLocation({
-          type: 'region',
-          slug: region.slug,
-          name: region.name,
-          id: region.id,
-        });
-      } else if (country) {
-        setSelectedLocation({
-          type: 'country',
-          slug: country.slug,
-          name: country.name,
-          id: country.id,
-        });
+      try {
+        setLocationError(null);
+        
+        // Always fetch location data directly from API to ensure it's available (especially on refresh)
+        // This bypasses the store cache which might be empty on page refresh
+        // Fetch all three in parallel for better performance
+        const [citiesData, regionsData, countriesData] = await Promise.all([
+          cityService.fetchCities(),
+          cityService.fetchRegions(),
+          cityService.fetchCountries(),
+        ]);
+        
+        // Update the store for future use (these are async but we don't need to wait)
+        fetchCities().catch(console.error);
+        fetchRegions().catch(console.error);
+        fetchCountries().catch(console.error);
+        
+        // Find location by slug - check in order: city, region, country
+        const city = citiesData.find((c: any) => c.slug === locationSlug);
+        const region = regionsData.find((r: any) => r.slug === locationSlug);
+        const country = countriesData.find((c: any) => c.slug === locationSlug);
+        
+        // Clear previous selections first
+        setSelectedCity(null);
+        setSelectedLocation(null);
+        
+        if (city) {
+          setSelectedCity(city);
+          setSelectedLocation({
+            type: 'city',
+            slug: city.slug,
+            name: city.name,
+            id: city.id,
+            regionId: city.regionId,
+          });
+          setLocationLoaded(true);
+        } else if (region) {
+          setSelectedLocation({
+            type: 'region',
+            slug: region.slug,
+            name: region.name,
+            id: region.id,
+          });
+          setLocationLoaded(true);
+        } else if (country) {
+          setSelectedLocation({
+            type: 'country',
+            slug: country.slug,
+            name: country.name,
+            id: country.id,
+          });
+          setLocationLoaded(true);
+        } else {
+          // Location not found
+          setLocationError(`Location "${locationSlug}" not found`);
+          setLocationLoaded(true); // Still set to true to show error state
+        }
+      } catch (error) {
+        console.error('Error loading location data:', error);
+        setLocationError('Failed to load location data');
+        setLocationLoaded(true);
       }
-      
-      setLocationLoaded(true);
     };
     
     loadLocationData();
-  }, [locationSlug, cities, regions, countries, fetchCities, fetchRegions, fetchCountries, setSelectedCity, setSelectedLocation]);
+  }, [locationSlug]); // Only depend on locationSlug to avoid re-running unnecessarily
 
   const updateFilters = (updates: Partial<FiltersState>) => {
     setFilters((prev) => ({ ...prev, ...updates }));
@@ -177,6 +201,25 @@ export default function BusinessesByLocationPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-gray-600">Loading location...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (locationError || !effectiveLocation) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Location Not Found</h1>
+          <p className="text-gray-600 mb-4">
+            {locationError || `The location "${locationSlug}" could not be found.`}
+          </p>
+          <button
+            onClick={() => router.push('/')}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            Go to Home
+          </button>
         </div>
       </div>
     );

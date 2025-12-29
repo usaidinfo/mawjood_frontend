@@ -110,7 +110,10 @@ export const createPaymentColumns = (): ColumnDef<Payment>[] => [
     accessorKey: 'createdAt',
     header: 'Date',
     cell: ({ row }) => {
-      const date = new Date(row.getValue('createdAt'));
+      const dateValue = row.getValue('createdAt');
+      if (!dateValue) return <span className="text-gray-400">N/A</span>;
+      const date = new Date(dateValue as string);
+      if (isNaN(date.getTime())) return <span className="text-gray-400">Invalid Date</span>;
       return (
         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
           <Calendar className="w-4 h-4" />

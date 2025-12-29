@@ -71,9 +71,9 @@ export default function Navbar() {
                   className="h-8 w-auto md:h-8 lg:h-10 flex-shrink-0"
                 />
                 <div className="ml-1.5 md:ml-0 lg:ml-2 flex-shrink-0">
-                  <h1 className="text-primary hover:text-primary block md:hidden lg:block text-sm md:text-sm lg:text-base font-bold leading-tight whitespace-nowrap">
+                  <span className="text-primary hover:text-primary block md:hidden lg:block text-sm md:text-sm lg:text-base font-bold leading-tight whitespace-nowrap">
                     {brandName}
-                  </h1>
+                  </span>
                 </div>
               </Link>
             </div>

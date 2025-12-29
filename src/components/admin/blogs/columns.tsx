@@ -151,9 +151,21 @@ export const createColumns = (
     header: 'Published Date',
     cell: ({ row }) => {
       const blog = row.original;
-      const publishedAt = (blog as any).publishedAt || (blog.published ? blog.createdAt : null);
+      const rawStatus = (blog as any).status as 'DRAFT' | 'PUBLISHED' | 'SCHEDULED' | undefined;
+      const isPublished = rawStatus === 'PUBLISHED' || (blog.published && !rawStatus);
+      
+      let publishedAt = (blog as any).publishedAt;
+      
+      if (!publishedAt && isPublished) {
+        if (blog.scheduledAt) {
+          publishedAt = blog.scheduledAt;
+        } else {
+          publishedAt = blog.createdAt;
+        }
+      }
+      
       return (
-        <span className="text-sm text-gray-600">
+        <span className="text-sm text-gray-600 dark:text-gray-400">
           {publishedAt ? format(new Date(publishedAt), 'MMM dd, yyyy') : 'Not Published'}
         </span>
       );
